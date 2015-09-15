@@ -1,2 +1,0 @@
-/arxiv/source_tree/asymmetricTreeCluster/build/tests/CMakeFiles/asymmTree.dir
-/arxiv/source_tree/asymmetricTreeCluster/build/tests/CMakeFiles/point.dir

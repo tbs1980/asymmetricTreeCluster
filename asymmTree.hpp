@@ -62,6 +62,7 @@ public:
                 }
                 std::cout<<mPoints[j][mPoints[j].size()-1]<<std::endl;
             }
+            std::cout<<"Point with "
             std::cout<<std::endl;
         }
     }

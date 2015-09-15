@@ -1,1 +1,0 @@
-/usr/bin/c++   -g -std=c++11 -pedantic -Wall -Wextra -g    CMakeFiles/asymmTree.dir/asymmTree.cpp.o  -o asymmTree -rdynamic 
