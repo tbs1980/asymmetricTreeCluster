@@ -5,10 +5,11 @@
 #include <vector>
 #include <cassert>
 
-template<class realScalarType>
+template<class _realScalarType>
 class point
 {
 public:
+    typedef _realScalarType realScalarType;
     typedef std::vector<realScalarType> realVectorType;
 
     point()
