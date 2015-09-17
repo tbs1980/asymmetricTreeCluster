@@ -30,11 +30,15 @@ public:
         pointType const & boundMax
     )
     :mLeftSubTree(nullptr),mRightSubTree(nullptr),mPoints(points),mSplitDimension(0)
-    ,mBoundMin(boundMin),mBoundMax(boundMax)
+    ,mBoundMin(boundMin),mBoundMax(boundMax),mPointIndices(points.size())
     {
+        for(size_t i=0;i<mPointIndices.size();++i)
+        {
+            mPointIndices[i] = i;
+        }
 
-        typename pointsArrayType::iterator begin = std::begin(mPoints);
-        typename pointsArrayType::iterator end = std::end(mPoints);
+        typename std::vector<size_t>::iterator begin = std::begin(mPointIndices);
+        typename std::vector<size_t>::iterator end = std::end(mPointIndices);
 
         /*
         std::cout<<"input point is "<<std::endl;
@@ -55,39 +59,26 @@ public:
 
             // sort the points in the current dimension
             std::sort(begin, end,
-                [dim]( pointType a, pointType b)
+                [this,dim]( size_t a, size_t b)
                 {
-                    return ( a[dim] < b[dim] );
+                    return ( mPoints[a][dim] < mPoints[b][dim] );
                 }
             );
-
-            // median
-            /*
-            size_t median_ind = mPoints.size()/2;
-
-            while(median_ind != size_t(0) && mPoints[median_ind][dim] == mPoints[size_t(median_ind - 1)][dim] )
-            {
-                --median_ind; // put all the nodes with equal coord value in the right subtree
-            }
-
-            std::cout<<"Median point in dimension "<<dim<<" is "<<mPoints[median_ind][dim]<<std::endl;
-            */
 
             auto rangeSize = std::distance(begin, end);
             auto median = begin + rangeSize/2;
 
-            /*
-            while(median != begin && (*median)[dim] == (*(median - 1))[dim] )
+            while(median != begin && mPoints[*(median)][dim] == mPoints[*(median - 1)][dim] )
             {
                 --median;
-            }*/
+            }
 
-            std::cout<<"Median point in dimension "<<dim<<" is "<<(*median)[dim]<<std::endl;
+            std::cout<<"Median point in dimension "<<dim<<" is "<<mPoints[*(median)][dim]<<std::endl;
 
             // set the new bounds
             pointType boundMinLeft = boundMin;
-            pointType boundMaxLeft = (*median);
-            pointType boundMinRight = (*median); //TODO is this correct? should this be the next point?
+            pointType boundMaxLeft = mPoints[*(median)];
+            pointType boundMinRight = mPoints[*(median)]; //TODO is this correct? should this be the next point?
             pointType boundMaxRight = boundMax;
 
             // find the Euclidian distance between the min and max for the current dimension
@@ -99,28 +90,29 @@ public:
 
             // find the lmin and lmax right and left
             auto wMinMaxLeft = std::minmax_element(begin,median,
-                [dim]( pointType a, pointType b)
+                [this,dim](  size_t a, size_t b)
                 {
-                    return ( a.weight() < b.weight() );
+                    return ( mPoints[a].weight() < mPoints[b].weight() );
                 }
             );
             auto wMinMaxRight = std::minmax_element( (median+1),end,
-                [dim]( pointType a, pointType b)
+                [this,dim](  size_t a, size_t b)
                 {
-                    return ( a.weight() < b.weight() );
+                    return ( mPoints[a].weight() < mPoints[b].weight() );
                 }
             );
 
-            realScalarType wMinLeftVal = (*wMinMaxLeft.first).weight();
-            realScalarType wMaxLeftVal = (*wMinMaxLeft.second).weight();
-            realScalarType wMinRightVal = (*wMinMaxRight.first).weight();
-            realScalarType wMaxRightVal = (*wMinMaxRight.second).weight();
+
+            realScalarType wMinLeftVal = mPoints[*wMinMaxLeft.first].weight();
+            realScalarType wMaxLeftVal = mPoints[*wMinMaxLeft.second].weight();
+            realScalarType wMinRightVal = mPoints[*wMinMaxRight.first].weight();
+            realScalarType wMaxRightVal = mPoints[*wMinMaxRight.second].weight();
 
 
             std::cout<<"for the left child the min and max liks are "
-                <<(*wMinMaxLeft.first).weight()<<"\t"<<(*wMinMaxLeft.second).weight()<<std::endl;
+                <<wMinLeftVal<<"\t"<<wMaxLeftVal<<std::endl;
             std::cout<<"for the right child the min and max liks are "
-                <<(*wMinMaxRight.first).weight()<<"\t"<<(*wMinMaxRight.second).weight()<<std::endl;
+                <<wMinRightVal<<"\t"<<wMaxRightVal<<std::endl;
 
             realScalarType discLeft = std::abs(wMaxLeftVal-wMinLeftVal)/distLeft;
             realScalarType discRight = std::abs(wMaxRightVal-wMinRightVal)/distRight;
@@ -138,6 +130,11 @@ public:
             <<std::distance(std::begin(normDiscr),discrMin)<<" = "<<(*discrMin)<<std::endl;
 
         mSplitDimension = std::distance(std::begin(normDiscr),discrMin);
+
+        if(mPoints.size()>thresholdForBranching)
+        {
+            std::cout<<"Number of points in this node is greater than the threshold. Branching now"<<std::endl;
+        }
     }
 
     ~asymmTree()
@@ -162,6 +159,7 @@ private:
     pointType mBoundMin;
     pointType mBoundMax;
     size_t mMedianIndex;
+    std::vector<size_t> mPointIndices;
 };
 
 #endif //ASYMM_TREE_HPP
