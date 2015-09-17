@@ -19,15 +19,9 @@ public:
 
     static const size_t thresholdForBranching = 100;
 
-    asymmTree()
-    :mLeftSubTree(nullptr),mRightSubTree(nullptr),mSplitDimension(0),mMedianIndex(0)
-    {
-
-    }
-
-    asymmTree(pointsArrayType  const& points,
-        pointType const & boundMin,
-        pointType const & boundMax
+    asymmTree(pointsArrayType   points,
+        pointType  boundMin,
+        pointType  boundMax
     )
     :mLeftSubTree(nullptr),mRightSubTree(nullptr),mPoints(points),mSplitDimension(0)
     ,mBoundMin(boundMin),mBoundMax(boundMax),mPointIndices(points.size())
@@ -39,17 +33,6 @@ public:
 
         typename std::vector<size_t>::iterator begin = std::begin(mPointIndices);
         typename std::vector<size_t>::iterator end = std::end(mPointIndices);
-
-        /*
-        std::cout<<"input point is "<<std::endl;
-        for(size_t i=0;i<mPoints.size();++i)
-        {
-            for(size_t j=0;j<mPoints[i].size();++j)
-            {
-                std::cout<<mPoints[i][j]<<"\t";
-            }
-            std::cout<<mPoints[i].weight()<<std::endl;
-        }*/
 
         // for each dimension find the median and the Fisher discriminant
         std::vector<realScalarType> normDiscr(mPoints[0].size());
@@ -134,18 +117,77 @@ public:
         if(mPoints.size()>thresholdForBranching)
         {
             std::cout<<"Number of points in this node is greater than the threshold. Branching now"<<std::endl;
+
+            std::cout<<"Sorting the points in dim "<<mSplitDimension<<std::endl;
+
+            // sort the points in the current dimension
+            std::sort(begin, end,
+                [this]( size_t a, size_t b)
+                {
+                    return ( mPoints[a][mSplitDimension] < mPoints[b][mSplitDimension] );
+                }
+            );
+            auto rangeSize = std::distance(begin, end);
+            auto median = begin + rangeSize/2;
+            std::cout<<"median is at "<<std::distance(begin, median)<<std::endl;
+            while(median != begin &&
+                mPoints[*(median)][mSplitDimension] == mPoints[*(median - 1)][mSplitDimension] )
+            {
+                --median;
+            }
+            std::cout<<"after search median is at "<<std::distance(begin, median)<<std::endl;
+
+            std::cout<<"Median point in dimension "<<mSplitDimension<<" is "<<mPoints[*(median)][mSplitDimension]<<std::endl;
+
+            // set the new bounds
+            pointType boundMinLeft = boundMin;
+            pointType boundMaxLeft = mPoints[*(median)];
+            pointType boundMinRight = mPoints[*(median)]; //TODO is this correct? should this be the nextpoint?
+            pointType boundMaxRight = boundMax;
+
+            // make points for the left and right tree
+            pointsArrayType pointsLeft(std::distance(begin, median));
+            pointsArrayType pointsRight(std::distance((median+1),end));
+
+            std::cout<<"size of left subtree = "<<pointsLeft.size()<<std::endl;
+            std::cout<<"size of right subtree = "<<pointsRight.size()<<std::endl;
+
+            for(size_t i=0;i<pointsLeft.size();++i)
+            {
+                pointsLeft[i] = mPoints[mPointIndices[i]];
+            }
+
+            for(size_t i=0;i<pointsRight.size();++i)
+            {
+                pointsRight[i] = mPoints[mPointIndices[i+pointsLeft.size()]];
+            }
+
+            //asymmTreeType* past = new asymmTreeType(pointsLeft,boundMinLeft,boundMaxLeft);
+
+            mLeftSubTree = new asymmTreeType(pointsLeft,boundMinLeft,boundMaxLeft);
+            mRightSubTree = new asymmTreeType(pointsRight,boundMinRight,boundMaxRight);
+
+            //delete past;
         }
+        else
+        {
+            std::cout<<"\n-----NOT branching------\n"<<std::endl;
+        }
+
+
     }
 
     ~asymmTree()
     {
         if(mLeftSubTree != nullptr)
         {
+            std::cout<<"==== deleting the left tree"<<std::endl;
             delete mLeftSubTree;
         }
 
         if(mRightSubTree != nullptr)
         {
+            std::cout<<"==== deleting the right tree"<<std::endl;
             delete mRightSubTree;
         }
     }
