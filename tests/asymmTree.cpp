@@ -45,7 +45,7 @@ int testAsymmTreeInit(void)
     std::uniform_real_distribution<double> distribution1(-15.,15.);
 
     const size_t numDims = 2;
-    const size_t numPoints = 150;
+    const size_t numPoints = 500;
 
     // define the bounds
     pointType boundMin(numDims,double(0));
@@ -73,7 +73,7 @@ int testAsymmTreeInit(void)
 
     // assign points and their weights
     std::ofstream outFile;
-    outFile.open("plot.dat",std::ios::trunc);
+    outFile.open("points.dat",std::ios::trunc);
     for(size_t i=0;i<numPoints;++i)
     {
         // get the coordinates of the point
@@ -97,7 +97,7 @@ int testAsymmTreeInit(void)
 
         for(size_t j=0;j<coords.size();++j)
         {
-            outFile<<coords[j]<<"\t";
+            outFile<<coords[j]<<",";
         }
         outFile<<weight<<std::endl;
 
@@ -107,7 +107,12 @@ int testAsymmTreeInit(void)
     }
     outFile.close();
 
-    asymmTreeType ast(pts,boundMin,boundMax);
+
+    asymmTreeType ast(pts,boundMin,boundMax,10,0,0);
+
+    outFile.open("tree.dat",std::ios::trunc);
+    ast.dumpTree(outFile);
+    outFile.close();
 
     return EXIT_SUCCESS;
 }
