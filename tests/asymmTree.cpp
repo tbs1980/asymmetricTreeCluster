@@ -45,7 +45,7 @@ int testAsymmTreeInit(void)
     std::uniform_real_distribution<double> distribution1(-15.,15.);
 
     const size_t numDims = 2;
-    const size_t numPoints = 1000;
+    const size_t numPoints = 150;
 
     // define the bounds
     pointType boundMin(numDims,double(0));

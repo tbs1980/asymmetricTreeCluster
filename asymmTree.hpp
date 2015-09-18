@@ -19,12 +19,12 @@ public:
 
     static const size_t thresholdForBranching = 100;
 
-    asymmTree(pointsArrayType   points,
-        pointType  boundMin,
-        pointType  boundMax
+    asymmTree(pointsArrayType const&  points,
+        pointType  const&  boundMin,
+        pointType  const&  boundMax
     )
     :mLeftSubTree(nullptr),mRightSubTree(nullptr),mPoints(points),mSplitDimension(0)
-    ,mBoundMin(boundMin),mBoundMax(boundMax),mPointIndices(points.size())
+    ,mBoundMin(0.),mBoundMax(0.),mPointIndices(points.size())
     {
         for(size_t i=0;i<mPointIndices.size();++i)
         {
@@ -116,6 +116,7 @@ public:
 
         if(mPoints.size()>thresholdForBranching)
         {
+            std::cout<<"*******>Creating sub trees now"<<std::endl;
             std::cout<<"Number of points in this node is greater than the threshold. Branching now"<<std::endl;
 
             std::cout<<"Sorting the points in dim "<<mSplitDimension<<std::endl;
@@ -162,12 +163,14 @@ public:
                 pointsRight[i] = mPoints[mPointIndices[i+pointsLeft.size()]];
             }
 
-            //asymmTreeType* past = new asymmTreeType(pointsLeft,boundMinLeft,boundMaxLeft);
+            // since we have decided the split dimension we can set the bounds here
+            mBoundMin = boundMin[mSplitDimension];
+            mBoundMax = boundMax[mSplitDimension];
+            std::cout<<"Setting the bounds for the dimension "<<mSplitDimension<<" as "<<mBoundMin<<"\t"<<mBoundMax<<std::endl;
 
             mLeftSubTree = new asymmTreeType(pointsLeft,boundMinLeft,boundMaxLeft);
             mRightSubTree = new asymmTreeType(pointsRight,boundMinRight,boundMaxRight);
 
-            //delete past;
         }
         else
         {
@@ -198,8 +201,8 @@ private:
     asymmTreeType* mRightSubTree;
     pointsArrayType mPoints;
     size_t mSplitDimension;
-    pointType mBoundMin;
-    pointType mBoundMax;
+    realScalarType mBoundMin;
+    realScalarType mBoundMax;
     size_t mMedianIndex;
     std::vector<size_t> mPointIndices;
 };
