@@ -42,7 +42,7 @@ int testAsymmTreeInit(void)
     std::default_random_engine generator;
 
     std::uniform_real_distribution<double> distribution0(-5.,5.);
-    std::uniform_real_distribution<double> distribution1(-15.,15.);
+    std::uniform_real_distribution<double> distribution1(-5.,15.);
 
     const size_t numDims = 2;
     const size_t numPoints = 500;
@@ -60,7 +60,7 @@ int testAsymmTreeInit(void)
         }
         else
         {
-            boundMin[i] = -double(15);
+            boundMin[i] = -double(5);
             boundMax[i] = double(15);
         }
     }
@@ -110,9 +110,38 @@ int testAsymmTreeInit(void)
 
     asymmTreeType ast(pts,boundMin,boundMax,10,0,0);
 
-    outFile.open("tree.dat",std::ios::trunc);
-    ast.dumpTree(outFile);
-    outFile.close();
+    //outFile.open("tree.dat",std::ios::trunc);
+    //ast.dumpTree(outFile);
+    //outFile.close();
+
+    // get some more points to add
+    pointsArrayType ptsNew(numPoints);
+    for(size_t i=0;i<numPoints/2;++i)
+    {
+        // get the coordinates of the point
+        std::vector<double> coords(numDims,0.);
+        for(size_t j=0;j<numDims;++j)
+        {
+            if(j==0)
+            {
+                coords[j] = distribution0(generator);
+            }
+            else
+            {
+                coords[j] = distribution1(generator);
+            }
+
+        }
+
+        // compute the weight
+        double weight = gauss.logLik(coords);
+        pointType pv(coords,weight);
+
+        ptsNew[i] = pv;
+
+    }
+
+    ast.addPoints(ptsNew);
 
     return EXIT_SUCCESS;
 }
