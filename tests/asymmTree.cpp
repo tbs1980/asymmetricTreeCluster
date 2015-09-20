@@ -108,15 +108,17 @@ int testAsymmTreeInit(void)
     outFile.close();
 
 
-    asymmTreeType ast(pts,boundMin,boundMax,10,0,0);
+    asymmTreeType ast(pts,boundMin,boundMax,100,0,0);
 
-    //outFile.open("tree.dat",std::ios::trunc);
-    //ast.dumpTree(outFile);
-    //outFile.close();
+    outFile.open("tree.dat",std::ios::trunc);
+    ast.dumpTree(outFile);
+    outFile.close();
 
     // get some more points to add
-    pointsArrayType ptsNew(numPoints);
-    for(size_t i=0;i<numPoints/2;++i)
+    outFile.open("newPoints.dat",std::ios::trunc);
+    const size_t numNewPoints = 500; //numPoints/2
+    pointsArrayType ptsNew(numNewPoints);
+    for(size_t i=0;i<numNewPoints;++i)
     {
         // get the coordinates of the point
         std::vector<double> coords(numDims,0.);
@@ -125,23 +127,32 @@ int testAsymmTreeInit(void)
             if(j==0)
             {
                 coords[j] = distribution0(generator);
+                outFile<<coords[j]<<",";
             }
             else
             {
                 coords[j] = distribution1(generator);
+                outFile<<coords[j]<<",";
             }
-
         }
 
         // compute the weight
         double weight = gauss.logLik(coords);
+
+        outFile<<weight<<std::endl;
+
         pointType pv(coords,weight);
 
         ptsNew[i] = pv;
 
     }
+    outFile.close();
 
     ast.addPoints(ptsNew);
+
+    outFile.open("newTree.dat",std::ios::trunc);
+    ast.dumpTree(outFile);
+    outFile.close();
 
     return EXIT_SUCCESS;
 }
