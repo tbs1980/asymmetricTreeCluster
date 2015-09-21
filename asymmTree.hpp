@@ -28,10 +28,20 @@ public:
         size_t const level
 
     )
-    :mLeftSubTree(nullptr),mRightSubTree(nullptr),mPoints(points),mSplitDimension(0)
-    ,mBoundMin(boundMin),mBoundMax(boundMax),mMedianVal(boundMin),mThresholdForBranching(thresholdForBranching)
-    ,mTreeIndex(treeIndex),mTreeLevel(level),mWeightMin(0),mWeightMax(0)
-    ,mHasLeftSubTree(false),mHasRighSubTree(false)
+    :mLeftSubTree(nullptr)
+    ,mRightSubTree(nullptr)
+    ,mPoints(points)
+    ,mSplitDimension(0)
+    ,mBoundMin(boundMin)
+    ,mBoundMax(boundMax)
+    ,mMedianVal(boundMin)
+    ,mThresholdForBranching(thresholdForBranching)
+    ,mTreeIndex(treeIndex)
+    ,mTreeLevel(level)
+    ,mWeightMin(0)
+    ,mWeightMax(0)
+    ,mHasLeftSubTree(false)
+    ,mHasRighSubTree(false)
     {
         //std::cout<<"Tree index = "<<treeIndex<<std::endl;
         //std::cout<<"Tree level  = "<<level<<std::endl;
@@ -175,14 +185,19 @@ public:
                 // 2. make tree
 
                 pointsArrayType newPoints(mPoints.size() + points.size());
+
+                std::cout<<"Old points size = "<<mPoints.size()<<std::endl;
+                std::cout<<"New points size = "<<points.size()<<std::endl;
+
+
                 for(size_t i=0;i<mPoints.size();++i)
                 {
                     newPoints[i] = mPoints[i];
                 }
 
-                for(size_t i=0;i<newPoints.size();++i)
+                for(size_t i=0;i<points.size();++i)
                 {
-                    newPoints[i] = mPoints[i+mPoints.size()];
+                    newPoints[i+mPoints.size()] = points[i];
                 }
 
                 // assign the new points back to the provate member
