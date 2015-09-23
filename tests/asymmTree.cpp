@@ -108,11 +108,20 @@ int testAsymmTreeInit(void)
     outFile.close();
 
 
-    asymmTreeType ast(pts,boundMin,boundMax,100,0,0);
+    asymmTreeType ast(pts,boundMin,boundMax,200,0,0);
 
     outFile.open("tree.dat",std::ios::trunc);
     ast.dumpTree(outFile);
     outFile.close();
+
+    // delete some nodes
+    ast.deleteNodes(-50.0);
+
+    outFile.open("delTree.dat",std::ios::trunc);
+    ast.dumpTree(outFile);
+    outFile.close();
+
+    return EXIT_SUCCESS;
 
     // get some more points to add
     outFile.open("newPoints.dat",std::ios::trunc);
@@ -148,12 +157,13 @@ int testAsymmTreeInit(void)
     }
     outFile.close();
 
+/*
     ast.addPoints(ptsNew);
 
     outFile.open("newTree.dat",std::ios::trunc);
     ast.dumpTree(outFile);
     outFile.close();
-
+*/
     return EXIT_SUCCESS;
 }
 int main(void)

@@ -46,6 +46,26 @@ public:
         //std::cout<<"Tree index = "<<treeIndex<<std::endl;
         //std::cout<<"Tree level  = "<<level<<std::endl;
 
+            std::vector<size_t> pointIndices(mPoints.size());
+            // set the point indices for sorting
+            for(size_t i=0;i<pointIndices.size();++i)
+            {
+                pointIndices[i] = i;
+            }
+
+            typename std::vector<size_t>::iterator begin = std::begin(pointIndices);
+            typename std::vector<size_t>::iterator end = std::end(pointIndices);
+
+            // find the lmin and lmax right and left
+            auto wMinMax = std::minmax_element(begin,end,
+                [this](  size_t a, size_t b)
+                {
+                    return ( mPoints[a].weight() < mPoints[b].weight() );
+                }
+            );
+
+            mWeightMin = mPoints[*wMinMax.first].weight();
+            mWeightMax = mPoints[*wMinMax.second].weight();
 
         buildTree();
     }
@@ -215,6 +235,49 @@ public:
         }
     }
 
+    void deleteNodes(realScalarType const weightMin)
+    {
+        // search and delete nodes those of which are below weightMin
+        // we assume that weights are from -infty to 0
+
+        if(mHasLeftSubTree or mHasRighSubTree)
+        {
+            std::cout<<"\nTree "<<mTreeIndex<<" has subtrees"<<std::endl;
+            //std::cout<<"min vals of left and right subtrees are "<<
+            if(mHasLeftSubTree and mLeftSubTree->weightMin()<weightMin)
+            {
+                std::cout<<"Deleting the left subtree of "<<mTreeIndex<<std::endl;
+                mLeftSubTree->deleteNodes(weightMin);
+                delete mLeftSubTree;
+                mLeftSubTree = nullptr;
+                mHasLeftSubTree = false;
+            }
+
+            if(mHasRighSubTree and mRightSubTree->weightMin()<weightMin)
+            {
+                std::cout<<"Deleting the right subtree of "<<mTreeIndex<<std::endl;
+                mRightSubTree->deleteNodes(weightMin);
+                delete mRightSubTree;
+                mRightSubTree = nullptr;
+                mHasRighSubTree = false;
+            }
+        }
+        else
+        {
+            std::cout<<"\n*****Tree "<<mTreeIndex<<" has no sub trees"<<std::endl;
+            if(mWeightMin < weightMin)
+            {
+                mPoints.clear();
+            }
+        }
+
+    }
+
+    realScalarType weightMin() const
+    {
+        return mWeightMin;
+    }
+
 private:
 
     void buildTree()
@@ -365,9 +428,11 @@ private:
 
             mLeftSubTree = new asymmTreeType(pointsLeft,boundMinLeft,boundMaxLeft,
                 mThresholdForBranching,(2*mTreeIndex+1),(mTreeLevel+1));
+            std::cout<<"Setting "<<mTreeIndex<<" has left subtree"<<std::endl;
             mHasLeftSubTree = true;
             mRightSubTree = new asymmTreeType(pointsRight,boundMinRight,boundMaxRight,
                 mThresholdForBranching,(2*mTreeIndex+2),(mTreeLevel+1));
+            std::cout<<"Setting "<<mTreeIndex<<" has right subtree"<<std::endl;
             mHasRighSubTree = true;
 
             //std::cout<<"Clear the root points from level "<<mTreeLevel<<" and index "<<mTreeIndex<<" node"<<std::endl;
