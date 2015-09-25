@@ -114,11 +114,46 @@ int testAsymmTreeInit(void)
     ast.dumpTree(outFile);
     outFile.close();
 
+    std::vector<size_t> inds;
+    ast.getTreeIndices(inds);
+
+    for(size_t i=0;i<inds.size();++i)
+    {
+        std::cout<<i<<"\t"<<inds[i]<<std::endl;
+    }
+
+    //return EXIT_SUCCESS;
+
     // delete some nodes
     ast.deleteNodes(-50.0);
 
     outFile.open("delTree.dat",std::ios::trunc);
     ast.dumpTree(outFile);
+    outFile.close();
+
+    std::cout<<"After deletion we get"<<std::endl;
+    std::vector<size_t> newInds;
+    ast.getTreeIndices(newInds);
+    for(size_t i=0;i<newInds.size();++i)
+    {
+        std::cout<<i<<"\t"<<newInds[i]<<std::endl;
+    }
+
+    pointType bMin;
+    pointType bMax;
+    ast.getBounds(bMin,bMax,size_t(3));
+
+    std::cout<<"Bound min is "<<bMin[0]<<"\t"<<bMin[1]<<std::endl;
+    std::cout<<"Bound max is "<<bMax[0]<<"\t"<<bMax[1]<<std::endl;
+
+    pointType randPnt = ast.randomPoint();
+
+    outFile.open("newRandPoint.dat",std::ios::trunc);
+    for(size_t i=0;i<randPnt.size()-1;++i)
+    {
+        outFile<<randPnt[i]<<",";
+    }
+    outFile<<randPnt[randPnt.size()-1]<<std::endl;
     outFile.close();
 
     return EXIT_SUCCESS;

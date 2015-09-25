@@ -9,6 +9,7 @@
 #include <iostream>
 #include <cmath>
 #include <fstream>
+#include <random>
 
 template<class pointType>
 class asymmTree
@@ -278,6 +279,86 @@ public:
         return mWeightMin;
     }
 
+    void getTreeIndices(std::vector<size_t> & inds) const
+    {
+        inds.push_back(mTreeIndex);
+        if(mHasLeftSubTree)
+        {
+            mLeftSubTree->getTreeIndices(inds);
+        }
+        if(mHasRighSubTree)
+        {
+            mRightSubTree->getTreeIndices(inds);
+        }
+    }
+
+    void getBounds(pointType & bndMin, pointType & bndMax,size_t const treeIndex)
+    {
+        if(mTreeIndex == treeIndex)
+        {
+            bndMin = mBoundMin;
+            bndMax = mBoundMax;
+            std::cout<<"found the node "<<treeIndex<<std::endl;
+        }
+        else
+        {
+            if(treeIndex % 2 == 0)
+            {
+                std::cout<<"Looking of node on the right side"<<std::endl;
+                mRightSubTree->getBounds(bndMin,bndMax,treeIndex);
+            }
+            else
+            {
+                std::cout<<"Looking for node the left side"<<std::endl;
+                mLeftSubTree->getBounds(bndMin,bndMax,treeIndex);
+            }
+        }
+    }
+
+    pointType randomPoint(void)
+    {
+        // returns a uniformly sampled random point from the active nodes.
+
+        // pick a node uniformly from the available ones
+        std::vector<size_t> treeInds;
+        getTreeIndices(treeInds);
+
+        assert(treeInds.size()>0);
+
+        // if there is only one node then we just need to pick from this one
+        size_t nodeSelected = treeInds[0];
+
+        // if there are more than one, we need a random selection
+        std::uniform_int_distribution<size_t> distUniInt(size_t(0), size_t( treeInds.size()-1) );
+
+        if(treeInds.size()>1)
+        {
+            nodeSelected = treeInds[distUniInt(mRandNumGen)];
+        }
+
+        std::cout<<"Generating a unifrom random point from node "<<nodeSelected<<std::endl;
+
+        // find the bounds of the node we want to generate a point from
+        pointType boundMin;
+        pointType boundMax;
+        getBounds(boundMin,boundMax,nodeSelected);
+
+        for(size_t i=0;i<boundMin.size();++i)
+        {
+            std::cout<<i<<"\t"<<boundMin[i]<<"\t"<<boundMax[i]<<std::endl;
+        }
+
+        pointType randPnt(mBoundMin.size(),realScalarType(0));
+
+        std::uniform_real_distribution<> distUniReal;
+        for(size_t i=0;i<boundMin.size();++i)
+        {
+            randPnt[i] = boundMin[i] + (boundMax[i]-boundMin[i])*distUniReal(mRandNumGen);
+        }
+
+        return randPnt;
+    }
+
 private:
 
     void buildTree()
@@ -486,7 +567,7 @@ private:
     realScalarType mWeightMax;
     bool mHasLeftSubTree;
     bool mHasRighSubTree;
-
+    std::mt19937 mRandNumGen;
 };
 
 #endif //ASYMM_TREE_HPP
