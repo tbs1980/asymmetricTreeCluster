@@ -88,7 +88,7 @@ public:
 
     void dumpTree(std::ofstream & outFile)
     {
-        outFile<<mTreeIndex<<",";
+        outFile<<mSplitDimension<<","<<mTreeIndex<<",";
         for(size_t i=0;i<mBoundMin.size();++i)
         {
             outFile<<mBoundMin[i]<<",";

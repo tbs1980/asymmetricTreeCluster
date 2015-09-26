@@ -30,6 +30,67 @@ private:
     size_t mNumDims;
 };
 
+int testConstructor(void)
+{
+    typedef point<double> pointType;
+    typedef std::vector<pointType> pointsArrayType;
+    typedef asymmTree<pointType> asymmTreeType;
+    typedef GaussLikelihood<double> GaussLikelihoodType;
+
+    std::default_random_engine generator;
+
+    std::uniform_real_distribution<double> distribution(-5.,5.);
+
+    const size_t numDims = 3;
+    const size_t numPoints = 500;
+
+    // define the bounds
+    pointType boundMin(numDims,double(0));
+    pointType boundMax(numDims,double(0));
+
+    for(size_t i=0;i<numDims;++i)
+    {
+        boundMin[i] = -double(5);
+        boundMax[i] = double(5);
+    }
+
+    // define the Gauss dist for computing weights
+    GaussLikelihoodType gauss(numDims);
+
+    // define the points array for the tree
+    pointsArrayType pts(numPoints);
+
+    for(size_t i=0;i<numPoints;++i)
+    {
+        // get the coordinates of the point
+        std::vector<double> coords(numDims,0.);
+        for(size_t j=0;j<numDims;++j)
+        {
+            coords[j] = distribution(generator);
+        }
+
+        // compute the weight
+        double weight = gauss.logLik(coords);
+
+        pointType pv(coords,weight);
+
+        pts[i] = pv;
+    }
+
+    size_t threshold = 200;
+    size_t treeIndex = 0;
+    size_t level = 0;
+
+    asymmTreeType ast(pts,boundMin,boundMax,threshold,treeIndex,level);
+
+    std::ofstream outFile;
+    outFile.open("tree.dat",std::ios::trunc);
+    ast.dumpTree(outFile);
+    outFile.close();
+
+    return EXIT_SUCCESS;
+}
+
 int testAsymmTreeInit(void)
 {
     typedef point<double> pointType;
@@ -204,6 +265,7 @@ int testAsymmTreeInit(void)
 int main(void)
 {
     int ret = 0;
-    ret += (int)testAsymmTreeInit();
+    ret += (int)testConstructor();
+    //ret += (int)testAsymmTreeInit();
     return ret;
 }
