@@ -137,6 +137,34 @@ public:
         buildTree();
     }
 
+    void setup(pointType  const&  boundMin,
+        pointType  const&  boundMax,
+        size_t const thresholdForBranching,
+        size_t const treeIndex,
+        size_t const level
+    )
+    {
+        assert(mHasLeftSubTree == false and mHasRighSubTree == false);
+        // TODO we need to check if the tree is already built?
+        // if tree exists we need to delete it first
+        // a delete tree functionality needed
+        mLeftSubTree = nullptr;
+        mRightSubTree = nullptr;
+        mSplitDimension = size_t(0);
+        mBoundMin = boundMin;
+        mBoundMax = boundMax;
+        mMedianVal = boundMin;
+        mThresholdForBranching = thresholdForBranching;
+        mTreeIndex = treeIndex;
+        mTreeLevel = level;
+        mWeightMin = realScalarType(0);
+        mWeightMax = realScalarType(0);
+        mHasLeftSubTree = false;
+        mHasRighSubTree = false;
+
+        assert(thresholdForBranching>0);
+    }
+
     ~asymmTree()
     {
         if(mLeftSubTree != nullptr)
@@ -291,6 +319,29 @@ public:
                 // assign the new points back to the provate member
                 mPoints = newPoints;
 
+                // sort and store the min and max
+                // set the point indices for sorting
+                std::vector<size_t> pointIndices(mPoints.size());
+                for(size_t i=0;i<pointIndices.size();++i)
+                {
+                    pointIndices[i] = i;
+                }
+
+                typename std::vector<size_t>::iterator begin = std::begin(pointIndices);
+                typename std::vector<size_t>::iterator end = std::end(pointIndices);
+
+                // find the lmin and lmax right and left
+                auto wMinMax = std::minmax_element(begin,end,
+                    [this](  size_t a, size_t b)
+                    {
+                        return ( mPoints[a].weight() < mPoints[b].weight() );
+                    }
+                );
+
+                mWeightMin = mPoints[*wMinMax.first].weight();
+                mWeightMax = mPoints[*wMinMax.second].weight();
+
+                // now build tree
                 buildTree();
 
             }
