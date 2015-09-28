@@ -81,7 +81,9 @@ int testConstructor(void)
     size_t treeIndex = 0;
     size_t level = 0;
 
-    asymmTreeType ast(pts,boundMin,boundMax,threshold,treeIndex,level);
+    //asymmTreeType ast(pts,boundMin,boundMax,threshold,treeIndex,level);
+    asymmTreeType ast;
+    ast.setup(pts,boundMin,boundMax,threshold,treeIndex,level);
 
     std::ofstream outFile;
     outFile.open("tree.dat",std::ios::trunc);

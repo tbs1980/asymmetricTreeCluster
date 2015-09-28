@@ -19,7 +19,21 @@ public:
     typedef asymmTree<pointType> asymmTreeType;
     typedef std::vector<pointType> pointsArrayType;
 
-    //static const size_t mThresholdForBranching = 100;
+    asymmTree()
+    :mLeftSubTree(nullptr)
+    ,mRightSubTree(nullptr)
+    ,mPoints(0)
+    ,mSplitDimension(0)
+    ,mThresholdForBranching(0)
+    ,mTreeIndex(0)
+    ,mTreeLevel(0)
+    ,mWeightMin(0)
+    ,mWeightMax(0)
+    ,mHasLeftSubTree(false)
+    ,mHasRighSubTree(false)
+    {
+
+    }
 
     asymmTree(pointsArrayType const&  points,
         pointType  const&  boundMin,
@@ -47,26 +61,78 @@ public:
         //std::cout<<"Tree index = "<<treeIndex<<std::endl;
         //std::cout<<"Tree level  = "<<level<<std::endl;
 
-            std::vector<size_t> pointIndices(mPoints.size());
-            // set the point indices for sorting
-            for(size_t i=0;i<pointIndices.size();++i)
+        assert(thresholdForBranching>0);
+
+        std::vector<size_t> pointIndices(mPoints.size());
+        // set the point indices for sorting
+        for(size_t i=0;i<pointIndices.size();++i)
+        {
+            pointIndices[i] = i;
+        }
+        typename std::vector<size_t>::iterator begin = std::begin(pointIndices);
+        typename std::vector<size_t>::iterator end = std::end(pointIndices);
+        // find the lmin and lmax right and left
+        auto wMinMax = std::minmax_element(begin,end,
+            [this](  size_t a, size_t b)
             {
-                pointIndices[i] = i;
+                return ( mPoints[a].weight() < mPoints[b].weight() );
             }
+        );
+        mWeightMin = mPoints[*wMinMax.first].weight();
+        mWeightMax = mPoints[*wMinMax.second].weight();
 
-            typename std::vector<size_t>::iterator begin = std::begin(pointIndices);
-            typename std::vector<size_t>::iterator end = std::end(pointIndices);
+        buildTree();
+    }
 
-            // find the lmin and lmax right and left
-            auto wMinMax = std::minmax_element(begin,end,
-                [this](  size_t a, size_t b)
-                {
-                    return ( mPoints[a].weight() < mPoints[b].weight() );
-                }
-            );
+    void setup(pointsArrayType const&  points,
+        pointType  const&  boundMin,
+        pointType  const&  boundMax,
+        size_t const thresholdForBranching,
+        size_t const treeIndex,
+        size_t const level
+    )
+    {
+        assert(mHasLeftSubTree == false and mHasRighSubTree == false);
+        // TODO we need to check if the tree is already built?
+        // if tree exists we need to delete it first
+        // a delete tree functionality needed
+        mLeftSubTree = nullptr;
+        mRightSubTree = nullptr;
+        mPoints = points;
+        mSplitDimension = size_t(0);
+        mBoundMin = boundMin;
+        mBoundMax = boundMax;
+        mMedianVal = boundMin;
+        mThresholdForBranching = thresholdForBranching;
+        mTreeIndex = treeIndex;
+        mTreeLevel = level;
+        mWeightMin = realScalarType(0);
+        mWeightMax = realScalarType(0);
+        mHasLeftSubTree = false;
+        mHasRighSubTree = false;
 
-            mWeightMin = mPoints[*wMinMax.first].weight();
-            mWeightMax = mPoints[*wMinMax.second].weight();
+        assert(thresholdForBranching>0);
+
+        // set the point indices for sorting
+        std::vector<size_t> pointIndices(mPoints.size());
+        for(size_t i=0;i<pointIndices.size();++i)
+        {
+            pointIndices[i] = i;
+        }
+
+        typename std::vector<size_t>::iterator begin = std::begin(pointIndices);
+        typename std::vector<size_t>::iterator end = std::end(pointIndices);
+
+        // find the lmin and lmax right and left
+        auto wMinMax = std::minmax_element(begin,end,
+            [this](  size_t a, size_t b)
+            {
+                return ( mPoints[a].weight() < mPoints[b].weight() );
+            }
+        );
+
+        mWeightMin = mPoints[*wMinMax.first].weight();
+        mWeightMax = mPoints[*wMinMax.second].weight();
 
         buildTree();
     }
@@ -198,6 +264,7 @@ public:
         {
             // we are the end of the tree
             // we need to see if branching threshold is reached
+            assert(mThresholdForBranching>0);
             if(mPoints.size() + points.size() > mThresholdForBranching)
             {
                 std::cout<<"++++++++We have passed the threshold and hence branching"<<std::endl;
@@ -364,6 +431,7 @@ private:
     void buildTree()
     {
         // check if we have enough points for branching
+        assert(mThresholdForBranching >0);
         if(mPoints.size()>mThresholdForBranching)// and mTreeLevel <2)
         {
             //std::cout<<"*******>Creating sub trees now."<<std::endl;
