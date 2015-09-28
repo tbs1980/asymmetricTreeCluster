@@ -41,8 +41,8 @@ int testConstructor(void)
 
     std::uniform_real_distribution<double> distribution(-5.,5.);
 
-    const size_t numDims = 3;
-    const size_t numPoints = 500;
+    const size_t numDims = 5;
+    const size_t numPoints = 1000;
 
     // define the bounds
     pointType boundMin(numDims,double(0));
@@ -77,7 +77,7 @@ int testConstructor(void)
         pts[i] = pv;
     }
 
-    size_t threshold = 200;
+    size_t threshold = 100;
     size_t treeIndex = 0;
     size_t level = 0;
 
