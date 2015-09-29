@@ -41,7 +41,7 @@ int testConstructor(void)
 
     std::uniform_real_distribution<double> distribution(-5.,5.);
 
-    const size_t numDims = 5;
+    const size_t numDims = 2;
     const size_t numPoints = 1000;
 
     // define the bounds
@@ -85,12 +85,23 @@ int testConstructor(void)
     asymmTreeType ast;
     //ast.setup(pts,boundMin,boundMax,threshold,treeIndex,level);
     ast.setup(boundMin,boundMax,threshold,treeIndex,level);
-    ast.addPoints(pts);
+    //ast.addPoints(pts);
 
     std::ofstream outFile;
-    outFile.open("tree.dat",std::ios::trunc);
-    ast.dumpTree(outFile);
+    outFile.open("genPoints.dat",std::ios::trunc);
+    std::mt19937 randGen;
+    for(size_t i=0;i<1000;++i)
+    {
+        //pointType pt = ast.randomPoint();
+        pointType pt = ast.randomPoint(randGen);
+        outFile<<pt[0]<<","<<pt[1]<<std::endl;
+    }
     outFile.close();
+
+    //std::ofstream outFile;
+    //outFile.open("tree.dat",std::ios::trunc);
+    //ast.dumpTree(outFile);
+    //outFile.close();
 
     return EXIT_SUCCESS;
 }

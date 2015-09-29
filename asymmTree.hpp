@@ -477,6 +477,52 @@ public:
         return randPnt;
     }
 
+    template<class RNGType>
+    pointType randomPoint(RNGType & rng)
+    {
+        // returns a uniformly sampled random point from the active nodes.
+
+        // pick a node uniformly from the available ones
+        std::vector<size_t> treeInds;
+        getTreeIndices(treeInds);
+
+        assert(treeInds.size()>0);
+
+        // if there is only one node then we just need to pick from this one
+        size_t nodeSelected = treeInds[0];
+
+        // if there are more than one, we need a random selection
+        std::uniform_int_distribution<size_t> distUniInt(size_t(0), size_t( treeInds.size()-1) );
+
+        if(treeInds.size()>1)
+        {
+            nodeSelected = treeInds[distUniInt(rng)];
+        }
+
+        std::cout<<"Generating a unifrom random point from node "<<nodeSelected<<std::endl;
+
+        // find the bounds of the node we want to generate a point from
+        pointType boundMin;
+        pointType boundMax;
+        getBounds(boundMin,boundMax,nodeSelected);
+
+        for(size_t i=0;i<boundMin.size();++i)
+        {
+            std::cout<<i<<"\t"<<boundMin[i]<<"\t"<<boundMax[i]<<std::endl;
+        }
+
+        pointType randPnt(mBoundMin.size(),realScalarType(0));
+
+        std::uniform_real_distribution<> distUniReal;
+        for(size_t i=0;i<boundMin.size();++i)
+        {
+            randPnt[i] = boundMin[i] + (boundMax[i]-boundMin[i])*distUniReal(rng);
+        }
+
+        return randPnt;
+
+    }
+
 private:
 
     void buildTree()
