@@ -215,14 +215,14 @@ public:
             std::cout<<points[i][points[i].size()-1]<<std::endl;
         }*/
 
-        std::cout<<"We are adding "<<points.size()<<" more points to the tree"<<std::endl;
+        //std::cout<<"We are adding "<<points.size()<<" more points to the tree"<<std::endl;
         if(mHasLeftSubTree or mHasRighSubTree)
         {
             // 1. then we need to sort points and pass to subtree
             // 2. pass the points to left of the median in split dimension to left
             // 3. pass the points to the right to the right tree
-            std::cout<<"this node as sub trees. hence sorting the points "
-                <<" in dim "<<mSplitDimension<<std::endl;
+            //std::cout<<"this node as sub trees. hence sorting the points "
+            //    <<" in dim "<<mSplitDimension<<std::endl;
 
             // since we have enough points we can create new tress
             std::vector<size_t> pointIndices(points.size());
@@ -230,6 +230,7 @@ public:
             for(size_t i=0;i<pointIndices.size();++i)
             {
                 pointIndices[i] = i;
+                assert(points[i].size() == mBoundMin.size());
             }
 
             typename std::vector<size_t>::iterator begin = std::begin(pointIndices);
@@ -244,12 +245,12 @@ public:
             );
 
             // find the nuber of points left to the median
-            std::cout<<"median value in this dimension is "<<mMedianVal[mSplitDimension]<<std::endl;
+            //std::cout<<"median value in this dimension is "<<mMedianVal[mSplitDimension]<<std::endl;
             size_t numPointsLeft = 0;
             for(size_t i=0;i<pointIndices.size();++i)
             {
                 //std::cout<<i<<"\t"<<"\t"<<pointIndices[i]
-                //    <<"\t"<<points[ pointIndices[i] ][mSplitDimension]<<std::endl;
+                //   <<"\t"<<points[ pointIndices[i] ][mSplitDimension]<<std::endl;
                 if(points[ pointIndices[i] ][mSplitDimension] >= mMedianVal[mSplitDimension])
                 {
                     break;
@@ -257,8 +258,8 @@ public:
                 ++numPointsLeft;
             }
             size_t numPointsRight = points.size()-numPointsLeft;
-            std::cout<<"Number of points left and right are "
-                <<numPointsLeft<<"\t"<<numPointsRight<<std::endl;
+            //std::cout<<"Number of points left and right are "
+            //    <<numPointsLeft<<"\t"<<numPointsRight<<std::endl;
 
             pointsArrayType pointsLeft(numPointsLeft);
             pointsArrayType pointsRight(numPointsRight);
@@ -295,15 +296,15 @@ public:
             assert(mThresholdForBranching>0);
             if(mPoints.size() + points.size() > mThresholdForBranching)
             {
-                std::cout<<"++++++++We have passed the threshold and hence branching"<<std::endl;
+                //std::cout<<"++++++++We have passed the threshold and hence branching"<<std::endl;
                 // we are branching
                 // 1. add the current set of points to the points
                 // 2. make tree
 
                 pointsArrayType newPoints(mPoints.size() + points.size());
 
-                std::cout<<"Old points size = "<<mPoints.size()<<std::endl;
-                std::cout<<"New points size = "<<points.size()<<std::endl;
+                //std::cout<<"Old points size = "<<mPoints.size()<<std::endl;
+                //std::cout<<"New points size = "<<points.size()<<std::endl;
 
 
                 for(size_t i=0;i<mPoints.size();++i)
@@ -416,18 +417,19 @@ public:
         {
             bndMin = mBoundMin;
             bndMax = mBoundMax;
-            std::cout<<"found the node "<<treeIndex<<std::endl;
+            //std::cout<<"found the node "<<treeIndex<<std::endl;
         }
         else
         {
-            if(treeIndex % 2 == 0)
+            //std::cout<<"The current index "<<mTreeIndex<<" is != "<<treeIndex<<std::endl;
+            if(treeIndex % 2 == 0 and mHasRighSubTree)
             {
-                std::cout<<"Looking of node on the right side"<<std::endl;
+                //std::cout<<"Looking of node on the right side"<<std::endl;
                 mRightSubTree->getBounds(bndMin,bndMax,treeIndex);
             }
-            else
+            else if(mHasLeftSubTree)
             {
-                std::cout<<"Looking for node the left side"<<std::endl;
+                //std::cout<<"Looking for node the left side"<<std::endl;
                 mLeftSubTree->getBounds(bndMin,bndMax,treeIndex);
             }
         }
@@ -480,11 +482,19 @@ public:
     template<class RNGType>
     pointType randomPoint(RNGType & rng)
     {
+        //std::cout<<"\n Generating a random point "<<std::endl;
         // returns a uniformly sampled random point from the active nodes.
 
         // pick a node uniformly from the available ones
         std::vector<size_t> treeInds;
         getTreeIndices(treeInds);
+
+        /*
+        std::cout<<"Avaliable ndoes are"<<std::endl;
+        for(size_t i=0;i<treeInds.size();++i)
+        {
+            std::cout<<i<<"\t"<<treeInds[i]<<std::endl;
+        }*/
 
         assert(treeInds.size()>0);
 
@@ -499,18 +509,20 @@ public:
             nodeSelected = treeInds[distUniInt(rng)];
         }
 
-        std::cout<<"Generating a unifrom random point from node "<<nodeSelected<<std::endl;
+        //std::cout<<"Generating a unifrom random point from node "<<nodeSelected<<std::endl;
 
         // find the bounds of the node we want to generate a point from
         pointType boundMin;
         pointType boundMax;
         getBounds(boundMin,boundMax,nodeSelected);
 
+        /*
         for(size_t i=0;i<boundMin.size();++i)
         {
             std::cout<<i<<"\t"<<boundMin[i]<<"\t"<<boundMax[i]<<std::endl;
-        }
+        }*/
 
+        //std::cout<<"Creating a random point with size "<<mBoundMin.size()<<std::endl;
         pointType randPnt(mBoundMin.size(),realScalarType(0));
 
         std::uniform_real_distribution<> distUniReal;
@@ -674,11 +686,11 @@ private:
 
             mLeftSubTree = new asymmTreeType(pointsLeft,boundMinLeft,boundMaxLeft,
                 mThresholdForBranching,(2*mTreeIndex+1),(mTreeLevel+1));
-            std::cout<<"Setting "<<mTreeIndex<<" has left subtree"<<std::endl;
+            //std::cout<<"Setting "<<mTreeIndex<<" has left subtree"<<std::endl;
             mHasLeftSubTree = true;
             mRightSubTree = new asymmTreeType(pointsRight,boundMinRight,boundMaxRight,
                 mThresholdForBranching,(2*mTreeIndex+2),(mTreeLevel+1));
-            std::cout<<"Setting "<<mTreeIndex<<" has right subtree"<<std::endl;
+            //std::cout<<"Setting "<<mTreeIndex<<" has right subtree"<<std::endl;
             mHasRighSubTree = true;
 
             //std::cout<<"Clear the root points from level "<<mTreeLevel<<" and index "<<mTreeIndex<<" node"<<std::endl;

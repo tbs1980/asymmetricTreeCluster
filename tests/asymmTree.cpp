@@ -144,6 +144,7 @@ int testAsymmTreeInit(void)
     // define the Gauss dist for computing weights
     GaussLikelihoodType gauss(numDims);
 
+/*
     // define the points array for the tree
     pointsArrayType pts(numPoints);
 
@@ -182,10 +183,13 @@ int testAsymmTreeInit(void)
         pts[i] = pv;
     }
     outFile.close();
+*/
 
+    //asymmTreeType ast(pts,boundMin,boundMax,200,0,0);
+    asymmTreeType ast;
+    ast.setup(boundMin,boundMax,200,0,0);
 
-    asymmTreeType ast(pts,boundMin,boundMax,200,0,0);
-
+/*
     outFile.open("tree.dat",std::ios::trunc);
     ast.dumpTree(outFile);
     outFile.close();
@@ -232,10 +236,10 @@ int testAsymmTreeInit(void)
     outFile<<randPnt[randPnt.size()-1]<<std::endl;
     outFile.close();
 
-    return EXIT_SUCCESS;
-
+    //return EXIT_SUCCESS;
+*/
     // get some more points to add
-    outFile.open("newPoints.dat",std::ios::trunc);
+    //outFile.open("newPoints.dat",std::ios::trunc);
     const size_t numNewPoints = 500; //numPoints/2
     pointsArrayType ptsNew(numNewPoints);
     for(size_t i=0;i<numNewPoints;++i)
@@ -247,40 +251,50 @@ int testAsymmTreeInit(void)
             if(j==0)
             {
                 coords[j] = distribution0(generator);
-                outFile<<coords[j]<<",";
+                //outFile<<coords[j]<<",";
             }
             else
             {
                 coords[j] = distribution1(generator);
-                outFile<<coords[j]<<",";
+                //outFile<<coords[j]<<",";
             }
         }
 
         // compute the weight
         double weight = gauss.logLik(coords);
 
-        outFile<<weight<<std::endl;
+        //outFile<<weight<<std::endl;
 
         pointType pv(coords,weight);
 
         ptsNew[i] = pv;
 
     }
-    outFile.close();
+    //outFile.close();
 
-/*
+
     ast.addPoints(ptsNew);
 
+    std::ofstream outFile;
     outFile.open("newTree.dat",std::ios::trunc);
     ast.dumpTree(outFile);
     outFile.close();
-*/
+
+
+    std::mt19937 randGen;
+    for(size_t i=0;i<1000;++i)
+    {
+        //pointType pt = ast.randomPoint();
+        pointType pt = ast.randomPoint(randGen);
+        //outFile<<pt[0]<<","<<pt[1]<<std::endl;
+    }
+
     return EXIT_SUCCESS;
 }
 int main(void)
 {
     int ret = 0;
-    ret += (int)testConstructor();
-    //ret += (int)testAsymmTreeInit();
+    //ret += (int)testConstructor();
+    ret += (int)testAsymmTreeInit();
     return ret;
 }
