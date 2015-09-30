@@ -240,7 +240,7 @@ int testAsymmTreeInit(void)
 */
     // get some more points to add
     //outFile.open("newPoints.dat",std::ios::trunc);
-    const size_t numNewPoints = 500; //numPoints/2
+    const size_t numNewPoints = 1; //numPoints/2
     pointsArrayType ptsNew(numNewPoints);
     for(size_t i=0;i<numNewPoints;++i)
     {
@@ -275,6 +275,7 @@ int testAsymmTreeInit(void)
 
     ast.addPoints(ptsNew);
 
+/*
     std::ofstream outFile;
     outFile.open("newTree.dat",std::ios::trunc);
     ast.dumpTree(outFile);
@@ -288,7 +289,7 @@ int testAsymmTreeInit(void)
         pointType pt = ast.randomPoint(randGen);
         //outFile<<pt[0]<<","<<pt[1]<<std::endl;
     }
-
+*/
     return EXIT_SUCCESS;
 }
 int main(void)

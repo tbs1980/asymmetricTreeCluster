@@ -204,7 +204,8 @@ public:
 
     void addPoints(pointsArrayType const& points)
     {
-        /*
+        std::cout<<" addPoints() called with size "<<points.size()<<std::endl;
+       /*
         std::cout<<"The input points are"<<std::endl;
         for(size_t i=0;i<points.size();++i)
         {
@@ -216,7 +217,13 @@ public:
         }*/
 
         //std::cout<<"We are adding "<<points.size()<<" more points to the tree"<<std::endl;
-        if(mHasLeftSubTree or mHasRighSubTree)
+ 
+        if(points.size()==0)
+        {
+            std::cout<<"No points provided :)"<<std::endl;
+            //return;
+        }
+        else if(mHasLeftSubTree or mHasRighSubTree)
         {
             // 1. then we need to sort points and pass to subtree
             // 2. pass the points to left of the median in split dimension to left
@@ -279,11 +286,11 @@ public:
                 //std::cout<<i<<"\t"<<pointsRight[i][mSplitDimension]<<std::endl;
             }
 
-            if(mHasLeftSubTree)
+            if(mHasLeftSubTree and pointsLeft.size()>0)
             {
                 mLeftSubTree->addPoints(pointsLeft);
             }
-            if(mHasRighSubTree)
+            if(mHasRighSubTree and pointsRight.size()>0)
             {
                 mRightSubTree->addPoints(pointsRight);
             }
@@ -346,12 +353,32 @@ public:
                 buildTree();
 
             }
-            else
+            else if(points.size()>0)
             {
-                std::cout<<"*******We haven't got enoung points yet. Not branching*****"<<std::endl;
+                std::cout<<"*******We haven't got enoung points yet. Not branching***** "
+                <<mPoints.size()<<"\t"<< points.size()<<std::endl;
                 // we are not ready to branch yet
                 // jut push back the points
-            }
+
+                 pointsArrayType newPoints(mPoints.size() + points.size());
+
+                //std::cout<<"Old points size = "<<mPoints.size()<<std::endl;
+                //std::cout<<"New points size = "<<points.size()<<std::endl;
+
+
+                for(size_t i=0;i<mPoints.size();++i)
+                {
+                    newPoints[i] = mPoints[i];
+                }
+
+                for(size_t i=0;i<points.size();++i)
+                {
+                    newPoints[i+mPoints.size()] = points[i];
+                }
+
+                // assign the new points back to the provate member
+                mPoints = newPoints;
+           }
         }
     }
 
