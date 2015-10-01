@@ -357,6 +357,7 @@ public:
                 mWeightMax = mPoints[*wMinMax.second].weight();
 
                 // now build tree
+                /*
                 std::cout<<"points for building the tree are"<<std::endl;
                 for(size_t i=0;i<mPoints.size();++i)
                 {
@@ -366,9 +367,10 @@ public:
                     }
                     std::cout<<mPoints[i].weight()<<std::endl;
                 }
-                std::cout<<"building the tree"<<std::endl;
+                */
+                //std::cout<<"building the tree"<<std::endl;
                 buildTree();
-                std::cout<<"building the tree done"<<std::endl;
+                //std::cout<<"building the tree done"<<std::endl;
 
             }
             else if(points.size()>0)
@@ -470,23 +472,26 @@ public:
         }
         else
         {
-            std::cout<<"The current index "<<mTreeIndex<<" is != "<<treeIndex<<std::endl;
+            //std::cout<<"The current index "<<mTreeIndex<<" is != "<<treeIndex<<std::endl;
             
             if(mHasRighSubTree)
             {
-                std::cout<<"Looking of node on the right side"<<std::endl;
+                //std::cout<<"Looking of node on the right side"<<std::endl;
                 mRightSubTree->getBounds(bndMin,bndMax,treeIndex);
             }
-            else if(mHasLeftSubTree)
+
+            if(mHasLeftSubTree)
             {
-                std::cout<<"Looking for node the left side"<<std::endl;
+                //std::cout<<"Looking for node the left side"<<std::endl;
                 mLeftSubTree->getBounds(bndMin,bndMax,treeIndex);
             }
+
+            /*
             else
             {
                 std::cout<<"This should not happen"<<std::endl;
                 abort();
-            }
+            }*/
         }
     }
 
@@ -534,7 +539,7 @@ public:
             nodeSelected = treeInds[distUniInt(mRandNumGen)];
         }
 
-        std::cout<<"Generating a unifrom random point from node "<<nodeSelected<<std::endl;
+        //std::cout<<"Generating a unifrom random point from node "<<nodeSelected<<std::endl;
 
         // find the bounds of the node we want to generate a point from
         pointType boundMin;
@@ -567,12 +572,14 @@ public:
         std::vector<size_t> treeInds;
         getTreeIndices(treeInds);
 
-        
+        std::cout<<"Tree size = "<<treeInds.size()<<std::endl;
+
+        /*
         std::cout<<"Avaliable ndoes are"<<std::endl;
         for(size_t i=0;i<treeInds.size();++i)
         {
             std::cout<<i<<"\t"<<treeInds[i]<<std::endl;
-        }
+        }*/
 
         assert(treeInds.size()>0);
 
@@ -622,7 +629,7 @@ private:
         assert(mThresholdForBranching >0);
         if(mPoints.size()>mThresholdForBranching)// and mTreeLevel <2)
         {
-            std::cout<<"*******>Creating sub trees now."<<std::endl;
+            //std::cout<<"*******>Creating sub trees now."<<std::endl;
 
             // since we have enough points we can create new tress
             std::vector<size_t> pointIndices(mPoints.size());
@@ -636,7 +643,7 @@ private:
             typename std::vector<size_t>::iterator end = std::end(pointIndices);
 
             // for each dimension find the median and the Fisher discriminant
-            std::cout<<"finding the split dimension"<<std::endl;
+            //std::cout<<"finding the split dimension"<<std::endl;
             std::vector<realScalarType> normDiscr(mPoints[0].size());
             for(size_t i=0;i<mPoints[0].size();++i)
             {
@@ -662,7 +669,7 @@ private:
                     --median;
                 }*/
 
-                std::cout<<"found median :"<<mBoundMin[mSplitDimension]<<"\t"<<mPoints[*(median)][mSplitDimension]<<"\t"<<mBoundMax[mSplitDimension]<<std::endl;
+                //std::cout<<"found median :"<<mBoundMin[mSplitDimension]<<"\t"<<mPoints[*(median)][mSplitDimension]<<"\t"<<mBoundMax[mSplitDimension]<<std::endl;
 
                 // set the new bounds
                 pointType const boundMinLeft = mBoundMin;
@@ -721,8 +728,8 @@ private:
             //auto discrMin = std::min_element(std::begin(normDiscr),std::end(normDiscr));
             auto discrMin = std::max_element(std::begin(normDiscr),std::end(normDiscr));
 
-            std::cout<<"the lowest value for the discriminant is from dim "
-                <<std::distance(std::begin(normDiscr),discrMin)<<" = "<<(*discrMin)<<std::endl;
+            //std::cout<<"the lowest value for the discriminant is from dim "
+            //    <<std::distance(std::begin(normDiscr),discrMin)<<" = "<<(*discrMin)<<std::endl;
 
             // set the split dimension as the one with the lowest discriminant
             mSplitDimension = std::distance(std::begin(normDiscr),discrMin);
@@ -765,17 +772,17 @@ private:
             //mBoundMin = boundMin;
             //mBoundMax = boundMax;
             mMedianVal = mPoints[*(median)];
-            std::cout<<"Setting the bounds for the dimension "
-                <<mSplitDimension<<" as "<<mBoundMin[mSplitDimension]<<"\t"<<mMedianVal[mSplitDimension]
-                <<"\t"<<mBoundMax[mSplitDimension]<<std::endl;
+            //std::cout<<"Setting the bounds for the dimension "
+            //    <<mSplitDimension<<" as "<<mBoundMin[mSplitDimension]<<"\t"<<mMedianVal[mSplitDimension]
+            //    <<"\t"<<mBoundMax[mSplitDimension]<<std::endl;
 
             // make points for the left and right tree
             pointsArrayType pointsLeft(std::distance(begin, median));
             pointsArrayType pointsRight(std::distance((median+1),end));
 
-            std::cout<<"size of left subtree = "<<pointsLeft.size()<<std::endl;
-            std::cout<<"size of right subtree = "<<pointsRight.size()<<std::endl;
-            std::cout<<"total size = "<<mPoints.size()<<std::endl;
+            //std::cout<<"size of left subtree = "<<pointsLeft.size()<<std::endl;
+            //std::cout<<"size of right subtree = "<<pointsRight.size()<<std::endl;
+            //std::cout<<"total size = "<<mPoints.size()<<std::endl;
 
             for(size_t i=0;i<pointsLeft.size();++i)
             {
