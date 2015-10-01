@@ -204,7 +204,7 @@ public:
 
     void addPoints(pointsArrayType const& points)
     {
-        std::cout<<" addPoints() called with size "<<points.size()<<std::endl;
+        //std::cout<<" addPoints() called with size "<<points.size()<<std::endl;
        /*
         std::cout<<"The input points are"<<std::endl;
         for(size_t i=0;i<points.size();++i)
@@ -324,6 +324,8 @@ public:
                     newPoints[i+mPoints.size()] = points[i];
                 }
 
+                //std::cout<<"done assigning"<<std::endl;
+
                 // assign the new points back to the provate member
                 mPoints = newPoints;
 
@@ -334,6 +336,7 @@ public:
                 {
                     pointIndices[i] = i;
                 }
+                //std::cout<<"done assigning pointIndices"<<std::endl;
 
                 typename std::vector<size_t>::iterator begin = std::begin(pointIndices);
                 typename std::vector<size_t>::iterator end = std::end(pointIndices);
@@ -346,17 +349,32 @@ public:
                     }
                 );
 
+                //std::cout<<"done finding minmax"<<std::endl;
+
+                //std::cout<<mPoints.size()<<"\t"<<(*wMinMax.first)<<"\t"<<*wMinMax.second<<std::endl;
+
                 mWeightMin = mPoints[*wMinMax.first].weight();
                 mWeightMax = mPoints[*wMinMax.second].weight();
 
                 // now build tree
+                std::cout<<"points for building the tree are"<<std::endl;
+                for(size_t i=0;i<mPoints.size();++i)
+                {
+                    for(size_t j=0;j<mPoints[i].size();++j)
+                    {
+                        std::cout<<mPoints[i][j]<<",";
+                    }
+                    std::cout<<mPoints[i].weight()<<std::endl;
+                }
+                std::cout<<"building the tree"<<std::endl;
                 buildTree();
+                std::cout<<"building the tree done"<<std::endl;
 
             }
             else if(points.size()>0)
             {
-                std::cout<<"*******We haven't got enoung points yet. Not branching***** "
-                <<mPoints.size()<<"\t"<< points.size()<<std::endl;
+                //std::cout<<"*******We haven't got enoung points yet. Not branching***** "
+                //<<mPoints.size()<<"\t"<< points.size()<<std::endl;
                 // we are not ready to branch yet
                 // jut push back the points
 
@@ -389,11 +407,11 @@ public:
 
         if(mHasLeftSubTree or mHasRighSubTree)
         {
-            std::cout<<"\nTree "<<mTreeIndex<<" has subtrees"<<std::endl;
+            //std::cout<<"\nTree "<<mTreeIndex<<" has subtrees"<<std::endl;
             //std::cout<<"min vals of left and right subtrees are "<<
             if(mHasLeftSubTree and mLeftSubTree->weightMin()<weightMin)
             {
-                std::cout<<"Deleting the left subtree of "<<mTreeIndex<<std::endl;
+                //std::cout<<"Deleting the left subtree of "<<mTreeIndex<<std::endl;
                 mLeftSubTree->deleteNodes(weightMin);
                 delete mLeftSubTree;
                 mLeftSubTree = nullptr;
@@ -402,7 +420,7 @@ public:
 
             if(mHasRighSubTree and mRightSubTree->weightMin()<weightMin)
             {
-                std::cout<<"Deleting the right subtree of "<<mTreeIndex<<std::endl;
+                //std::cout<<"Deleting the right subtree of "<<mTreeIndex<<std::endl;
                 mRightSubTree->deleteNodes(weightMin);
                 delete mRightSubTree;
                 mRightSubTree = nullptr;
@@ -411,7 +429,7 @@ public:
         }
         else
         {
-            std::cout<<"\n*****Tree "<<mTreeIndex<<" has no sub trees"<<std::endl;
+            //std::cout<<"\n*****Tree "<<mTreeIndex<<" has no sub trees"<<std::endl;
             if(mWeightMin < weightMin)
             {
                 mPoints.clear();
@@ -445,19 +463,52 @@ public:
             bndMin = mBoundMin;
             bndMax = mBoundMax;
             //std::cout<<"found the node "<<treeIndex<<std::endl;
+            for(size_t i=0;i<bndMin.size();++i)
+            {
+                assert(bndMin[i] < bndMax[i]);
+            }
         }
         else
         {
-            //std::cout<<"The current index "<<mTreeIndex<<" is != "<<treeIndex<<std::endl;
-            if(treeIndex % 2 == 0 and mHasRighSubTree)
+            std::cout<<"The current index "<<mTreeIndex<<" is != "<<treeIndex<<std::endl;
+            
+            if(mHasRighSubTree)
             {
-                //std::cout<<"Looking of node on the right side"<<std::endl;
+                std::cout<<"Looking of node on the right side"<<std::endl;
                 mRightSubTree->getBounds(bndMin,bndMax,treeIndex);
             }
             else if(mHasLeftSubTree)
             {
-                //std::cout<<"Looking for node the left side"<<std::endl;
+                std::cout<<"Looking for node the left side"<<std::endl;
                 mLeftSubTree->getBounds(bndMin,bndMax,treeIndex);
+            }
+            else
+            {
+                std::cout<<"This should not happen"<<std::endl;
+                abort();
+            }
+        }
+    }
+
+    bool searchTreeIndex(size_t const treeIndex)
+    {
+        if(mTreeIndex == treeIndex)
+        {
+            return true;
+        }
+        else
+        {
+            if(mHasLeftSubTree)
+            {
+                return mLeftSubTree->searchTreeIndex(treeIndex);
+            }
+            else if(mHasRighSubTree)
+            {
+                return mRightSubTree->searchTreeIndex(treeIndex);
+            }
+            else
+            {
+                return false;
             }
         }
     }
@@ -516,12 +567,12 @@ public:
         std::vector<size_t> treeInds;
         getTreeIndices(treeInds);
 
-        /*
+        
         std::cout<<"Avaliable ndoes are"<<std::endl;
         for(size_t i=0;i<treeInds.size();++i)
         {
             std::cout<<i<<"\t"<<treeInds[i]<<std::endl;
-        }*/
+        }
 
         assert(treeInds.size()>0);
 
@@ -555,6 +606,7 @@ public:
         std::uniform_real_distribution<> distUniReal;
         for(size_t i=0;i<boundMin.size();++i)
         {
+            assert(boundMin[i] < boundMax[i]);
             randPnt[i] = boundMin[i] + (boundMax[i]-boundMin[i])*distUniReal(rng);
         }
 
@@ -570,7 +622,7 @@ private:
         assert(mThresholdForBranching >0);
         if(mPoints.size()>mThresholdForBranching)// and mTreeLevel <2)
         {
-            //std::cout<<"*******>Creating sub trees now."<<std::endl;
+            std::cout<<"*******>Creating sub trees now."<<std::endl;
 
             // since we have enough points we can create new tress
             std::vector<size_t> pointIndices(mPoints.size());
@@ -584,6 +636,7 @@ private:
             typename std::vector<size_t>::iterator end = std::end(pointIndices);
 
             // for each dimension find the median and the Fisher discriminant
+            std::cout<<"finding the split dimension"<<std::endl;
             std::vector<realScalarType> normDiscr(mPoints[0].size());
             for(size_t i=0;i<mPoints[0].size();++i)
             {
@@ -600,12 +653,16 @@ private:
                 // find the median
                 auto rangeSize = std::distance(begin, end);
                 auto median = begin + rangeSize/2;
+                assert(rangeSize>0);
 
                 // TODO is this step necessary?
+                /*
                 while(median != begin && mPoints[*(median)][dim] == mPoints[*(median - 1)][dim] )
                 {
                     --median;
-                }
+                }*/
+
+                std::cout<<"found median :"<<mBoundMin[mSplitDimension]<<"\t"<<mPoints[*(median)][mSplitDimension]<<"\t"<<mBoundMax[mSplitDimension]<<std::endl;
 
                 // set the new bounds
                 pointType const boundMinLeft = mBoundMin;
@@ -614,8 +671,20 @@ private:
                 pointType const boundMaxRight = mBoundMax;
 
                 // find the Euclidian distance between the min and max for the current dimension
+                //std::cout<<"for dimension "<<dim<<std::endl;
+                //std::cout<<"distLeft "<<boundMaxLeft[dim]<<"\t"<<boundMinLeft[dim]<<std::endl;
                 realScalarType const distLeft = std::abs( boundMaxLeft[dim] - boundMinLeft[dim] );
+                //std::cout<<"distRight "<<boundMaxRight[dim]<<"\t"<<boundMinRight[dim]<<std::endl;
                 realScalarType const distRight =  std::abs( boundMaxRight[dim] - boundMinRight[dim] );
+
+                if((distLeft>0) == false)
+                {
+                    std::cout<<"We have a problem with the distance"<<std::endl;
+                    for(size_t ii =0;ii<mPoints.size();++ii)
+                    {
+                        std::cout<<ii<<"\t"<<mPoints[ii][mSplitDimension]<<std::endl;
+                    }
+                }
 
                 // find the lmin and lmax right and left
                 auto wMinMaxLeft = std::minmax_element(begin,median,
@@ -638,6 +707,9 @@ private:
                 realScalarType const wMaxRightVal = mPoints[*wMinMaxRight.second].weight();
 
                 // find the left and right discriminats
+                assert(distLeft>0);
+                assert(distRight>0);
+
                 realScalarType discLeft = std::abs(wMaxLeftVal-wMinLeftVal)/distLeft;
                 realScalarType discRight = std::abs(wMaxRightVal-wMinRightVal)/distRight;
 
@@ -649,8 +721,8 @@ private:
             //auto discrMin = std::min_element(std::begin(normDiscr),std::end(normDiscr));
             auto discrMin = std::max_element(std::begin(normDiscr),std::end(normDiscr));
 
-            //std::cout<<"the lowest value for the discriminant is from dim "
-            //    <<std::distance(std::begin(normDiscr),discrMin)<<" = "<<(*discrMin)<<std::endl;
+            std::cout<<"the lowest value for the discriminant is from dim "
+                <<std::distance(std::begin(normDiscr),discrMin)<<" = "<<(*discrMin)<<std::endl;
 
             // set the split dimension as the one with the lowest discriminant
             mSplitDimension = std::distance(std::begin(normDiscr),discrMin);
@@ -681,34 +753,43 @@ private:
             pointType boundMinRight = mBoundMin;
             pointType boundMaxRight = mBoundMax;
 
+
             // the split dimension will have a new bound coming from median point
             boundMaxLeft[mSplitDimension] = mPoints[*(median)][mSplitDimension];
             boundMinRight[mSplitDimension] = mPoints[*(median)][mSplitDimension];
+
+            assert(boundMinLeft[mSplitDimension] < boundMaxLeft[mSplitDimension]);
+            assert(boundMinRight[mSplitDimension] < boundMaxRight[mSplitDimension]);
 
             // since we have decided the split dimension we can set the node bounds here
             //mBoundMin = boundMin;
             //mBoundMax = boundMax;
             mMedianVal = mPoints[*(median)];
-            //std::cout<<"Setting the bounds for the dimension "
-            //    <<mSplitDimension<<" as "<<mBoundMin[mSplitDimension]<<"\t"<<mMedianVal[mSplitDimension]
-            //    <<"\t"<<mBoundMax[mSplitDimension]<<std::endl;
+            std::cout<<"Setting the bounds for the dimension "
+                <<mSplitDimension<<" as "<<mBoundMin[mSplitDimension]<<"\t"<<mMedianVal[mSplitDimension]
+                <<"\t"<<mBoundMax[mSplitDimension]<<std::endl;
 
             // make points for the left and right tree
             pointsArrayType pointsLeft(std::distance(begin, median));
             pointsArrayType pointsRight(std::distance((median+1),end));
 
-            //std::cout<<"size of left subtree = "<<pointsLeft.size()<<std::endl;
-            //std::cout<<"size of right subtree = "<<pointsRight.size()<<std::endl;
+            std::cout<<"size of left subtree = "<<pointsLeft.size()<<std::endl;
+            std::cout<<"size of right subtree = "<<pointsRight.size()<<std::endl;
+            std::cout<<"total size = "<<mPoints.size()<<std::endl;
 
             for(size_t i=0;i<pointsLeft.size();++i)
             {
-                pointsLeft[i] = mPoints[pointIndices[i]];
+                pointsLeft[i] = mPoints[ pointIndices[i] ];
             }
+            //std::cout<<"done left points"<<std::endl;
 
             for(size_t i=0;i<pointsRight.size();++i)
             {
-                pointsRight[i] = mPoints[pointIndices[i+pointsLeft.size()]];
+                pointsRight[i] = mPoints[ pointIndices[i+pointsLeft.size()] ];
             }
+
+            assert(pointsLeft.size()>0);
+            assert(pointsRight.size()>0);
 
 
             mLeftSubTree = new asymmTreeType(pointsLeft,boundMinLeft,boundMaxLeft,
