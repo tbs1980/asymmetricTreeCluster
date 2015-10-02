@@ -47,7 +47,6 @@ int testSetupNoPoints(void)
     typedef asymmTree<pointType> asymmTreeType;
 
     const size_t numDims = 2;
-    const size_t numPoints = 1000;
 
     // define the bounds
     pointType boundMin(numDims,double(0));
@@ -208,7 +207,6 @@ int testRandomPoint(void)
     typedef asymmTree<pointType> asymmTreeType;
 
     const size_t numDims = 2;
-    const size_t numPoints = 1000;
 
     // define the bounds
     pointType boundMin(numDims,double(0));
@@ -236,6 +234,226 @@ int testRandomPoint(void)
         outFile<<pt[0]<<","<<pt[1]<<std::endl;
     }
     outFile.close();
+
+    return EXIT_SUCCESS;
+}
+
+int testAddPoints(void)
+{
+    typedef point<double> pointType;
+    typedef std::vector<pointType> pointsArrayType;
+    typedef asymmTree<pointType> asymmTreeType;
+    typedef GaussLikelihood<double> GaussLikelihoodType;
+
+    std::default_random_engine generator;
+
+    std::uniform_real_distribution<double> distribution0(-5.,5.);
+    std::uniform_real_distribution<double> distribution1(-5.,15.);
+
+    const size_t numDims = 2;
+
+    // define the bounds
+    pointType boundMin(numDims,double(0));
+    pointType boundMax(numDims,double(0));
+
+    for(size_t i=0;i<numDims;++i)
+    {
+        if(i==0)
+        {
+            boundMin[i] = -double(5);
+            boundMax[i] = double(5);
+        }
+        else
+        {
+            boundMin[i] = -double(5);
+            boundMax[i] = double(15);
+        }
+    }
+
+    // define the Gauss dist for computing weights
+    GaussLikelihoodType gauss(numDims);
+
+    const size_t numNewPoints = 1; //numPoints/2
+    pointsArrayType ptsNew(numNewPoints);
+    for(size_t i=0;i<numNewPoints;++i)
+    {
+        // get the coordinates of the point
+        std::vector<double> coords(numDims,0.);
+        for(size_t j=0;j<numDims;++j)
+        {
+            if(j==0)
+            {
+                coords[j] = distribution0(generator);
+            }
+            else
+            {
+                coords[j] = distribution1(generator);
+            }
+        }
+
+        // compute the weight
+        double weight = gauss.logLik(coords);
+
+        pointType pv(coords,weight);
+
+        ptsNew[i] = pv;
+    }
+
+    asymmTreeType ast;
+    ast.setup(boundMin,boundMax,200,0,0);
+
+    ast.addPoints(ptsNew);
+
+    return EXIT_SUCCESS;
+}
+
+int testDeleteNodes(void)
+{
+    typedef point<double> pointType;
+    typedef std::vector<pointType> pointsArrayType;
+    typedef asymmTree<pointType> asymmTreeType;
+    typedef GaussLikelihood<double> GaussLikelihoodType;
+
+    std::default_random_engine generator;
+
+    std::uniform_real_distribution<double> distribution0(-5.,5.);
+    std::uniform_real_distribution<double> distribution1(-5.,15.);
+
+    const size_t numDims = 2;
+    const size_t numPoints = 500;
+
+    // define the bounds
+    pointType boundMin(numDims,double(0));
+    pointType boundMax(numDims,double(0));
+
+    for(size_t i=0;i<numDims;++i)
+    {
+        if(i==0)
+        {
+            boundMin[i] = -double(5);
+            boundMax[i] = double(5);
+        }
+        else
+        {
+            boundMin[i] = -double(5);
+            boundMax[i] = double(15);
+        }
+    }
+
+    // define the Gauss dist for computing weights
+    GaussLikelihoodType gauss(numDims);
+
+    // define the points array for the tree
+    pointsArrayType pts(numPoints);
+
+    // assign points and their weights
+    std::ofstream outFile;
+    outFile.open("points.dat",std::ios::trunc);
+    for(size_t i=0;i<numPoints;++i)
+    {
+        // get the coordinates of the point
+        std::vector<double> coords(numDims,0.);
+        for(size_t j=0;j<numDims;++j)
+        {
+            if(j==0)
+            {
+                coords[j] = distribution0(generator);
+            }
+            else
+            {
+                coords[j] = distribution1(generator);
+            }
+
+        }
+
+        // compute the weight
+        double weight = gauss.logLik(coords);
+
+        pointType pv(coords,weight);
+
+        pts[i] = pv;
+    }
+    outFile.close();
+
+    asymmTreeType ast(pts,boundMin,boundMax,200,0,0);
+
+    ast.deleteNodes(-50.0);
+
+    return EXIT_SUCCESS;
+}
+
+int testGetTreeInds(void)
+{
+    typedef point<double> pointType;
+    typedef std::vector<pointType> pointsArrayType;
+    typedef asymmTree<pointType> asymmTreeType;
+    typedef GaussLikelihood<double> GaussLikelihoodType;
+
+    std::default_random_engine generator;
+
+    std::uniform_real_distribution<double> distribution0(-5.,5.);
+    std::uniform_real_distribution<double> distribution1(-5.,15.);
+
+    const size_t numDims = 2;
+    const size_t numPoints = 500;
+
+    // define the bounds
+    pointType boundMin(numDims,double(0));
+    pointType boundMax(numDims,double(0));
+
+    for(size_t i=0;i<numDims;++i)
+    {
+        if(i==0)
+        {
+            boundMin[i] = -double(5);
+            boundMax[i] = double(5);
+        }
+        else
+        {
+            boundMin[i] = -double(5);
+            boundMax[i] = double(15);
+        }
+    }
+
+    // define the Gauss dist for computing weights
+    GaussLikelihoodType gauss(numDims);
+
+    // define the points array for the tree
+    pointsArrayType pts(numPoints);
+
+    // assign points and their weights
+    std::ofstream outFile;
+    outFile.open("points.dat",std::ios::trunc);
+    for(size_t i=0;i<numPoints;++i)
+    {
+        // get the coordinates of the point
+        std::vector<double> coords(numDims,0.);
+        for(size_t j=0;j<numDims;++j)
+        {
+            if(j==0)
+            {
+                coords[j] = distribution0(generator);
+            }
+            else
+            {
+                coords[j] = distribution1(generator);
+            }
+
+        }
+
+        // compute the weight
+        double weight = gauss.logLik(coords);
+
+        pointType pv(coords,weight);
+
+        pts[i] = pv;
+    }
+    outFile.close();
+
+    asymmTreeType ast(pts,boundMin,boundMax,200,0,0);
+
+    std::vector<size_t> inds;
+    ast.getTreeIndices(inds);
 
     return EXIT_SUCCESS;
 }
@@ -433,7 +651,10 @@ int main(void)
     ret += (int) testDefaultConstructor();
     ret += (int) testConstructor();
     ret += (int) testRandomPoint();
-    
+    ret += (int) testAddPoints();
+    ret += (int) testDeleteNodes();
+    ret += (int) testGetTreeInds();
+
     //ret += (int)testConstructor();
     //ret += (int)testAsymmTreeInit();
     return ret;
