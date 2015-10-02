@@ -411,7 +411,7 @@ public:
         {
             //std::cout<<"\nTree "<<mTreeIndex<<" has subtrees"<<std::endl;
             //std::cout<<"min vals of left and right subtrees are "<<
-            if(mHasLeftSubTree and mLeftSubTree->weightMin()<weightMin)
+            if(mHasLeftSubTree and mLeftSubTree->weightMax()<weightMin)
             {
                 //std::cout<<"Deleting the left subtree of "<<mTreeIndex<<std::endl;
                 mLeftSubTree->deleteNodes(weightMin);
@@ -420,7 +420,7 @@ public:
                 mHasLeftSubTree = false;
             }
 
-            if(mHasRighSubTree and mRightSubTree->weightMin()<weightMin)
+            if(mHasRighSubTree and mRightSubTree->weightMax()<weightMin)
             {
                 //std::cout<<"Deleting the right subtree of "<<mTreeIndex<<std::endl;
                 mRightSubTree->deleteNodes(weightMin);
@@ -432,7 +432,7 @@ public:
         else
         {
             //std::cout<<"\n*****Tree "<<mTreeIndex<<" has no sub trees"<<std::endl;
-            if(mWeightMin < weightMin)
+            if(mWeightMax < weightMin)
             {
                 mPoints.clear();
             }
@@ -443,6 +443,11 @@ public:
     realScalarType weightMin() const
     {
         return mWeightMin;
+    }
+
+    realScalarType weightMax() const
+    {
+        return mWeightMax;
     }
 
     void getTreeIndices(std::vector<size_t> & inds) const
@@ -572,7 +577,7 @@ public:
         std::vector<size_t> treeInds;
         getTreeIndices(treeInds);
 
-        std::cout<<"Tree size = "<<treeInds.size()<<std::endl;
+        //std::cout<<"Tree size = "<<treeInds.size()<<std::endl;
 
         /*
         std::cout<<"Avaliable ndoes are"<<std::endl;
