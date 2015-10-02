@@ -30,16 +30,21 @@ private:
     size_t mNumDims;
 };
 
+int testDefaultConstructor(void)
+{
+    typedef point<double> pointType;
+    typedef asymmTree<pointType> asymmTreeType;
+
+    asymmTreeType ast;
+
+    return EXIT_SUCCESS;
+}
+
 
 int testSetupNoPoints(void)
 {
     typedef point<double> pointType;
-    typedef std::vector<pointType> pointsArrayType;
     typedef asymmTree<pointType> asymmTreeType;
-
-    std::default_random_engine generator;
-
-    std::uniform_real_distribution<double> distribution(-5.,5.);
 
     const size_t numDims = 2;
     const size_t numPoints = 1000;
@@ -61,7 +66,7 @@ int testSetupNoPoints(void)
     asymmTreeType ast;
     ast.setup(boundMin,boundMax,threshold,treeIndex,level);
 
-	return EXIT_SUCCESS;
+    return EXIT_SUCCESS;
 }
 
 int testConstructor(void)
@@ -329,7 +334,8 @@ int testAsymmTreeInit(void)
 int main(void)
 {
     int ret = 0;
-	ret += (int) testSetupNoPoints();
+    ret += (int) testSetupNoPoints();
+    ret += (int) testDefaultConstructor();
     //ret += (int)testConstructor();
     //ret += (int)testAsymmTreeInit();
     return ret;
