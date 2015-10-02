@@ -45,4 +45,5 @@ endif()
 
 add_executable(asymmTree asymmTree.cpp)
 add_executable(point point.cpp)
+add_executable(simulateNestedSampling simulateNestedSampling.cpp)
 add_test(ast_point point)

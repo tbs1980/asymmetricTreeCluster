@@ -31,6 +31,7 @@ public:
     ,mWeightMax(0)
     ,mHasLeftSubTree(false)
     ,mHasRighSubTree(false)
+    ,mTreeActive(true)
     {
 
     }
@@ -57,6 +58,7 @@ public:
     ,mWeightMax(0)
     ,mHasLeftSubTree(false)
     ,mHasRighSubTree(false)
+    ,mTreeActive(true)
     {
         assert(thresholdForBranching>0);
 
@@ -107,6 +109,7 @@ public:
         mWeightMax = realScalarType(0);
         mHasLeftSubTree = false;
         mHasRighSubTree = false;
+        mTreeActive = true;
 
         assert(thresholdForBranching>0);
 
@@ -158,6 +161,7 @@ public:
         mWeightMax = realScalarType(0);
         mHasLeftSubTree = false;
         mHasRighSubTree = false;
+        mTreeActive = true;
 
         assert(thresholdForBranching>0);
     }
@@ -177,7 +181,7 @@ public:
 
     void dumpTree(std::ofstream & outFile)
     {
-        outFile<<mSplitDimension<<","<<mTreeIndex<<",";
+        outFile<<mTreeIndex<<","<<mSplitDimension<<",";
         for(size_t i=0;i<mBoundMin.size();++i)
         {
             outFile<<mBoundMin[i]<<",";
@@ -337,37 +341,36 @@ public:
         }
     }
 
-    void deleteNodes(realScalarType const weightMin)
+    void deleteNodes(realScalarType const weightStar)
     {
-        // search and delete nodes those of which are below weightMin
-        // we assume that weights are from -infty to 0
-
         if(mHasLeftSubTree or mHasRighSubTree)
         {
-            if(mHasLeftSubTree and mLeftSubTree->weightMax()<weightMin)
+            if(mHasLeftSubTree)
             {
-                mLeftSubTree->deleteNodes(weightMin);
-                delete mLeftSubTree;
-                mLeftSubTree = nullptr;
-                mHasLeftSubTree = false;
+                mLeftSubTree->deleteNodes(weightStar);
+                if (mLeftSubTree->treeIsActive()==false)
+                {
+                    delete mLeftSubTree;
+                    mLeftSubTree = nullptr;
+                    mHasLeftSubTree = false;
+                }
             }
-
-            if(mHasRighSubTree and mRightSubTree->weightMax()<weightMin)
+            if(mHasRighSubTree)
             {
-                mRightSubTree->deleteNodes(weightMin);
-                delete mRightSubTree;
-                mRightSubTree = nullptr;
-                mHasRighSubTree = false;
+                mRightSubTree->deleteNodes(weightStar);
+                if(mRightSubTree->treeIsActive() == false)
+                {
+                    delete mRightSubTree;
+                    mRightSubTree = nullptr;
+                    mHasRighSubTree = false;
+                }
             }
         }
-        else
+        else if(mWeightMax <= weightStar)
         {
-            if(mWeightMax < weightMin)
-            {
-                mPoints.clear();
-            }
+            mPoints.clear();
+            mTreeActive = false;
         }
-
     }
 
     realScalarType weightMin() const
@@ -378,6 +381,21 @@ public:
     realScalarType weightMax() const
     {
         return mWeightMax;
+    }
+
+    bool hasLeftSubTree() const
+    {
+        return mHasLeftSubTree;
+    }
+
+    bool hasRightSubTree() const
+    {
+        return mHasRighSubTree;
+    }
+
+    bool treeIsActive() const
+    {
+        return mTreeActive;
     }
 
     void getTreeIndices(std::vector<size_t> & inds) const
@@ -479,6 +497,11 @@ public:
         return randPnt;
     }
 
+    size_t treeIndex(void) const
+    {
+        return mTreeIndex;
+    }
+
 private:
 
     void buildTree()
@@ -500,9 +523,8 @@ private:
 
             // for each dimension find the median and the Fisher discriminant
             std::vector<realScalarType> normDiscr(mPoints[0].size());
-            for(size_t i=0;i<mPoints[0].size();++i)
+            for(size_t dim=0;dim<mPoints[0].size();++dim)
             {
-                size_t dim = i;
                 // sort the points in the current dimension
                 std::sort(begin, end,
                     [this,dim]( size_t a, size_t b)
@@ -570,15 +592,14 @@ private:
                 realScalarType discRight = std::abs(wMaxRightVal-wMinRightVal)/distRight;
 
                 // find the difference between the two sides
-                normDiscr[i] = std::abs(discRight - discLeft);
+                normDiscr[dim] = std::abs(discRight - discLeft);
             }
 
             // find the dimension with the lowest discriminant
-            //auto discrMin = std::min_element(std::begin(normDiscr),std::end(normDiscr));
-            auto discrMin = std::max_element(std::begin(normDiscr),std::end(normDiscr));
+            auto discrMax = std::max_element(std::begin(normDiscr),std::end(normDiscr));
 
             // set the split dimension as the one with the lowest discriminant
-            mSplitDimension = std::distance(std::begin(normDiscr),discrMin);
+            mSplitDimension = std::distance(std::begin(normDiscr),discrMax);
 
             // sort the points in the split dimension
             std::sort(begin, end,
@@ -687,6 +708,7 @@ private:
     realScalarType mWeightMax;
     bool mHasLeftSubTree;
     bool mHasRighSubTree;
+    bool mTreeActive;
 };
 
 #endif //ASYMM_TREE_HPP
