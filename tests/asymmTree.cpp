@@ -202,6 +202,44 @@ int testConstructor(void)
     return EXIT_SUCCESS;
 }
 
+int testRandomPoint(void)
+{
+    typedef point<double> pointType;
+    typedef asymmTree<pointType> asymmTreeType;
+
+    const size_t numDims = 2;
+    const size_t numPoints = 1000;
+
+    // define the bounds
+    pointType boundMin(numDims,double(0));
+    pointType boundMax(numDims,double(0));
+
+    for(size_t i=0;i<numDims;++i)
+    {
+        boundMin[i] = -double(5);
+        boundMax[i] = double(5);
+    }
+
+    size_t threshold = 100;
+    size_t treeIndex = 0;
+    size_t level = 0;
+
+    asymmTreeType ast;
+    ast.setup(boundMin,boundMax,threshold,treeIndex,level);
+
+    std::ofstream outFile;
+    outFile.open("genPoints.dat",std::ios::trunc);
+    std::mt19937 randGen;
+    for(size_t i=0;i<1000;++i)
+    {
+        pointType pt = ast.randomPoint(randGen);
+        outFile<<pt[0]<<","<<pt[1]<<std::endl;
+    }
+    outFile.close();
+
+    return EXIT_SUCCESS;
+}
+
 int testAsymmTreeInit(void)
 {
     typedef point<double> pointType;
@@ -394,6 +432,8 @@ int main(void)
     ret += (int) testSetupNoPoints();
     ret += (int) testDefaultConstructor();
     ret += (int) testConstructor();
+    ret += (int) testRandomPoint();
+    
     //ret += (int)testConstructor();
     //ret += (int)testAsymmTreeInit();
     return ret;

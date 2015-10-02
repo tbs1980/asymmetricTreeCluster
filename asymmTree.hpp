@@ -441,41 +441,6 @@ public:
         }
     }
 
-    pointType randomPoint(void)
-    {
-        // pick a node uniformly from the available ones
-        std::vector<size_t> treeInds;
-        getTreeIndices(treeInds);
-
-        assert(treeInds.size()>0);
-
-        // if there is only one node then we just need to pick from this one
-        size_t nodeSelected = treeInds[0];
-
-        // if there are more than one, we need a random selection
-        std::uniform_int_distribution<size_t> distUniInt(size_t(0), size_t( treeInds.size()-1) );
-
-        if(treeInds.size()>1)
-        {
-            nodeSelected = treeInds[distUniInt(mRandNumGen)];
-        }
-
-        // find the bounds of the node we want to generate a point from
-        pointType boundMin;
-        pointType boundMax;
-        getBounds(boundMin,boundMax,nodeSelected);
-
-        pointType randPnt(mBoundMin.size(),realScalarType(0));
-
-        std::uniform_real_distribution<> distUniReal;
-        for(size_t i=0;i<boundMin.size();++i)
-        {
-            randPnt[i] = boundMin[i] + (boundMax[i]-boundMin[i])*distUniReal(mRandNumGen);
-        }
-
-        return randPnt;
-    }
-
     template<class RNGType>
     pointType randomPoint(RNGType & rng)
     {
@@ -722,7 +687,6 @@ private:
     realScalarType mWeightMax;
     bool mHasLeftSubTree;
     bool mHasRighSubTree;
-    std::mt19937 mRandNumGen;
 };
 
 #endif //ASYMM_TREE_HPP
