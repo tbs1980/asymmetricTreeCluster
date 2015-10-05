@@ -54,7 +54,7 @@ void simulateNS(void)
     boundMin[1] = -double(5);
     boundMax[1] = double(15);
 
-    size_t threshold = 100;
+    size_t threshold = 4;
     size_t treeIndex = 0;
     size_t level = 0;
 
@@ -89,7 +89,7 @@ void simulateNS(void)
         }
     );
 
-    std::cout<<"At the begining lmin is "<<livePoints[livePointInds[0]].weight()<<std::endl;
+    //td::cout<<"At the begining lmin is "<<livePoints[livePointInds[0]].weight()<<std::endl;
 
     // add these points to the tree
     ast.addPoints(livePoints);
@@ -108,7 +108,7 @@ void simulateNS(void)
     outFile.close();
 
     // next loop through the sampling process
-    size_t numIter = 2000;
+    size_t numIter = 1000;
     size_t tot=0;
     size_t acc=0;
     for(size_t i=0;i<numIter;++i)
@@ -150,7 +150,7 @@ void simulateNS(void)
         ast.dumpTree(outFile);
         outFile.close();
 
-        std::cout<<"Acceptance  = "<<(double)acc/(double)tot<<"\t"<<livePoints[livePointInds[0]].weight()<<std::endl;
+        std::cout<<i<<","<<(double)acc/(double)tot<<","<<livePoints[livePointInds[0]].weight()<<std::endl;
     }
 
 }

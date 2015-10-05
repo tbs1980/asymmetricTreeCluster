@@ -588,8 +588,8 @@ private:
                 assert(distLeft>0);
                 assert(distRight>0);
 
-                realScalarType discLeft = std::abs(wMaxLeftVal-wMinLeftVal)/distLeft;
-                realScalarType discRight = std::abs(wMaxRightVal-wMinRightVal)/distRight;
+                realScalarType discLeft = std::abs(wMaxLeftVal-wMinLeftVal);///distLeft;
+                realScalarType discRight = std::abs(wMaxRightVal-wMinRightVal);///distRight;
 
                 // find the difference between the two sides
                 normDiscr[dim] = std::abs(discRight - discLeft);
