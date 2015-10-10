@@ -23,6 +23,7 @@ public:
     :mLeftSubTree(nullptr)
     ,mRightSubTree(nullptr)
     ,mPoints(0)
+    ,mNumDims(0)
     ,mSplitDimension(0)
     ,mThresholdForBranching(0)
     ,mTreeIndex(0)
@@ -41,13 +42,14 @@ public:
         pointType  const&  boundMax,
         size_t const thresholdForBranching,
         size_t const treeIndex,
-        size_t const level
-
+        size_t const level,
+        size_t const splitDimension=size_t(0)
     )
     :mLeftSubTree(nullptr)
     ,mRightSubTree(nullptr)
     ,mPoints(points)
-    ,mSplitDimension(0)
+    ,mNumDims(boundMin.size())
+    ,mSplitDimension(splitDimension)
     ,mBoundMin(boundMin)
     ,mBoundMax(boundMax)
     ,mMedianVal(boundMin)
@@ -98,6 +100,7 @@ public:
         mLeftSubTree = nullptr;
         mRightSubTree = nullptr;
         mPoints = points;
+        mNumDims = boundMin.size();
         mSplitDimension = size_t(0);
         mBoundMin = boundMin;
         mBoundMax = boundMax;
@@ -150,6 +153,7 @@ public:
         // a delete tree functionality needed
         mLeftSubTree = nullptr;
         mRightSubTree = nullptr;
+        mNumDims = boundMin.size();
         mSplitDimension = size_t(0);
         mBoundMin = boundMin;
         mBoundMax = boundMax;
@@ -181,7 +185,7 @@ public:
 
     void dumpTree(std::ofstream & outFile)
     {
-        outFile<<mTreeIndex<<","<<mSplitDimension<<",";
+        outFile<<mTreeIndex<<","<<mSplitDimension<<","<<mPoints.size()<<",";
         for(size_t i=0;i<mBoundMin.size();++i)
         {
             outFile<<mBoundMin[i]<<",";
@@ -599,7 +603,7 @@ private:
             auto discrMax = std::max_element(std::begin(normDiscr),std::end(normDiscr));
 
             // set the split dimension as the one with the lowest discriminant
-            mSplitDimension = std::distance(std::begin(normDiscr),discrMax);
+            //mSplitDimension = std::distance(std::begin(normDiscr),discrMax);
 
             // sort the points in the split dimension
             std::sort(begin, end,
@@ -657,11 +661,11 @@ private:
 
 
             mLeftSubTree = new asymmTreeType(pointsLeft,boundMinLeft,boundMaxLeft,
-                mThresholdForBranching,(2*mTreeIndex+1),(mTreeLevel+1));
+                mThresholdForBranching,(2*mTreeIndex+1),(mTreeLevel+1),(mSplitDimension +1) % mNumDims);
             mHasLeftSubTree = true;
 
             mRightSubTree = new asymmTreeType(pointsRight,boundMinRight,boundMaxRight,
-                mThresholdForBranching,(2*mTreeIndex+2),(mTreeLevel+1));
+                mThresholdForBranching,(2*mTreeIndex+2),(mTreeLevel+1),(mSplitDimension +1) % mNumDims);
             mHasRighSubTree = true;
 
             mPoints.clear();
@@ -697,6 +701,7 @@ private:
     asymmTreeType* mLeftSubTree;
     asymmTreeType* mRightSubTree;
     pointsArrayType mPoints;
+    size_t mNumDims;
     size_t mSplitDimension;
     pointType mBoundMin;
     pointType mBoundMax;

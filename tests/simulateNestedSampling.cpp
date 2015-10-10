@@ -54,7 +54,7 @@ void simulateNS(void)
     boundMin[1] = -double(5);
     boundMax[1] = double(15);
 
-    size_t threshold = 4;
+    size_t threshold = 10;
     size_t treeIndex = 0;
     size_t level = 0;
 
