@@ -38,7 +38,7 @@ void simulateNS(void)
     typedef GaussLikelihood<double> GaussLikelihoodType;
 
     // define the Gauss dist for computing weights
-    const size_t numDims = 2;
+    const size_t numDims = 100;
     GaussLikelihoodType gauss(numDims);
 
     // define the bounds
@@ -47,14 +47,14 @@ void simulateNS(void)
 
     for(size_t i=0;i<numDims;++i)
     {
-        boundMin[i] = -double(5);
-        boundMax[i] = double(5);
+        boundMin[i] = -double(2);
+        boundMax[i] = double(2);
     }
 
-    boundMin[1] = -double(5);
-    boundMax[1] = double(15);
+    //boundMin[1] = -double(5);
+    //boundMax[1] = double(15);
 
-    size_t threshold = 10;
+    size_t threshold = 20;
     size_t treeIndex = 0;
     size_t level = 0;
 
@@ -107,8 +107,12 @@ void simulateNS(void)
     ast.dumpTree(outFile);
     outFile.close();
 
+    // createa a file for plotting acceptance rates
+    std::ofstream accFile;
+    accFile.open("acceptance100.dat",std::ios::trunc);
+
     // next loop through the sampling process
-    size_t numIter = 1000;
+    size_t numIter = 10000;
     size_t tot=0;
     size_t acc=0;
     for(size_t i=0;i<numIter;++i)
@@ -146,12 +150,13 @@ void simulateNS(void)
         );
         //std::cout<<"lmin is "<<livePoints[livePointInds[0]].weight()<<std::endl;
 
-        outFile.open("nsTreeIter.dat",std::ios::trunc);
-        ast.dumpTree(outFile);
-        outFile.close();
+        //outFile.open("nsTreeIter.dat",std::ios::trunc);
+        //ast.dumpTree(outFile);
+        //outFile.close();
 
-        std::cout<<i<<","<<(double)acc/(double)tot<<","<<livePoints[livePointInds[0]].weight()<<std::endl;
+        accFile<<i<<","<<(double)acc/(double)tot<<","<<livePoints[livePointInds[0]].weight()<<std::endl;
     }
+     accFile.close();
 
 }
 

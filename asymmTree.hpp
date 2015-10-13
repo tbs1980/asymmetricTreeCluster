@@ -526,6 +526,7 @@ private:
             typename std::vector<size_t>::iterator end = std::end(pointIndices);
 
             // for each dimension find the median and the Fisher discriminant
+            /*
             std::vector<realScalarType> normDiscr(mPoints[0].size());
             for(size_t dim=0;dim<mPoints[0].size();++dim)
             {
@@ -543,11 +544,10 @@ private:
                 assert(rangeSize>0);
 
                 // TODO is this step necessary?
-                /*
                 while(median != begin && mPoints[*(median)][dim] == mPoints[*(median - 1)][dim] )
                 {
                     --median;
-                }*/
+                }
 
                 // set the new bounds
                 pointType const boundMinLeft = mBoundMin;
@@ -601,6 +601,7 @@ private:
 
             // find the dimension with the lowest discriminant
             auto discrMax = std::max_element(std::begin(normDiscr),std::end(normDiscr));
+            */
 
             // set the split dimension as the one with the lowest discriminant
             //mSplitDimension = std::distance(std::begin(normDiscr),discrMax);
