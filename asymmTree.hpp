@@ -205,7 +205,7 @@ public:
         }
     }
 
-    void addPoints(pointsArrayType const& points)
+    void addPoints(pointsArrayType const& points,bool const makeTree = true)
     {
         if(points.size()==0)
         {
@@ -277,7 +277,8 @@ public:
             // we are the end of the tree
             // we need to see if branching threshold is reached
             assert(mThresholdForBranching>0);
-            if(mPoints.size() + points.size() > mThresholdForBranching)
+            if(mPoints.size() + points.size() > mThresholdForBranching and 
+                makeTree == true)
             {
                 // we are branching
                 // 1. add the current set of points to the points
