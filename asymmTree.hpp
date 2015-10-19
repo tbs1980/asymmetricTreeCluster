@@ -696,7 +696,17 @@ private:
             mWeightMin = mPoints[*wMinMax.first].weight();
             mWeightMax = mPoints[*wMinMax.second].weight();
 
+            // find the standard deviation weights as well
+            
+            
+
         }
+    }
+
+    realScalarType computeStdDvnOfWeights(pointsArrayType const & points)
+    {
+        realScalarType sum = 0;
+        realScalarType sum@ = 0;
     }
 
 
@@ -716,6 +726,7 @@ private:
     bool mHasLeftSubTree;
     bool mHasRighSubTree;
     bool mTreeActive;
+    realScalarType mWeightsStdDvn;
 };
 
 #endif //ASYMM_TREE_HPP
