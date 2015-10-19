@@ -4,7 +4,7 @@ import sys
 import matplotlib.cm as cm
 import matplotlib as mpl
 
-def plotTree(treeDumpFileName,dim1=0,dim2=1):
+def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
     """
     A function for plotting the tree.
 
@@ -44,10 +44,18 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1):
             plt.fill_between([b1Min,b1Max],[b2Min,b2Min],[b2Max,b2Max],
                 color=cm.ScalarMappable(norm=norm, cmap=cmap).to_rgba(weight))
 
+    if radiusOfSphere != None:
+        circle1=plt.Circle((0,0),radius=radiusOfSphere,color='m',fill=False)
+        fig = plt.gcf()
+        fig.gca().add_artist(circle1)
+
+
     plt.show()
 
 if __name__ == "__main__" :
     if len(sys.argv) == 2:
         plotTree(sys.argv[1],0,1)
+    elif len(sys.argv) == 3:
+        plotTree(sys.argv[1],0,1,float(sys.argv[2]))
     else:
-        print "usage: python ", sys.argv[0], "<tree-file-name"
+        print "usage: python ", sys.argv[0], "<tree-file-name>", "(radius)"
