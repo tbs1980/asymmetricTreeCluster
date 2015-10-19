@@ -194,7 +194,10 @@ public:
         {
             outFile<<mBoundMax[i]<<",";
         }
-        outFile<<mWeightMin<<","<<mWeightMax<<std::endl;
+        outFile<<mWeightMin<<","
+            <<mWeightMax<<","
+            <<mWeightsMean<<","
+            <<mWeightsStdDvn<<std::endl;
         if(mHasLeftSubTree)
         {
             mLeftSubTree->dumpTree(outFile);
@@ -277,7 +280,7 @@ public:
             // we are the end of the tree
             // we need to see if branching threshold is reached
             assert(mThresholdForBranching>0);
-            if(mPoints.size() + points.size() > mThresholdForBranching and 
+            if(mPoints.size() + points.size() > mThresholdForBranching and
                 makeTree == true)
             {
                 // we are branching
@@ -697,16 +700,31 @@ private:
             mWeightMax = mPoints[*wMinMax.second].weight();
 
             // find the standard deviation weights as well
-            
-            
+            computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn);
+
 
         }
     }
 
-    realScalarType computeStdDvnOfWeights(pointsArrayType const & points)
+    void computeMeanStdDvnOfWeights(pointsArrayType const & points,realScalarType & mean, realScalarType & stdDvn)
     {
         realScalarType sum = 0;
-        realScalarType sum@ = 0;
+        realScalarType sum2 = 0;
+
+        for(size_t i=0;i<points.size();++i)
+        {
+            realScalarType weightVal = points[i].weight();
+            sum += weightVal;
+            sum2 += weightVal*weightVal;
+        }
+
+        sum /= (realScalarType)points.size();
+        sum2 /= (realScalarType)points.size();
+
+        mean  = sum;
+
+        assert(sum2 > sum*sum);
+        stdDvn = std::sqrt(sum2 - sum*sum);
     }
 
 
@@ -727,6 +745,7 @@ private:
     bool mHasRighSubTree;
     bool mTreeActive;
     realScalarType mWeightsStdDvn;
+    realScalarType mWeightsMean;
 };
 
 #endif //ASYMM_TREE_HPP

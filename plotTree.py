@@ -18,7 +18,9 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
         tree = tree.reshape([1,tree.shape[0]])
 
     startCol = 3;
-    numDims = (len(tree[0]) - startCol - 2)/2
+    numDims = (len(tree[0]) - startCol - 4)/2
+
+    print "numDims ",numDims
 
     minWeight = np.min(tree[:,tree.shape[1]-1])
     maxWeight = np.max(tree[:,tree.shape[1]-1])
@@ -40,7 +42,7 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
 
         numPoints = nodeInfo[2]
         if numPoints > 0 :
-            weight = nodeInfo[tree.shape[1]-1]
+            weight = nodeInfo[tree.shape[1]-2] # plotting the mean weight
             plt.fill_between([b1Min,b1Max],[b2Min,b2Min],[b2Max,b2Max],
                 color=cm.ScalarMappable(norm=norm, cmap=cmap).to_rgba(weight))
 
