@@ -22,8 +22,8 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
 
     print "numDims ",numDims
 
-    minWeight = np.min(tree[:,tree.shape[1]-1])
-    maxWeight = np.max(tree[:,tree.shape[1]-1])
+    minWeight = np.min(tree[:,tree.shape[1]-4])
+    maxWeight = np.max(tree[:,tree.shape[1]-3])
 
     norm = mpl.colors.Normalize(vmin=minWeight, vmax=maxWeight)
     cmap = cm.hot

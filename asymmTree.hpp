@@ -375,6 +375,7 @@ public:
             }
         }
         else if(mWeightMax <= weightStar)
+        //else if(mWeightsMean + realScalarType(2.)*mWeightsStdDvn <= weightStar)
         {
             mPoints.clear();
             mTreeActive = false;
@@ -723,7 +724,7 @@ private:
 
         mean  = sum;
 
-        assert(sum2 > sum*sum);
+        assert(sum2 >= sum*sum);
         stdDvn = std::sqrt(sum2 - sum*sum);
     }
 
