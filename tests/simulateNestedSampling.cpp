@@ -54,7 +54,7 @@ void simulateNS(void)
     //boundMin[1] = -double(5);
     //boundMax[1] = double(15);
 
-    size_t threshold = 10;
+    size_t threshold = 125;
     size_t treeIndex = 0;
     size_t level = 0;
 
@@ -99,6 +99,22 @@ void simulateNS(void)
     ast.dumpTree(outFile);
     outFile.close();
 
+    pointType fpt = livePoints[livePointInds[0]];
+    std::cout<<"searching for nearest nodes for "<<fpt[0]<<"\t"<<fpt[1]<<std::endl;
+    pointType dist(numDims,double(0));
+    dist[0] = 2.0;
+    dist[1] = 2.0;
+    std::cout<<"distnace in each dimension is "<<dist[0]<<"\t"<<dist[1]<<std::endl;
+    std::vector<size_t> nearInds;
+    ast.findNearestNodes(fpt,dist,nearInds);
+    std::cout<<"nearest inds are "<<std::endl;
+    for(size_t i=0;i<nearInds.size();++i)
+    {
+        std::cout<<nearInds[i]<<std::endl;
+    }
+
+    return;
+
     // delte the nodes below the lmin
     // this will be the same as we havn't adde any new points
     ast.deleteNodes(livePoints[livePointInds[0]].weight());
@@ -106,6 +122,8 @@ void simulateNS(void)
     outFile.open("nsTreeInitLv.dat",std::ios::trunc);
     ast.dumpTree(outFile);
     outFile.close();
+
+    //return;
 
     // createa a file for plotting acceptance rates
     std::ofstream accFile;

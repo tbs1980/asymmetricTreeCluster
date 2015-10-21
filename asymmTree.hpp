@@ -269,9 +269,14 @@ public:
             {
                 mLeftSubTree->addPoints(pointsLeft);
             }
-            if(mHasRighSubTree and pointsRight.size()>0)
+            else if(mHasRighSubTree and pointsRight.size()>0)
             {
                 mRightSubTree->addPoints(pointsRight);
+            }
+            else
+            {
+                std::cout<<"This means we are trying to add point to a tree that we deleted"<<std::endl;
+                abort();
             }
 
         }
@@ -349,9 +354,49 @@ public:
         }
     }
 
-    void findNode(pointType const& point)
+    //////////////////////////////////////////////////////////////////////////
+    void findNearestNodes(pointType const& point,pointType const& dist,std::vector<size_t> & inds)
     {
+        std::cout<<mTreeIndex<<"\t"<<mSplitDimension<<"\t"<<point[mSplitDimension]
+            <<"\t"<<dist[mSplitDimension]<<"\t"<<mMedianVal[mSplitDimension]<<std::endl;
+        // do we have left or right sub-trees?
+        if(mHasLeftSubTree or mHasRighSubTree)
+        {
+            if(point[mSplitDimension] < mMedianVal[mSplitDimension])
+            {
+                // then we are goin to the left tree
+                if(mHasLeftSubTree)
+                {
+                    mLeftSubTree->findNearestNodes(point,dist,inds);
+                }
+            }
+            else
+            {
+                // then we are going to the right subtree
+                if(mHasRighSubTree)
+                {
+                    mRightSubTree->findNearestNodes(point,dist,inds);
+                }
 
+            }
+
+
+            // only go to the right one if we pass the median when distance is added
+            if(point[mSplitDimension] - dist[mSplitDimension] < mMedianVal[mSplitDimension])
+            {
+                std::cout<<"Yes"<<std::endl;
+                // then we are going to the right subtree
+                if(mHasLeftSubTree)
+                {
+                    mLeftSubTree->findNearestNodes(point,dist,inds);
+                }
+            }
+        }
+        else
+        {
+            // we are at the end node
+            inds.push_back(mTreeIndex);
+        }
     }
 
     void deleteNodes(realScalarType const weightStar)
