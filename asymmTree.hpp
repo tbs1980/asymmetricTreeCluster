@@ -349,6 +349,11 @@ public:
         }
     }
 
+    void findNode(pointType const& point)
+    {
+
+    }
+
     void deleteNodes(realScalarType const weightStar)
     {
         if(mHasLeftSubTree or mHasRighSubTree)
@@ -374,8 +379,8 @@ public:
                 }
             }
         }
-        else if(mWeightMax <= weightStar)
-        //else if(mWeightsMean + realScalarType(2.)*mWeightsStdDvn <= weightStar)
+        else if(mWeightMin <= weightStar)
+        //else if(mWeightsMean + realScalarType(0.)*mWeightsStdDvn <= weightStar)
         {
             mPoints.clear();
             mTreeActive = false;
