@@ -242,9 +242,11 @@ public:
 
             // find the nuber of points left to the median
             //std::cout<<"median value in this dimension is "<<mMedianVal[mSplitDimension]<<std::endl;
+            //std::cout<<"total number of points is"<<points.size()<<std::endl;
             size_t numPointsLeft = 0;
             for(size_t i=0;i<pointIndices.size();++i)
             {
+                //std::cout<<points[ pointIndices[i] ][mSplitDimension]<<"\t"<<mMedianVal[mSplitDimension]<<std::endl;
                 if(points[ pointIndices[i] ][mSplitDimension] >= mMedianVal[mSplitDimension])
                 {
                     break;
@@ -265,6 +267,8 @@ public:
                 pointsRight[i] = points[pointIndices[i+pointsLeft.size()]];
             }
 
+            assert(pointsLeft.size()+pointsRight.size() == points.size());
+
             if(mHasLeftSubTree and pointsLeft.size()>0)
             {
                 mLeftSubTree->addPoints(pointsLeft);
@@ -276,6 +280,10 @@ public:
             else
             {
                 std::cout<<"This means we are trying to add point to a tree that we deleted"<<std::endl;
+                std::cout<<"numPointsLeft = "<<numPointsLeft<<std::endl;
+                std::cout<<"numPointsRight = "<<numPointsRight<<std::endl;
+                std::cout<<"mHasLeftSubTree = "<<mHasLeftSubTree<<std::endl;
+                std::cout<<"mHasRighSubTree = "<<mHasRighSubTree<<std::endl;
                 abort();
             }
 
@@ -357,8 +365,8 @@ public:
     //////////////////////////////////////////////////////////////////////////
     void findNearestNodes(pointType const& point,pointType const& dist,std::vector<size_t> & inds)
     {
-        std::cout<<mTreeIndex<<"\t"<<mSplitDimension<<"\t"<<point[mSplitDimension]
-            <<"\t"<<dist[mSplitDimension]<<"\t"<<mMedianVal[mSplitDimension]<<std::endl;
+        //std::cout<<mTreeIndex<<"\t"<<mSplitDimension<<"\t"<<point[mSplitDimension]
+        //    <<"\t"<<dist[mSplitDimension]<<"\t"<<mMedianVal[mSplitDimension]<<std::endl;
         // do we have left or right sub-trees?
         if(mHasLeftSubTree or mHasRighSubTree)
         {
@@ -382,9 +390,9 @@ public:
 
 
             // only go to the right one if we pass the median when distance is added
-            if(point[mSplitDimension] - dist[mSplitDimension] < mMedianVal[mSplitDimension])
+            if(point[mSplitDimension] >= mMedianVal[mSplitDimension] and point[mSplitDimension] - dist[mSplitDimension] < mMedianVal[mSplitDimension])
             {
-                std::cout<<"Yes"<<std::endl;
+                //std::cout<<"Yes"<<std::endl;
                 // then we are going to the right subtree
                 if(mHasLeftSubTree)
                 {
@@ -397,6 +405,43 @@ public:
             // we are at the end node
             inds.push_back(mTreeIndex);
         }
+    }
+
+    void findNodeAndItsDimensions(pointType const& point, pointType & nodeDims,bool & nodeFound)
+    {
+        nodeFound = false;
+        assert(mBoundMin.size() == nodeDims.size());
+
+        if(mHasLeftSubTree or mHasRighSubTree)
+        {
+            if(point[mSplitDimension] < mMedianVal[mSplitDimension])
+            {
+                // then we are goin to the left tree
+                if(mHasLeftSubTree)
+                {
+                    mLeftSubTree->findNodeAndItsDimensions(point,nodeDims,nodeFound);
+                }
+            }
+            else
+            {
+                // then we are going to the right subtree
+                if(mHasRighSubTree)
+                {
+                    mRightSubTree->findNodeAndItsDimensions(point,nodeDims,nodeFound);
+                }
+
+            }
+        }
+        else
+        {
+            for(size_t i=0;i<mBoundMin.size();++i)
+            {
+                assert(mBoundMax[i] > mBoundMin[i]);
+                nodeDims[i] = mBoundMax[i] - mBoundMin[i];
+            }
+            nodeFound = true;
+        }
+
     }
 
     void deleteNodes(realScalarType const weightStar)
@@ -424,8 +469,8 @@ public:
                 }
             }
         }
-        else if(mWeightMin <= weightStar)
-        //else if(mWeightsMean + realScalarType(0.)*mWeightsStdDvn <= weightStar)
+        //else if(mWeightMax <= weightStar)
+        else if(mWeightsMean + realScalarType(1.)*mWeightsStdDvn <= weightStar)
         {
             mPoints.clear();
             mTreeActive = false;
@@ -555,6 +600,57 @@ public:
 
         return randPnt;
     }
+
+    template<class RNGType>
+    pointType randomPoint(pointType const& point, RNGType & rng)
+    {
+        // find the nearest neighbours
+        pointType nodeDims(point.size(),realScalarType(0));
+        bool nodeFound = false;
+        std::cout<<"searching for point "<<point[0]<<"\t"<<point[1]<<std::endl;
+        findNodeAndItsDimensions(point,nodeDims,nodeFound);
+
+        assert(nodeFound);
+
+        // search for a set of nodes nearby
+        std::vector<size_t> treeInds;
+        findNearestNodes(point,nodeDims,treeInds);
+
+        // returns a uniformly sampled random point from the active nodes.
+        // pick a node uniformly from the available ones
+        //std::vector<size_t> treeInds;
+        //getTreeIndices(treeInds);
+
+        assert(treeInds.size()>0);
+
+        // if there is only one node then we just need to pick from this one
+        size_t nodeSelected = treeInds[0];
+
+        // if there are more than one, we need a random selection
+        std::uniform_int_distribution<size_t> distUniInt(size_t(0), size_t( treeInds.size()-1) );
+
+        if(treeInds.size()>1)
+        {
+            nodeSelected = treeInds[distUniInt(rng)];
+        }
+
+        // find the bounds of the node we want to generate a point from
+        pointType boundMin;
+        pointType boundMax;
+        getBounds(boundMin,boundMax,nodeSelected);
+
+        pointType randPnt(mBoundMin.size(),realScalarType(0));
+
+        std::uniform_real_distribution<> distUniReal;
+        for(size_t i=0;i<boundMin.size();++i)
+        {
+            assert(boundMin[i] < boundMax[i]);
+            randPnt[i] = boundMin[i] + (boundMax[i]-boundMin[i])*distUniReal(rng);
+        }
+
+        return randPnt;
+    }
+
 
     size_t treeIndex(void) const
     {
