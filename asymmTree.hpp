@@ -438,6 +438,7 @@ public:
             {
                 assert(mBoundMax[i] > mBoundMin[i]);
                 nodeDims[i] = mBoundMax[i] - mBoundMin[i];
+                nodeDims[i] *= 10;
             }
             nodeFound = true;
         }
@@ -450,6 +451,7 @@ public:
         {
             if(mHasLeftSubTree)
             {
+                //std::cout<<"deleting the tree "<<mLeftSubTree->treeIndex()<<std::endl;
                 mLeftSubTree->deleteNodes(weightStar);
                 if (mLeftSubTree->treeIsActive()==false)
                 {
@@ -460,6 +462,7 @@ public:
             }
             if(mHasRighSubTree)
             {
+                //std::cout<<"deleting the tree "<<mRightSubTree->treeIndex()<<std::endl;
                 mRightSubTree->deleteNodes(weightStar);
                 if(mRightSubTree->treeIsActive() == false)
                 {
@@ -470,8 +473,10 @@ public:
             }
         }
         //else if(mWeightMax <= weightStar)
-        else if(mWeightsMean + realScalarType(1.)*mWeightsStdDvn <= weightStar)
+        //else if(mWeightsMean + realScalarType(1.)*mWeightsStdDvn <= weightStar)
+        else if(mWeightMax + realScalarType(1.)*mWeightsStdDvn <= weightStar)
         {
+            std::cout<<"**deleting the tree "<<mTreeIndex<<std::endl;
             mPoints.clear();
             mTreeActive = false;
         }
@@ -626,6 +631,8 @@ public:
         // if there is only one node then we just need to pick from this one
         size_t nodeSelected = treeInds[0];
 
+        std::cout<<"Generating the random point from "<<nodeSelected<<std::endl;
+
         // if there are more than one, we need a random selection
         std::uniform_int_distribution<size_t> distUniInt(size_t(0), size_t( treeInds.size()-1) );
 
@@ -644,6 +651,7 @@ public:
         std::uniform_real_distribution<> distUniReal;
         for(size_t i=0;i<boundMin.size();++i)
         {
+            std::cout<<"boudns "<<boundMin[i] << "\t"<< boundMax[i]<<std::endl;
             assert(boundMin[i] < boundMax[i]);
             randPnt[i] = boundMin[i] + (boundMax[i]-boundMin[i])*distUniReal(rng);
         }

@@ -136,7 +136,13 @@ void simulateNS(void)
     size_t acc=0;
     for(size_t i=0;i<numIter;++i)
     {
-
+        std::cout<<"\n----------Iteration "<<tot<<" ---------------"<<std::endl;
+        /*
+        if(tot > 20 )
+        {
+            break;
+        }
+        */
         pointType fpt = livePoints[livePointInds[0]];
         /*
         pointType nodDims(numDims,double(0));
@@ -180,7 +186,7 @@ void simulateNS(void)
             std::cout<<"Deleting the nodes below "<<livePoints[livePointInds[0]][0]
             <<"\t"<<livePoints[livePointInds[0]][1]<<"\t"
             <<livePoints[livePointInds[0]].weight()<<std::endl;
-            ast.deleteNodes(livePoints[livePointInds[0]].weight());
+            //ast.deleteNodes(livePoints[livePointInds[0]].weight());
 
             // replace the min live point
             livePoints[livePointInds[0]] = pt;
