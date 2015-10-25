@@ -1,3 +1,4 @@
+from __future__ import print_function
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
@@ -20,7 +21,7 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
     startCol = 3;
     numDims = (len(tree[0]) - startCol - 4)/2
 
-    print "numDims ",numDims
+    print("numDims ",numDims)
 
     minWeight = np.min(tree[:,tree.shape[1]-4])
     maxWeight = np.max(tree[:,tree.shape[1]-3])
@@ -42,6 +43,8 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
 
         numPoints = nodeInfo[2]
         if numPoints > 0 :
+            treeInd = int(nodeInfo[0])
+            plt.text(0.5*(b1Min+b1Max),0.5*(b2Min+b2Max),str(treeInd))
             weight = nodeInfo[tree.shape[1]-2] # plotting the mean weight
             plt.fill_between([b1Min,b1Max],[b2Min,b2Min],[b2Max,b2Max],
                 color=cm.ScalarMappable(norm=norm, cmap=cmap).to_rgba(weight))
@@ -60,4 +63,4 @@ if __name__ == "__main__" :
     elif len(sys.argv) == 3:
         plotTree(sys.argv[1],0,1,float(sys.argv[2]))
     else:
-        print "usage: python ", sys.argv[0], "<tree-file-name>", "(radius)"
+        print("usage: python ", sys.argv[0], "<tree-file-name>", "(radius)")

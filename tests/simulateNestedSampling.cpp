@@ -99,6 +99,23 @@ void simulateNS(void)
     ast.dumpTree(outFile);
     outFile.close();
 
+/*
+    pointType fpt = livePoints[livePointInds[0]];
+    std::cout<<"searching for nearest nodes for "<<fpt[0]<<"\t"<<fpt[1]<<std::endl;
+    pointType dist(numDims,double(0));
+    dist[0] = 2.0;
+    dist[1] = 2.0;
+    std::cout<<"distnace in each dimension is "<<dist[0]<<"\t"<<dist[1]<<std::endl;
+    std::vector<size_t> nearInds;
+    ast.findNearestNodes(fpt,dist,nearInds);
+    std::cout<<"nearest inds are "<<std::endl;
+    for(size_t i=0;i<nearInds.size();++i)
+    {
+        std::cout<<nearInds[i]<<std::endl;
+    }
+
+    return;
+*/
     // delte the nodes below the lmin
     // this will be the same as we havn't adde any new points
     ast.deleteNodes(livePoints[livePointInds[0]].weight());
@@ -107,18 +124,54 @@ void simulateNS(void)
     ast.dumpTree(outFile);
     outFile.close();
 
+    //return;
+
     // createa a file for plotting acceptance rates
     std::ofstream accFile;
     accFile.open("acceptance100.dat",std::ios::trunc);
 
     // next loop through the sampling process
-    size_t numIter = 1000;
+    size_t numIter = 200;
     size_t tot=0;
     size_t acc=0;
     for(size_t i=0;i<numIter;++i)
     {
+        std::cout<<"\n----------Iteration "<<tot<<" ---------------"<<std::endl;
+        /*
+        if(tot > 20 )
+        {
+            break;
+        }
+        */
+        pointType fpt = livePoints[livePointInds[0]];
+        /*
+        pointType nodDims(numDims,double(0));
+        bool nodeFound = false;
+        ast.findNodeAndItsDimensions(fpt,nodDims,nodeFound);
+        */
+        /*
+        std::cout<<"node dimensions are "<<std::endl;
+        for(size_t i=0;i<nodDims.size();++i)
+        {
+            std::cout<<nodDims[i]<<std::endl;
+        }
+        std::cout<<std::endl;*/
+
+
+        //pointType dist(numDims,double(0));
+        //dist[0] = 2.0;
+        //std::vector<size_t> nearInds;
+        //ast.findNearestNodes(fpt,nodDims,nearInds);
+        /*
+        std::cout<<"nearest inds are "<<std::endl;
+        for(size_t i=0;i<nearInds.size();++i)
+        {
+            std::cout<<nearInds[i]<<std::endl;
+        }*/
+
         //  get some random points
-        pointType pt = ast.randomPoint(randGen);
+        //pointType pt = ast.randomPoint(randGen);
+        pointType pt = ast.randomPoint(fpt,randGen);
         double weight = gauss.logLik(pt.coords());
         pt.weight() = weight;
 
@@ -130,8 +183,10 @@ void simulateNS(void)
         if(pt.weight() > livePoints[livePointInds[0]].weight())
         {
             // delete nodes if necessary
-            //std::cout<<"Deleting the nodes below "<<livePoints[livePointInds[0]].weight()<<std::endl;
-            ast.deleteNodes(livePoints[livePointInds[0]].weight());
+            std::cout<<"Deleting the nodes below "<<livePoints[livePointInds[0]][0]
+            <<"\t"<<livePoints[livePointInds[0]][1]<<"\t"
+            <<livePoints[livePointInds[0]].weight()<<std::endl;
+            //ast.deleteNodes(livePoints[livePointInds[0]].weight());
 
             // replace the min live point
             livePoints[livePointInds[0]] = pt;
