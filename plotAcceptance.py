@@ -19,9 +19,11 @@ def plot_acc(file_list,label_list,title,outputFileName):
     plt.savefig(outputFileName)
 
 
-file_list = ['./acceptance2.dat','./acceptance10.dat',
-    './acceptance50.dat','./acceptance100.dat']
-label_list = ['2','10','50','100']
+#file_list = ['./acceptance2.dat','./acceptance10.dat',
+#    './acceptance50.dat','./acceptance100.dat']
+#label_list = ['2','10','50','100']
+file_list = ['./acceptance2.dat']
+label_list = ['2']
 #title = 'lv = 1000, thr = 10'
 title = 'lv = 1000, thr = 20'
 #outputFileName = 'accVsDimLv1kThr10.png'

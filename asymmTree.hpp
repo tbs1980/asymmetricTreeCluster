@@ -36,7 +36,6 @@ public:
     {
 
     }
-
     asymmTree(pointsArrayType const&  points,
         pointType  const&  boundMin,
         pointType  const&  boundMax,
@@ -407,7 +406,8 @@ public:
         }
     }
 
-    void findNodeAndItsDimensions(pointType const& point, pointType & nodeDims,bool & nodeFound)
+
+    void findNodeAndItsDimensions(pointType const& point, pointType & nodeDims,size_t & treeIndex,bool & nodeFound)
     {
         nodeFound = false;
         assert(mBoundMin.size() == nodeDims.size());
@@ -419,7 +419,7 @@ public:
                 // then we are goin to the left tree
                 if(mHasLeftSubTree)
                 {
-                    mLeftSubTree->findNodeAndItsDimensions(point,nodeDims,nodeFound);
+                    mLeftSubTree->findNodeAndItsDimensions(point,nodeDims,treeIndex,nodeFound);
                 }
             }
             else
@@ -427,7 +427,7 @@ public:
                 // then we are going to the right subtree
                 if(mHasRighSubTree)
                 {
-                    mRightSubTree->findNodeAndItsDimensions(point,nodeDims,nodeFound);
+                    mRightSubTree->findNodeAndItsDimensions(point,nodeDims,treeIndex,nodeFound);
                 }
 
             }
@@ -441,8 +441,94 @@ public:
                 nodeDims[i] *= 10;
             }
             nodeFound = true;
+            treeIndex = mTreeIndex;
         }
 
+    }
+
+    void findNearestNodes(pointType const& point, size_t const nodeDist,std::vector<size_t> & inds)
+    {
+        pointType nodeDims(point.size(),realScalarType(0));
+        bool nodeFound(false);
+        size_t nodeIndex(0);
+        findNodeAndItsDimensions(point,nodeDims,nodeIndex,nodeFound);
+
+        assert(nodeFound);
+
+        //std::cout<<"The point belongs to the node "<<nodeIndex<<std::endl;
+
+        std::vector<size_t> treeInds;
+        getTreeIndices(treeInds);
+
+        std::sort(treeInds.begin(), treeInds.end());
+
+        /*
+        std::cout<<"The tree indices in order are"<<std::endl;
+        for(size_t i=0;i<treeInds.size();++i)
+        {
+            std::cout<<treeInds[i]<<std::endl;
+        }
+        */
+
+        auto iter = std::find(treeInds.begin(), treeInds.end(),nodeIndex);
+
+        /*
+        if(iter != treeInds.end())
+        {
+            std::cout<<"The node is inside tree indices at position "
+            <<std::distance(treeInds.begin(),iter)<<" of "<<treeInds.size()-1
+            //<<"\n the value is "<<treeInds[std::distance(treeInds.begin(),iter)]<< std::endl;
+            <<"\n the value is "<<*(iter)<< std::endl;
+        }*/
+
+        /*
+        if(std::distance(treeInds.begin(),iter) == treeInds.size()-1)
+        {
+            // we are at the end of the vector, so take the ones befre it
+            std::cout<<"The nearest n nodes are"<<std::endl;
+            for(size_t i=0;i<numNearestNodes;++i)
+            {
+                std::cout<< *(iter-i) <<std::endl;
+                inds.push_back(*(iter-i));
+            }
+        }
+        else if(std::distance(treeInds.begin(),iter) == 0)
+        {
+            // we are the beginning of the vector
+
+        }
+        */
+        size_t numNodesTaken = 0;
+        size_t pos = std::distance(treeInds.begin(),iter);
+        
+        //std::cout<<"The nearest n nodes are"<<std::endl;
+        for(long i=pos;i>=0;--i)
+        {
+            if(pos - i > nodeDist)
+            {
+                break;
+            }
+            inds.push_back(treeInds[i]);
+            //std::cout<<treeInds[i]<<std::endl;
+        }
+        for(size_t i=pos+1;i<treeInds.size();++i)
+        {
+            if(i-pos > nodeDist)
+            {
+                break;
+            }
+
+            inds.push_back(treeInds[i]);
+            //std::cout<<treeInds[i]<<std::endl;
+        }
+
+        /*
+        std::cout<<"The nearest n nodes are"<<std::endl;
+        for(size_t i=0;i<numNearestNodes;++i)
+        {
+            std::cout<<( *(iter+numNearestNodes) )<<std::endl;
+            inds.push_back(*(iter+numNearestNodes));
+        }*/
     }
 
     void deleteNodes(realScalarType const weightStar)
@@ -474,9 +560,9 @@ public:
         }
         //else if(mWeightMax <= weightStar)
         //else if(mWeightsMean + realScalarType(1.)*mWeightsStdDvn <= weightStar)
-        else if(mWeightMax + realScalarType(1.)*mWeightsStdDvn <= weightStar)
+        else if(mWeightMax + realScalarType(2.)*mWeightsStdDvn <= weightStar)
         {
-            std::cout<<"**deleting the tree "<<mTreeIndex<<std::endl;
+            //std::cout<<"**deleting the tree "<<mTreeIndex<<std::endl;
             mPoints.clear();
             mTreeActive = false;
         }
@@ -509,14 +595,37 @@ public:
 
     void getTreeIndices(std::vector<size_t> & inds) const
     {
-        inds.push_back(mTreeIndex);
+        //inds.push_back(mTreeIndex);
+        /*
         if(mHasLeftSubTree)
         {
             mLeftSubTree->getTreeIndices(inds);
         }
-        if(mHasRighSubTree)
+        else if(mHasRighSubTree)
         {
             mRightSubTree->getTreeIndices(inds);
+        }
+        else
+        {
+            inds.push_back(mTreeIndex);
+        }
+        */
+
+        if(mHasLeftSubTree or mHasRighSubTree)
+        {
+            if(mHasLeftSubTree)
+            {
+                mLeftSubTree->getTreeIndices(inds);
+            }
+
+            if(mHasRighSubTree)
+            {
+                mRightSubTree->getTreeIndices(inds);
+            }
+        }
+        else
+        {
+            inds.push_back(mTreeIndex);
         }
     }
 
@@ -609,13 +718,17 @@ public:
     template<class RNGType>
     pointType randomPoint(pointType const& point, RNGType & rng)
     {
+        /*
         // find the nearest neighbours
         pointType nodeDims(point.size(),realScalarType(0));
         bool nodeFound = false;
+        size_t treeIndex(0);
         std::cout<<"searching for point "<<point[0]<<"\t"<<point[1]<<std::endl;
-        findNodeAndItsDimensions(point,nodeDims,nodeFound);
+        findNodeAndItsDimensions(point,nodeDims,treeIndex,nodeFound);
 
         assert(nodeFound);
+
+        std::cout<<"The point belongs to the node "<<treeIndex<<std::endl;
 
         // search for a set of nodes nearby
         std::vector<size_t> treeInds;
@@ -625,13 +738,16 @@ public:
         // pick a node uniformly from the available ones
         //std::vector<size_t> treeInds;
         //getTreeIndices(treeInds);
+        */
+
+        std::vector<size_t> treeInds;
+        findNearestNodes(point,size_t(4),treeInds);
 
         assert(treeInds.size()>0);
 
         // if there is only one node then we just need to pick from this one
         size_t nodeSelected = treeInds[0];
 
-        std::cout<<"Generating the random point from "<<nodeSelected<<std::endl;
 
         // if there are more than one, we need a random selection
         std::uniform_int_distribution<size_t> distUniInt(size_t(0), size_t( treeInds.size()-1) );
@@ -640,6 +756,8 @@ public:
         {
             nodeSelected = treeInds[distUniInt(rng)];
         }
+
+        std::cout<<"Generating the random point from "<<nodeSelected<<std::endl;
 
         // find the bounds of the node we want to generate a point from
         pointType boundMin;
@@ -669,6 +787,8 @@ private:
 
     void buildTree()
     {
+        //std::cout<<"\n builing tree"<<std::endl;
+
         // check if we have enough points for branching
         assert(mThresholdForBranching >0);
         if(mPoints.size()>mThresholdForBranching)// and mTreeLevel <2)
