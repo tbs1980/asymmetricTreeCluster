@@ -500,7 +500,7 @@ public:
         */
         size_t numNodesTaken = 0;
         size_t pos = std::distance(treeInds.begin(),iter);
-        
+
         //std::cout<<"The nearest n nodes are"<<std::endl;
         for(long i=pos;i>=0;--i)
         {
@@ -741,7 +741,7 @@ public:
         */
 
         std::vector<size_t> treeInds;
-        findNearestNodes(point,size_t(4),treeInds);
+        findNearestNodes(point,size_t(100),treeInds);
 
         assert(treeInds.size()>0);
 
@@ -757,7 +757,7 @@ public:
             nodeSelected = treeInds[distUniInt(rng)];
         }
 
-        std::cout<<"Generating the random point from "<<nodeSelected<<std::endl;
+        //std::cout<<"Generating the random point from "<<nodeSelected<<std::endl;
 
         // find the bounds of the node we want to generate a point from
         pointType boundMin;
@@ -769,7 +769,7 @@ public:
         std::uniform_real_distribution<> distUniReal;
         for(size_t i=0;i<boundMin.size();++i)
         {
-            std::cout<<"boudns "<<boundMin[i] << "\t"<< boundMax[i]<<std::endl;
+            //std::cout<<"boudns "<<boundMin[i] << "\t"<< boundMax[i]<<std::endl;
             assert(boundMin[i] < boundMax[i]);
             randPnt[i] = boundMin[i] + (boundMax[i]-boundMin[i])*distUniReal(rng);
         }
