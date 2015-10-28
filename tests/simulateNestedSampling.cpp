@@ -92,7 +92,7 @@ void simulateNS(void)
     std::cout<<"At the begining lmin is "<<livePoints[livePointInds[0]].weight()<<std::endl;
 
     // add these points to the tree
-    ast.addPoints(livePoints);
+    ast.addPoints(livePoints,true);
     // dump
     std::ofstream outFile;
     outFile.open("nsTree.dat",std::ios::trunc);
@@ -118,7 +118,7 @@ void simulateNS(void)
 */
     // delte the nodes below the lmin
     // this will be the same as we havn't adde any new points
-    ast.deleteNodes(livePoints[livePointInds[0]].weight());
+    //ast.deleteNodes(livePoints[livePointInds[0]].weight());
     // dump
     outFile.open("nsTreeInitLv.dat",std::ios::trunc);
     ast.dumpTree(outFile);
@@ -128,15 +128,15 @@ void simulateNS(void)
 
     // createa a file for plotting acceptance rates
     std::ofstream accFile;
-    accFile.open("acceptance100.dat",std::ios::trunc);
+    accFile.open("acceptance100a.dat",std::ios::trunc);
 
     // next loop through the sampling process
-    size_t numIter = 100;
+    size_t numIter = 1000;
     size_t tot=0;
     size_t acc=0;
     for(size_t i=0;i<numIter;++i)
     {
-        std::cout<<"\n----------Iteration "<<tot<<" ---------------"<<std::endl;
+        //std::cout<<"\n----------Iteration "<<tot<<" ---------------"<<std::endl;
         /*
         if(tot > 20 )
         {
@@ -170,8 +170,8 @@ void simulateNS(void)
         }*/
 
         //  get some random points
-        //pointType pt = ast.randomPoint(randGen);
-        pointType pt = ast.randomPoint(fpt,randGen);
+        pointType pt = ast.randomPoint(randGen);
+        //pointType pt = ast.randomPoint(fpt,randGen);
         double weight = gauss.logLik(pt.coords());
         pt.weight() = weight;
 
@@ -204,7 +204,7 @@ void simulateNS(void)
                 return livePoints[a].weight() < livePoints[b].weight();
             }
         );
-        std::cout<<"lmin is "<<livePoints[livePointInds[0]].weight()<<"\t"<<(double)acc/(double)tot<<std::endl;
+        //std::cout<<"lmin is "<<livePoints[livePointInds[0]].weight()<<"\t"<<(double)acc/(double)tot<<std::endl;
 
         outFile.open("nsTreeIter.dat",std::ios::trunc);
         ast.dumpTree(outFile);

@@ -421,6 +421,11 @@ public:
                 {
                     mLeftSubTree->findNodeAndItsDimensions(point,nodeDims,treeIndex,nodeFound);
                 }
+                else
+                {
+                    std::cout<<"Left tree should be there but not found"<<std::endl;
+                    abort();
+                }
             }
             else
             {
@@ -428,6 +433,11 @@ public:
                 if(mHasRighSubTree)
                 {
                     mRightSubTree->findNodeAndItsDimensions(point,nodeDims,treeIndex,nodeFound);
+                }
+                else
+                {
+                    std::cout<<"Right tree should be here but not found"<<std::endl;
+                    abort();
                 }
 
             }
@@ -560,7 +570,7 @@ public:
         }
         //else if(mWeightMax <= weightStar)
         //else if(mWeightsMean + realScalarType(1.)*mWeightsStdDvn <= weightStar)
-        else if(mWeightMax + realScalarType(2.)*mWeightsStdDvn <= weightStar)
+        else if(mWeightMax + realScalarType(1.)*mWeightsStdDvn <= weightStar)
         {
             //std::cout<<"**deleting the tree "<<mTreeIndex<<std::endl;
             mPoints.clear();
@@ -687,6 +697,8 @@ public:
 
         assert(treeInds.size()>0);
 
+        //std::cout<<"Tree size = "<<treeInds.size()<<std::endl;
+
         // if there is only one node then we just need to pick from this one
         size_t nodeSelected = treeInds[0];
 
@@ -784,6 +796,45 @@ public:
     }
 
 private:
+
+    size_t findMaxVarDimension()
+    {
+        size_t dimWithMaxVar = 0;
+        realScalarType varMax(0);
+        for(size_t dim=0;dim<mPoints[0].size();++dim)
+        {
+            realScalarType sum(0);
+            realScalarType sum2(0);
+
+            for(size_t i=0;i<mPoints.size();++i)
+            {
+                sum += mPoints[i][dim];
+                sum2 += mPoints[i][dim]*mPoints[i][dim];
+            }
+
+            sum /= (realScalarType) mPoints.size();
+            sum2 /= (realScalarType) mPoints.size();
+
+            realScalarType var = sum2 - sum*sum;
+            assert(var >= realScalarType(0));
+
+            if(dim == 0)
+            {
+                varMax = var;
+                dimWithMaxVar = dim;
+            }
+            else
+            {
+                if(var > varMax)
+                {
+                    varMax = var;
+                    dimWithMaxVar = dim;
+                }
+            }
+        }
+
+        return dimWithMaxVar;
+    }
 
     void buildTree()
     {
@@ -885,6 +936,10 @@ private:
             // set the split dimension as the one with the lowest discriminant
             //mSplitDimension = std::distance(std::begin(normDiscr),discrMax);
 
+            mSplitDimension = findMaxVarDimension();
+
+            //std::cout<<"Maximum variance dimension is "<<mSplitDimension<<std::endl;
+
             // sort the points in the split dimension
             std::sort(begin, end,
                 [this]( size_t a, size_t b)
@@ -896,12 +951,11 @@ private:
             auto median = begin + rangeSize/2;
 
             // TODO is this step really necessary?
-            /*
             while(median != begin &&
                 mPoints[*(median)][mSplitDimension] == mPoints[*(median - 1)][mSplitDimension] )
             {
                 --median;
-            }*/
+            }
 
             //std::cout<<"Median point in dimension "<<mSplitDimension<<" is "<<mPoints[*(median)][mSplitDimension]<<std::endl;
 
@@ -924,20 +978,29 @@ private:
 
             // make points for the left and right tree
             pointsArrayType pointsLeft(std::distance(begin, median));
-            pointsArrayType pointsRight(std::distance((median+1),end));
+            pointsArrayType pointsRight(std::distance((median),end));
+
+            //std::cout<<std::distance(begin,begin)<<std::endl;
+
+            //std::cout<<pointsLeft.size()<<"\t"<<pointsRight.size()<<"\t"<<mPoints.size()<<std::endl;
+
+            assert(pointsLeft.size() + pointsRight.size() == mPoints.size());
 
             for(size_t i=0;i<pointsLeft.size();++i)
             {
+                //std::cout<<i<<"\t"<<pointIndices[i]<<std::endl;
                 pointsLeft[i] = mPoints[ pointIndices[i] ];
             }
-
+            //std::cout<<std::endl;
             for(size_t i=0;i<pointsRight.size();++i)
             {
+                //std::cout<<i+pointsLeft.size()<<"\t"<<pointIndices[i+pointsLeft.size()]<<std::endl;
                 pointsRight[i] = mPoints[ pointIndices[i+pointsLeft.size()] ];
             }
 
             assert(pointsLeft.size()>0);
             assert(pointsRight.size()>0);
+            //abort();
 
 
             mLeftSubTree = new asymmTreeType(pointsLeft,boundMinLeft,boundMaxLeft,
