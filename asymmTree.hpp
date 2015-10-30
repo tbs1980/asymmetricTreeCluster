@@ -257,6 +257,8 @@ public:
             pointsArrayType pointsLeft(numPointsLeft);
             pointsArrayType pointsRight(numPointsRight);
 
+            assert(pointsLeft.size() + pointsRight.size() == points.size());
+
             for(size_t i=0;i<pointsLeft.size();++i)
             {
                 pointsLeft[i] = points[pointIndices[i]];
@@ -283,6 +285,13 @@ public:
                 std::cout<<"numPointsRight = "<<numPointsRight<<std::endl;
                 std::cout<<"mHasLeftSubTree = "<<mHasLeftSubTree<<std::endl;
                 std::cout<<"mHasRighSubTree = "<<mHasRighSubTree<<std::endl;
+                std::cout<<"The coordinates of the points in the splitDimension "<<mSplitDimension<< " are"<<std::endl;
+                for(size_t i=0;i<points.size();++i)
+                {
+                    std::cout<<points[i][mSplitDimension]<<std::endl;
+                }
+                std::cout<<"The median value is "<<mMedianVal[mSplitDimension]<< std::endl;
+
                 abort();
             }
 
@@ -357,6 +366,30 @@ public:
 
                 // assign the new points back to the provate member
                 mPoints = newPoints;
+
+                // sort and store the min and max
+                // set the point indices for sorting
+                std::vector<size_t> pointIndices(mPoints.size());
+                for(size_t i=0;i<pointIndices.size();++i)
+                {
+                    pointIndices[i] = i;
+                }
+
+                typename std::vector<size_t>::iterator begin = std::begin(pointIndices);
+                typename std::vector<size_t>::iterator end = std::end(pointIndices);
+
+                // find the lmin and lmax right and left
+                auto wMinMax = std::minmax_element(begin,end,
+                    [this](  size_t a, size_t b)
+                    {
+                        return ( mPoints[a].weight() < mPoints[b].weight() );
+                    }
+                );
+
+                mWeightMin = mPoints[*wMinMax.first].weight();
+                mWeightMax = mPoints[*wMinMax.second].weight();
+
+                computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn);
            }
         }
     }
@@ -414,32 +447,17 @@ public:
 
         if(mHasLeftSubTree or mHasRighSubTree)
         {
-            if(point[mSplitDimension] < mMedianVal[mSplitDimension])
+            if(mHasLeftSubTree and point[mSplitDimension] < mMedianVal[mSplitDimension])
             {
-                // then we are goin to the left tree
-                if(mHasLeftSubTree)
-                {
-                    mLeftSubTree->findNodeAndItsDimensions(point,nodeDims,treeIndex,nodeFound);
-                }
-                else
-                {
-                    std::cout<<"Left tree should be there but not found"<<std::endl;
-                    abort();
-                }
+                mLeftSubTree->findNodeAndItsDimensions(point,nodeDims,treeIndex,nodeFound);
+            }
+            else if(mHasRighSubTree and point[mSplitDimension] >= mMedianVal[mSplitDimension])
+            {
+                mRightSubTree->findNodeAndItsDimensions(point,nodeDims,treeIndex,nodeFound);
             }
             else
             {
-                // then we are going to the right subtree
-                if(mHasRighSubTree)
-                {
-                    mRightSubTree->findNodeAndItsDimensions(point,nodeDims,treeIndex,nodeFound);
-                }
-                else
-                {
-                    std::cout<<"Right tree should be here but not found"<<std::endl;
-                    abort();
-                }
-
+                std::cout<<"It looks like this point"<<point[0]<<"\t"<<point[1]<<" belongs  to a delted tree"<<std::endl;
             }
         }
         else
@@ -462,6 +480,13 @@ public:
         bool nodeFound(false);
         size_t nodeIndex(0);
         findNodeAndItsDimensions(point,nodeDims,nodeIndex,nodeFound);
+
+        if(nodeFound == false)
+        {
+            std::cout<<"We did not find a node lets try adding this poit"<<std::endl;
+            pointsArrayType pts(1,point);
+            addPoints(pts);
+        }
 
         assert(nodeFound);
 
@@ -572,7 +597,18 @@ public:
         //else if(mWeightsMean + realScalarType(1.)*mWeightsStdDvn <= weightStar)
         else if(mWeightMax + realScalarType(1.)*mWeightsStdDvn <= weightStar)
         {
-            //std::cout<<"**deleting the tree "<<mTreeIndex<<std::endl;
+            /*
+            std::cout<<"\n**d eleting the tree "<<mTreeIndex<<std::endl;
+            std::cout<<"** deleting the points "<<std::endl;
+            for(size_t i=0;i<mPoints.size();++i)
+            {
+                std::cout<<mPoints[i][0]<<"\t"<<mPoints[i][1]<<"\t"<<mPoints[i].weight()<<std::endl;
+            }
+            std::cout<<" The maximum weight is "<<mWeightMax<<std::endl;
+            std::cout<<" The threshold for deletion is "<<mWeightMax + realScalarType(1.)*mWeightsStdDvn<<std::endl;
+            std::cout<<" W* is "<<weightStar<<std::endl;
+            */
+            
             mPoints.clear();
             mTreeActive = false;
         }
@@ -751,6 +787,8 @@ public:
         //std::vector<size_t> treeInds;
         //getTreeIndices(treeInds);
         */
+
+        //std::cout<<"searching for point "<<point[0]<<"\t"<<point[1]<<std::endl;
 
         std::vector<size_t> treeInds;
         findNearestNodes(point,size_t(100),treeInds);
@@ -936,7 +974,7 @@ private:
             // set the split dimension as the one with the lowest discriminant
             //mSplitDimension = std::distance(std::begin(normDiscr),discrMax);
 
-            mSplitDimension = findMaxVarDimension();
+            //mSplitDimension = findMaxVarDimension();
 
             //std::cout<<"Maximum variance dimension is "<<mSplitDimension<<std::endl;
 

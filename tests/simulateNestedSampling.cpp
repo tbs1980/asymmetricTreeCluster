@@ -63,7 +63,7 @@ void simulateNS(void)
     ast.setup(boundMin,boundMax,threshold,treeIndex,level);
 
     // create a set of live points
-    size_t numLivePoints = 1000;
+    size_t numLivePoints = 3000;
     pointsArrayType livePoints(numLivePoints);
     std::vector<size_t> livePointInds(numLivePoints);
 
@@ -128,10 +128,11 @@ void simulateNS(void)
 
     // createa a file for plotting acceptance rates
     std::ofstream accFile;
-    accFile.open("acceptance100a.dat",std::ios::trunc);
+    //accFile.open("acceptance2near.dat",std::ios::trunc);
+    accFile.open("acceptance2all.dat",std::ios::trunc);
 
     // next loop through the sampling process
-    size_t numIter = 1000;
+    size_t numIter = 10000;
     size_t tot=0;
     size_t acc=0;
     for(size_t i=0;i<numIter;++i)

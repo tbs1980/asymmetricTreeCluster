@@ -23,39 +23,48 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
 
     print("numDims ",numDims)
 
-    minWeight = np.min(tree[:,tree.shape[1]-4])
-    maxWeight = np.max(tree[:,tree.shape[1]-3])
+    wtMin = tree[:,tree.shape[1]-4]
+    wtMax = tree[:,tree.shape[1]-3]
+    numPts = tree[:,3]
+
+    #minWeight = np.min(wtMin[numPts>0])
+    #maxWeight = np.max(wtMax[numPts>0])
+
+    minWeight = np.min(wtMin)
+    maxWeight = np.max(wtMax)
+
+    print(minWeight, maxWeight)
 
     norm = mpl.colors.Normalize(vmin=minWeight, vmax=maxWeight)
     cmap = cm.hot
 
     for nodeInfo in tree:
-        if int(nodeInfo[1]) == int(dim1) or int(nodeInfo[1]) == int(dim2):
-            b1Min = nodeInfo[startCol+dim1]
-            b2Min = nodeInfo[startCol+dim2]
+        #if int(nodeInfo[1]) == int(dim1) or int(nodeInfo[1]) == int(dim2):
+        b1Min = nodeInfo[startCol+dim1]
+        b2Min = nodeInfo[startCol+dim2]
 
-            b1Max = nodeInfo[startCol+numDims+dim1]
-            b2Max = nodeInfo[startCol+numDims+dim2]
+        b1Max = nodeInfo[startCol+numDims+dim1]
+        b2Max = nodeInfo[startCol+numDims+dim2]
+        plt.plot([b1Min,b1Max],[b2Min,b2Min],color='k')
+        plt.plot([b1Min,b1Max],[b2Max,b2Max],color='k')
+        plt.plot([b1Min,b1Min],[b2Min,b2Max],color='k')
+        plt.plot([b1Max,b1Max],[b2Min,b2Max],color='k')
 
-            plt.plot([b1Min,b1Max],[b2Min,b2Min],color='k')
-            plt.plot([b1Min,b1Max],[b2Max,b2Max],color='k')
-            plt.plot([b1Min,b1Min],[b2Min,b2Max],color='k')
-            plt.plot([b1Max,b1Max],[b2Min,b2Max],color='k')
-
-            numPoints = nodeInfo[2]
-            if numPoints > 0 :
-                treeInd = int(nodeInfo[0])
-                plt.text(0.5*(b1Min+b1Max),0.5*(b2Min+b2Max),str(treeInd))
-                weight = nodeInfo[tree.shape[1]-2] # plotting the mean weight
-                plt.fill_between([b1Min,b1Max],[b2Min,b2Min],[b2Max,b2Max],
-                    color=cm.ScalarMappable(norm=norm, cmap=cmap).to_rgba(weight))
+        numPoints = nodeInfo[2]
+        if numPoints > 0 :
+            treeInd = int(nodeInfo[0])
+            #plt.text(0.5*(b1Min+b1Max),0.5*(b2Min+b2Max),str(treeInd))
+            weight = nodeInfo[tree.shape[1]-2] # plotting the mean weight
+            plt.fill_between([b1Min,b1Max],[b2Min,b2Min],[b2Max,b2Max],
+                color=cm.ScalarMappable(norm=norm, cmap=cmap).to_rgba(weight))
 
     if radiusOfSphere != None:
         circle1=plt.Circle((0,0),radius=radiusOfSphere,color='m',fill=False)
         fig = plt.gcf()
         fig.gca().add_artist(circle1)
 
-
+    #ax = plt.gca()
+    #ax.set_axis_bgcolor('red')
     plt.show()
 
 if __name__ == "__main__" :
