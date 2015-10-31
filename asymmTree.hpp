@@ -36,6 +36,7 @@ public:
     {
 
     }
+
     asymmTree(pointsArrayType const&  points,
         pointType  const&  boundMin,
         pointType  const&  boundMax,
@@ -61,9 +62,11 @@ public:
     ,mHasRighSubTree(false)
     ,mTreeActive(true)
     {
+        // sanity checks
         assert(thresholdForBranching>0);
 
         std::vector<size_t> pointIndices(mPoints.size());
+
         // set the point indices for sorting
         for(size_t i=0;i<pointIndices.size();++i)
         {
@@ -71,6 +74,7 @@ public:
         }
         typename std::vector<size_t>::iterator begin = std::begin(pointIndices);
         typename std::vector<size_t>::iterator end = std::end(pointIndices);
+
         // find the lmin and lmax right and left
         auto wMinMax = std::minmax_element(begin,end,
             [this](  size_t a, size_t b)
@@ -81,6 +85,10 @@ public:
         mWeightMin = mPoints[*wMinMax.first].weight();
         mWeightMax = mPoints[*wMinMax.second].weight();
 
+        // compute the mean and standard deviation
+        computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn);
+
+        // finally build tree
         buildTree();
     }
 
@@ -93,6 +101,7 @@ public:
     )
     {
         assert(mHasLeftSubTree == false and mHasRighSubTree == false);
+
         // TODO we need to check if the tree is already built?
         // if tree exists we need to delete it first
         // a delete tree functionality needed
@@ -113,7 +122,9 @@ public:
         mHasRighSubTree = false;
         mTreeActive = true;
 
+        // sanity checks
         assert(thresholdForBranching>0);
+        // TODO more checks required here
 
         // set the point indices for sorting
         std::vector<size_t> pointIndices(mPoints.size());
@@ -136,6 +147,10 @@ public:
         mWeightMin = mPoints[*wMinMax.first].weight();
         mWeightMax = mPoints[*wMinMax.second].weight();
 
+        // compute the mean  and the standard deviation
+        computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn);
+
+        // finally build the tree
         buildTree();
     }
 
@@ -147,6 +162,7 @@ public:
     )
     {
         assert(mHasLeftSubTree == false and mHasRighSubTree == false);
+
         // TODO we need to check if the tree is already built?
         // if tree exists we need to delete it first
         // a delete tree functionality needed
@@ -184,6 +200,11 @@ public:
 
     void dumpTree(std::ofstream & outFile)
     {
+        // TODO should we write a header?
+        // the order is
+        // tree-index,split-dimension,points-size,bound-min,bound-max,
+        // weight-min,weight-max,weight-mean,weight-std-dvn,
+
         outFile<<mTreeIndex<<","<<mSplitDimension<<","<<mPoints.size()<<",";
         for(size_t i=0;i<mBoundMin.size();++i)
         {
@@ -197,6 +218,8 @@ public:
             <<mWeightMax<<","
             <<mWeightsMean<<","
             <<mWeightsStdDvn<<std::endl;
+
+        // go inside the trees and do the same
         if(mHasLeftSubTree)
         {
             mLeftSubTree->dumpTree(outFile);
@@ -221,6 +244,7 @@ public:
 
             // since we have enough points we can create new tress
             std::vector<size_t> pointIndices(points.size());
+
             // set the point indices for sorting
             for(size_t i=0;i<pointIndices.size();++i)
             {
@@ -240,12 +264,9 @@ public:
             );
 
             // find the nuber of points left to the median
-            //std::cout<<"median value in this dimension is "<<mMedianVal[mSplitDimension]<<std::endl;
-            //std::cout<<"total number of points is"<<points.size()<<std::endl;
             size_t numPointsLeft = 0;
             for(size_t i=0;i<pointIndices.size();++i)
             {
-                //std::cout<<points[ pointIndices[i] ][mSplitDimension]<<"\t"<<mMedianVal[mSplitDimension]<<std::endl;
                 if(points[ pointIndices[i] ][mSplitDimension] >= mMedianVal[mSplitDimension])
                 {
                     break;
@@ -254,11 +275,13 @@ public:
             }
             size_t numPointsRight = points.size()-numPointsLeft;
 
+            // create points array for the left and the right trees
             pointsArrayType pointsLeft(numPointsLeft);
             pointsArrayType pointsRight(numPointsRight);
 
             assert(pointsLeft.size() + pointsRight.size() == points.size());
 
+            // assign points to left and right
             for(size_t i=0;i<pointsLeft.size();++i)
             {
                 pointsLeft[i] = points[pointIndices[i]];
@@ -268,8 +291,7 @@ public:
                 pointsRight[i] = points[pointIndices[i+pointsLeft.size()]];
             }
 
-            assert(pointsLeft.size()+pointsRight.size() == points.size());
-
+            // branch if we have trees and points
             if(mHasLeftSubTree and pointsLeft.size()>0)
             {
                 mLeftSubTree->addPoints(pointsLeft);
@@ -301,6 +323,8 @@ public:
             // we are the end of the tree
             // we need to see if branching threshold is reached
             assert(mThresholdForBranching>0);
+
+            // make sure that we have enough points and we are build a tree
             if(mPoints.size() + points.size() > mThresholdForBranching and
                 makeTree == true)
             {
@@ -308,6 +332,7 @@ public:
                 // 1. add the current set of points to the points
                 // 2. make tree
 
+                // sort points
                 pointsArrayType newPoints(mPoints.size() + points.size());
 
                 for(size_t i=0;i<mPoints.size();++i)
@@ -345,6 +370,10 @@ public:
                 mWeightMin = mPoints[*wMinMax.first].weight();
                 mWeightMax = mPoints[*wMinMax.second].weight();
 
+                // compute the mean and standard deviation
+                computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn);
+
+                // finally build tree
                 buildTree();
 
             }
@@ -352,7 +381,10 @@ public:
             {
                 // we are not ready to branch yet
                 // jut push back the points
-                 pointsArrayType newPoints(mPoints.size() + points.size());
+
+                // create a points array to store all points
+                // TODO is push back a better solution?
+                pointsArrayType newPoints(mPoints.size() + points.size());
 
                 for(size_t i=0;i<mPoints.size();++i)
                 {
@@ -389,16 +421,17 @@ public:
                 mWeightMin = mPoints[*wMinMax.first].weight();
                 mWeightMax = mPoints[*wMinMax.second].weight();
 
+                // compute the mean and standard deviation
                 computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn);
            }
         }
     }
 
-    //////////////////////////////////////////////////////////////////////////
-    void findNearestNodes(pointType const& point,pointType const& dist,std::vector<size_t> & inds)
+    void findNearestNodes(pointType const& point,
+        pointType const& dist,
+        std::vector<size_t> & inds)
     {
-        //std::cout<<mTreeIndex<<"\t"<<mSplitDimension<<"\t"<<point[mSplitDimension]
-        //    <<"\t"<<dist[mSplitDimension]<<"\t"<<mMedianVal[mSplitDimension]<<std::endl;
+        // Find a set of points in a cube/brick defined by dist
         // do we have left or right sub-trees?
         if(mHasLeftSubTree or mHasRighSubTree)
         {
@@ -420,11 +453,9 @@ public:
 
             }
 
-
             // only go to the right one if we pass the median when distance is added
             if(point[mSplitDimension] >= mMedianVal[mSplitDimension] and point[mSplitDimension] - dist[mSplitDimension] < mMedianVal[mSplitDimension])
             {
-                //std::cout<<"Yes"<<std::endl;
                 // then we are going to the right subtree
                 if(mHasLeftSubTree)
                 {
@@ -440,8 +471,12 @@ public:
     }
 
 
-    void findNodeAndItsDimensions(pointType const& point, pointType & nodeDims,size_t & treeIndex,bool & nodeFound)
+    void findNodeAndItsDimensions(pointType const& point,
+        pointType & nodeDims,
+        size_t & treeIndex,
+        bool & nodeFound)
     {
+        // find the node a point belongs to and retrieve its diemnsions
         nodeFound = false;
         assert(mBoundMin.size() == nodeDims.size());
 
@@ -474,69 +509,35 @@ public:
 
     }
 
-    void findNearestNodes(pointType const& point, size_t const nodeDist,std::vector<size_t> & inds)
+    void findNearestNodes(pointType const& point,
+        size_t const nodeDist,
+        std::vector<size_t> & inds)
     {
+        // find the nearest nodeDist nodes of the point
+
+        // find the node the point belongs to
         pointType nodeDims(point.size(),realScalarType(0));
         bool nodeFound(false);
         size_t nodeIndex(0);
         findNodeAndItsDimensions(point,nodeDims,nodeIndex,nodeFound);
 
-        if(nodeFound == false)
-        {
-            std::cout<<"We did not find a node lets try adding this poit"<<std::endl;
-            pointsArrayType pts(1,point);
-            addPoints(pts);
-        }
-
+        // check if we found the node
         assert(nodeFound);
 
-        //std::cout<<"The point belongs to the node "<<nodeIndex<<std::endl;
-
+        // get the indices all the active nodes
         std::vector<size_t> treeInds;
         getTreeIndices(treeInds);
 
+        // sort them in order
         std::sort(treeInds.begin(), treeInds.end());
 
-        /*
-        std::cout<<"The tree indices in order are"<<std::endl;
-        for(size_t i=0;i<treeInds.size();++i)
-        {
-            std::cout<<treeInds[i]<<std::endl;
-        }
-        */
-
+        // find the current node and its nearest neighbours
         auto iter = std::find(treeInds.begin(), treeInds.end(),nodeIndex);
 
-        /*
-        if(iter != treeInds.end())
-        {
-            std::cout<<"The node is inside tree indices at position "
-            <<std::distance(treeInds.begin(),iter)<<" of "<<treeInds.size()-1
-            //<<"\n the value is "<<treeInds[std::distance(treeInds.begin(),iter)]<< std::endl;
-            <<"\n the value is "<<*(iter)<< std::endl;
-        }*/
-
-        /*
-        if(std::distance(treeInds.begin(),iter) == treeInds.size()-1)
-        {
-            // we are at the end of the vector, so take the ones befre it
-            std::cout<<"The nearest n nodes are"<<std::endl;
-            for(size_t i=0;i<numNearestNodes;++i)
-            {
-                std::cout<< *(iter-i) <<std::endl;
-                inds.push_back(*(iter-i));
-            }
-        }
-        else if(std::distance(treeInds.begin(),iter) == 0)
-        {
-            // we are the beginning of the vector
-
-        }
-        */
         size_t numNodesTaken = 0;
         size_t pos = std::distance(treeInds.begin(),iter);
 
-        //std::cout<<"The nearest n nodes are"<<std::endl;
+        // start the ones before the current node
         for(long i=pos;i>=0;--i)
         {
             if(pos - i > nodeDist)
@@ -544,8 +545,9 @@ public:
                 break;
             }
             inds.push_back(treeInds[i]);
-            //std::cout<<treeInds[i]<<std::endl;
         }
+
+        // then the ones after the current node
         for(size_t i=pos+1;i<treeInds.size();++i)
         {
             if(i-pos > nodeDist)
@@ -554,16 +556,8 @@ public:
             }
 
             inds.push_back(treeInds[i]);
-            //std::cout<<treeInds[i]<<std::endl;
         }
 
-        /*
-        std::cout<<"The nearest n nodes are"<<std::endl;
-        for(size_t i=0;i<numNearestNodes;++i)
-        {
-            std::cout<<( *(iter+numNearestNodes) )<<std::endl;
-            inds.push_back(*(iter+numNearestNodes));
-        }*/
     }
 
     void deleteNodes(realScalarType const weightStar)
@@ -595,7 +589,7 @@ public:
         }
         //else if(mWeightMax <= weightStar)
         //else if(mWeightsMean + realScalarType(1.)*mWeightsStdDvn <= weightStar)
-        else if(mWeightMax + realScalarType(1.)*mWeightsStdDvn <= weightStar)
+        else if(mWeightMax + realScalarType(2.)*mWeightsStdDvn < weightStar)
         {
             /*
             std::cout<<"\n**d eleting the tree "<<mTreeIndex<<std::endl;
@@ -608,7 +602,7 @@ public:
             std::cout<<" The threshold for deletion is "<<mWeightMax + realScalarType(1.)*mWeightsStdDvn<<std::endl;
             std::cout<<" W* is "<<weightStar<<std::endl;
             */
-            
+
             mPoints.clear();
             mTreeActive = false;
         }
@@ -791,7 +785,7 @@ public:
         //std::cout<<"searching for point "<<point[0]<<"\t"<<point[1]<<std::endl;
 
         std::vector<size_t> treeInds;
-        findNearestNodes(point,size_t(100),treeInds);
+        findNearestNodes(point,size_t(20),treeInds);
 
         assert(treeInds.size()>0);
 

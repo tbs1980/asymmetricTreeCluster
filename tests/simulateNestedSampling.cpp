@@ -38,7 +38,7 @@ void simulateNS(void)
     typedef GaussLikelihood<double> GaussLikelihoodType;
 
     // define the Gauss dist for computing weights
-    const size_t numDims = 2;
+    const size_t numDims = 4;
     GaussLikelihoodType gauss(numDims);
 
     // define the bounds
@@ -63,7 +63,7 @@ void simulateNS(void)
     ast.setup(boundMin,boundMax,threshold,treeIndex,level);
 
     // create a set of live points
-    size_t numLivePoints = 3000;
+    size_t numLivePoints = 10000;
     pointsArrayType livePoints(numLivePoints);
     std::vector<size_t> livePointInds(numLivePoints);
 
@@ -132,7 +132,7 @@ void simulateNS(void)
     accFile.open("acceptance2all.dat",std::ios::trunc);
 
     // next loop through the sampling process
-    size_t numIter = 10000;
+    size_t numIter = 1000;
     size_t tot=0;
     size_t acc=0;
     for(size_t i=0;i<numIter;++i)
