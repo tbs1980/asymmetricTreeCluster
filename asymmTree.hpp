@@ -566,7 +566,6 @@ public:
         {
             if(mHasLeftSubTree)
             {
-                //std::cout<<"deleting the tree "<<mLeftSubTree->treeIndex()<<std::endl;
                 mLeftSubTree->deleteNodes(weightStar);
                 if (mLeftSubTree->treeIsActive()==false)
                 {
@@ -577,7 +576,6 @@ public:
             }
             if(mHasRighSubTree)
             {
-                //std::cout<<"deleting the tree "<<mRightSubTree->treeIndex()<<std::endl;
                 mRightSubTree->deleteNodes(weightStar);
                 if(mRightSubTree->treeIsActive() == false)
                 {
@@ -591,17 +589,6 @@ public:
         //else if(mWeightsMean + realScalarType(1.)*mWeightsStdDvn <= weightStar)
         else if(mWeightMax + realScalarType(2.)*mWeightsStdDvn < weightStar)
         {
-            /*
-            std::cout<<"\n**d eleting the tree "<<mTreeIndex<<std::endl;
-            std::cout<<"** deleting the points "<<std::endl;
-            for(size_t i=0;i<mPoints.size();++i)
-            {
-                std::cout<<mPoints[i][0]<<"\t"<<mPoints[i][1]<<"\t"<<mPoints[i].weight()<<std::endl;
-            }
-            std::cout<<" The maximum weight is "<<mWeightMax<<std::endl;
-            std::cout<<" The threshold for deletion is "<<mWeightMax + realScalarType(1.)*mWeightsStdDvn<<std::endl;
-            std::cout<<" W* is "<<weightStar<<std::endl;
-            */
 
             mPoints.clear();
             mTreeActive = false;
@@ -635,21 +622,6 @@ public:
 
     void getTreeIndices(std::vector<size_t> & inds) const
     {
-        //inds.push_back(mTreeIndex);
-        /*
-        if(mHasLeftSubTree)
-        {
-            mLeftSubTree->getTreeIndices(inds);
-        }
-        else if(mHasRighSubTree)
-        {
-            mRightSubTree->getTreeIndices(inds);
-        }
-        else
-        {
-            inds.push_back(mTreeIndex);
-        }
-        */
 
         if(mHasLeftSubTree or mHasRighSubTree)
         {
