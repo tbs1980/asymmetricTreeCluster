@@ -699,8 +699,6 @@ public:
 
         assert(treeInds.size()>0);
 
-        //std::cout<<"Tree size = "<<treeInds.size()<<std::endl;
-
         // if there is only one node then we just need to pick from this one
         size_t nodeSelected = treeInds[0];
 
@@ -732,30 +730,6 @@ public:
     template<class RNGType>
     pointType randomPoint(pointType const& point, RNGType & rng)
     {
-        /*
-        // find the nearest neighbours
-        pointType nodeDims(point.size(),realScalarType(0));
-        bool nodeFound = false;
-        size_t treeIndex(0);
-        std::cout<<"searching for point "<<point[0]<<"\t"<<point[1]<<std::endl;
-        findNodeAndItsDimensions(point,nodeDims,treeIndex,nodeFound);
-
-        assert(nodeFound);
-
-        std::cout<<"The point belongs to the node "<<treeIndex<<std::endl;
-
-        // search for a set of nodes nearby
-        std::vector<size_t> treeInds;
-        findNearestNodes(point,nodeDims,treeInds);
-
-        // returns a uniformly sampled random point from the active nodes.
-        // pick a node uniformly from the available ones
-        //std::vector<size_t> treeInds;
-        //getTreeIndices(treeInds);
-        */
-
-        //std::cout<<"searching for point "<<point[0]<<"\t"<<point[1]<<std::endl;
-
         std::vector<size_t> treeInds;
         findNearestNodes(point,size_t(20),treeInds);
 
@@ -773,8 +747,6 @@ public:
             nodeSelected = treeInds[distUniInt(rng)];
         }
 
-        //std::cout<<"Generating the random point from "<<nodeSelected<<std::endl;
-
         // find the bounds of the node we want to generate a point from
         pointType boundMin;
         pointType boundMax;
@@ -785,7 +757,6 @@ public:
         std::uniform_real_distribution<> distUniReal;
         for(size_t i=0;i<boundMin.size();++i)
         {
-            //std::cout<<"boudns "<<boundMin[i] << "\t"<< boundMax[i]<<std::endl;
             assert(boundMin[i] < boundMax[i]);
             randPnt[i] = boundMin[i] + (boundMax[i]-boundMin[i])*distUniReal(rng);
         }
@@ -842,7 +813,6 @@ private:
 
     void buildTree()
     {
-        //std::cout<<"\n builing tree"<<std::endl;
 
         // check if we have enough points for branching
         assert(mThresholdForBranching >0);
@@ -850,6 +820,7 @@ private:
         {
             // since we have enough points we can create new tress
             std::vector<size_t> pointIndices(mPoints.size());
+
             // set the point indices for sorting
             for(size_t i=0;i<pointIndices.size();++i)
             {
@@ -942,8 +913,6 @@ private:
 
             //mSplitDimension = findMaxVarDimension();
 
-            //std::cout<<"Maximum variance dimension is "<<mSplitDimension<<std::endl;
-
             // sort the points in the split dimension
             std::sort(begin, end,
                 [this]( size_t a, size_t b)
@@ -960,8 +929,6 @@ private:
             {
                 --median;
             }
-
-            //std::cout<<"Median point in dimension "<<mSplitDimension<<" is "<<mPoints[*(median)][mSplitDimension]<<std::endl;
 
             // set the new bounds
             pointType boundMinLeft = mBoundMin;
@@ -984,28 +951,20 @@ private:
             pointsArrayType pointsLeft(std::distance(begin, median));
             pointsArrayType pointsRight(std::distance((median),end));
 
-            //std::cout<<std::distance(begin,begin)<<std::endl;
-
-            //std::cout<<pointsLeft.size()<<"\t"<<pointsRight.size()<<"\t"<<mPoints.size()<<std::endl;
-
             assert(pointsLeft.size() + pointsRight.size() == mPoints.size());
 
             for(size_t i=0;i<pointsLeft.size();++i)
             {
-                //std::cout<<i<<"\t"<<pointIndices[i]<<std::endl;
                 pointsLeft[i] = mPoints[ pointIndices[i] ];
             }
-            //std::cout<<std::endl;
+
             for(size_t i=0;i<pointsRight.size();++i)
             {
-                //std::cout<<i+pointsLeft.size()<<"\t"<<pointIndices[i+pointsLeft.size()]<<std::endl;
                 pointsRight[i] = mPoints[ pointIndices[i+pointsLeft.size()] ];
             }
 
             assert(pointsLeft.size()>0);
             assert(pointsRight.size()>0);
-            //abort();
-
 
             mLeftSubTree = new asymmTreeType(pointsLeft,boundMinLeft,boundMaxLeft,
                 mThresholdForBranching,(2*mTreeIndex+1),(mTreeLevel+1),(mSplitDimension +1) % mNumDims);
@@ -1021,6 +980,7 @@ private:
         {
             // then we need to find the min and maximum likelihoods
             std::vector<size_t> pointIndices(mPoints.size());
+
             // set the point indices for sorting
             for(size_t i=0;i<pointIndices.size();++i)
             {
