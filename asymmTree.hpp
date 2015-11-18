@@ -787,7 +787,7 @@ public:
         getBounds(leftBoundMin,leftBoundMax,mLeftSubTree->treeIndex());
         getBounds(rightBoundMin,rightBoundMax,mRightSubTree->treeIndex());
 
-        for(int ii=0; ii<mNumDims; ii++)
+        for(size_t ii=0; ii<mNumDims; ii++)
         {
           vleft  *= (leftBoundMax[ii] - leftBoundMin[ii]);
           vright *= (rightBoundMax[ii] - rightBoundMin[ii]);

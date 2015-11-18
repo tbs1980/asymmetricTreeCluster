@@ -38,7 +38,7 @@ void simulateNS(void)
     typedef GaussLikelihood<double> GaussLikelihoodType;
 
     // define the Gauss dist for computing weights
-    const size_t numDims = 4;
+    const size_t numDims = 2;
     GaussLikelihoodType gauss(numDims);
 
     // define the bounds
@@ -63,7 +63,7 @@ void simulateNS(void)
     ast.setup(boundMin,boundMax,threshold,treeIndex,level);
 
     // create a set of live points
-    size_t numLivePoints = 10000;
+    size_t numLivePoints = 1000;
     pointsArrayType livePoints(numLivePoints);
     std::vector<size_t> livePointInds(numLivePoints);
 
@@ -171,7 +171,9 @@ void simulateNS(void)
         }*/
 
         //  get some random points
-        pointType pt = ast.randomPoint(randGen);
+        //pointType pt = ast.randomPoint(randGen);
+        pointType pt = ast.walkRandomPoint(randGen);
+
         //pointType pt = ast.randomPoint(fpt,randGen);
         double weight = gauss.logLik(pt.coords());
         pt.weight() = weight;
