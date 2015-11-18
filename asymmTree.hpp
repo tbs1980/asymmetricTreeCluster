@@ -770,6 +770,52 @@ public:
         return mTreeIndex;
     }
 
+
+    template<class RNGType>
+    pointType walkRandomPoint(RNGType & rng)
+    {
+      if(mHasLeftSubTree && mHasRighSubTree)
+      {
+        double vleft  = 1.0;
+        double vright = 1.0;
+
+        pointType leftBoundMin;
+        pointType leftBoundMax;
+        pointType rightBoundMin;
+        pointType rightBoundMax;
+
+        getBounds(leftBoundMin,leftBoundMax,mLeftSubTree->treeIndex());
+        getBounds(rightBoundMin,rightBoundMax,mRightSubTree->treeIndex());
+
+        for(int ii=0; ii<mNumDims; ii++)
+        {
+          vleft  *= (leftBoundMax[ii] - leftBoundMin[ii]);
+          vright *= (rightBoundMax[ii] - rightBoundMin[ii]);
+        }
+
+        double vthresh  = vleft / (vleft + vright);
+
+        std::uniform_real_distribution<> distUniReal;
+
+        if(distUniReal(rng) <= vthresh) {return mLeftSubTree->walkRandomPoint(rng);}
+        else                            {return mRightSubTree->walkRandomPoint(rng);}
+
+      } else {
+
+        pointType randPnt(mBoundMin.size(),realScalarType(0));
+
+        std::uniform_real_distribution<> distUniReal;
+        for(size_t ii=0;ii<mBoundMin.size();++ii)
+        {
+            assert(mBoundMin[ii] < mBoundMax[ii]);
+            randPnt[ii] = mBoundMin[ii] + (mBoundMax[ii]-mBoundMin[ii])*distUniReal(rng);
+        }
+
+        return randPnt;
+      }
+    }
+
+
 private:
 
     size_t findMaxVarDimension()
