@@ -815,6 +815,8 @@ public:
       }
     }
 
+    asymmTreeType* leftSubTree()  {return mLeftSubTree;}
+    asymmTreeType* rightSubTree() {return mRightSubTree;}
 
 private:
 
