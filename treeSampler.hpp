@@ -11,6 +11,7 @@
 #include <fstream>
 #include <random>
 
+#include "stepRegression.hpp"
 #include "asymmTree.hpp"
 
 template<class pointType>
@@ -22,36 +23,75 @@ public:
   typedef typename pointType::realScalarType RealScalarType;
   typedef asymmTree<pointType> AsymmTreeType;
   typedef std::vector<pointType> PointsArrayType;
-  typedef gen1DSpline SplineType;
+  typedef StepRegression RegressionType;
   typedef Eigen::VectorXd VectorXd;
 
   TreeSampler()
   {
-
+    mTreeRoot = new AsymmTreeType;
   }
 
-  void setup(AsymmTreeType* arg_tree_root) {
+  ~TreeSampler()
+  {
+    delete(mTreeRoot);
+  }
 
+  void setup(pointType  const&  boundMin,
+      pointType  const&  boundMax,
+      size_t const thresholdForBranching,
+      size_t const treeIndex,
+      size_t const level
+  ) {
+
+    mTreeRoot->setup(boundMin,boundMax,thresholdForBranching,treeIndex,level);
+    setup();
+  }
+
+  void addPoints(PointsArrayType const& points,bool const makeTree = true)
+  {
+
+    mTreeRoot->addPoints(points,makeTree);
+  }
+
+  void dumpTree(std::ofstream & outFile)
+  {
+    mTreeRoot->dumpTree(outFile);
+  }
+
+  template<class RNGType>
+  pointType walkRandomPoint(RNGType & rng)
+  {
+    return randomPoint(rng);
+  }
+
+  void deleteNodes(RealScalarType const weightStar)
+  {
+    mTreeRoot->deleteNodes(weightStar);
+  }
+
+  // void setup(AsymmTreeType* arg_tree_root) {
+  void setup()
+  {
     // Sorted list of active nodes by ascending volume
-    mTreeRoot = arg_tree_root;
+    // mTreeRoot = arg_tree_root;
     list_active_nodes(mTreeRoot,mActiveNodes);
     std::sort(mActiveNodes.begin(),mActiveNodes.end(),compareVolumes);
 
     // Number of active nodes
     size_t nnodes = mActiveNodes.size();
 
-    // Spline interpolation vectors
-    VectorXd spline_idx = VectorXd(nnodes+1);
-    VectorXd fcvol(nnodes+1);
+    // Interpolation vectors
+    VectorXd idx   = VectorXd(nnodes+1);
+    VectorXd fcvol = VectorXd(nnodes+1);
 
     // Initial values
-    spline_idx[0] = 0.;
+    idx[0]   = 0.;
     fcvol[0] = 0.;
 
     // Store cumulative volumes and reference indices
     for(size_t ii=0;ii<nnodes;ii++)
     {
-      spline_idx[ii+1] = ii+1;
+      idx[ii+1]   = ii+1;
       fcvol[ii+1] = fcvol[ii] + nodeVolume(mActiveNodes[ii]);
     }
 
@@ -59,13 +99,10 @@ public:
     RealScalarType icvol = 1. / fcvol[nnodes];
 
     // Convert to cumulative fractional volumes
-    for(size_t ii=0;ii<nnodes;ii++)
-    {
-      fcvol[ii+1] *= icvol;
-    }
+    for(size_t ii=0;ii<nnodes;ii++) { fcvol[ii+1] *= icvol; }
 
-    // Fit spline
-    mRandomIndexSpline.interpolate(fcvol,spline_idx);
+    // Fit step regressor
+    mRegressionIndex.setup(fcvol,idx);
   }
 
 
@@ -73,7 +110,7 @@ public:
   pointType randomPoint(RNGType & rng)
   {
     std::uniform_real_distribution<> distUniReal;
-    size_t random_node_index = floor( mRandomIndexSpline(distUniReal(rng)) );
+    size_t random_node_index = mRegressionIndex(distUniReal(rng));
     assert(random_node_index >= 0 && random_node_index < mActiveNodes.size());
     return mActiveNodes[random_node_index]->walkRandomPoint(rng);
   }
@@ -118,10 +155,7 @@ private:
     assert(boundMin.size() == boundMax.size());
     size_t ndim = boundMin.size();
 
-    for(size_t ii=0; ii<ndim; ii++)
-    {
-      volume *= (boundMax[ii]  - boundMin[ii]);
-    }
+    for(size_t ii=0; ii<ndim; ii++) { volume *= (boundMax[ii]  - boundMin[ii]); }
 
     return volume;
   }
@@ -134,8 +168,8 @@ private:
 
   AsymmTreeType* mTreeRoot;
   std::vector<AsymmTreeType*> mActiveNodes;
-  SplineType mRandomIndexSpline;
+  RegressionType mRegressionIndex;
 
 };
 
-#endif //ASYMM_TREE_HPP
+#endif // TREE_SAMPLER_HPP
