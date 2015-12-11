@@ -3,6 +3,8 @@
 #include <random>
 #include <fstream>
 
+#include "treeSampler.hpp"
+
 template<typename realScalarType>
 class GaussLikelihood
 {
@@ -34,7 +36,7 @@ void simulateNS(void)
 {
     typedef point<double> pointType;
     typedef std::vector<pointType> pointsArrayType;
-    typedef asymmTree<pointType> asymmTreeType;
+    typedef TreeSampler<pointType> asymmTreeType;
     typedef GaussLikelihood<double> GaussLikelihoodType;
 
     // define the Gauss dist for computing weights

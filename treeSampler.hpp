@@ -28,13 +28,52 @@ public:
 
   TreeSampler()
   {
-
+    mTreeRoot = new AsymmTreeType;
   }
 
-  void setup(AsymmTreeType* arg_tree_root) {
+  ~TreeSampler()
+  {
+    delete(mTreeRoot);
+  }
 
+  void setup(pointType  const&  boundMin,
+      pointType  const&  boundMax,
+      size_t const thresholdForBranching,
+      size_t const treeIndex,
+      size_t const level
+  ) {
+
+    mTreeRoot->setup(boundMin,boundMax,thresholdForBranching,treeIndex,level);
+    setup();
+  }
+
+  void addPoints(PointsArrayType const& points,bool const makeTree = true)
+  {
+
+    mTreeRoot->addPoints(points,makeTree);
+  }
+
+  void dumpTree(std::ofstream & outFile)
+  {
+    mTreeRoot->dumpTree(outFile);
+  }
+
+  template<class RNGType>
+  pointType walkRandomPoint(RNGType & rng)
+  {
+    return randomPoint(rng);
+  }
+
+  void deleteNodes(RealScalarType const weightStar)
+  {
+    mTreeRoot->deleteNodes(weightStar);
+  }
+
+  // void setup(AsymmTreeType* arg_tree_root) {
+  void setup()
+  {
     // Sorted list of active nodes by ascending volume
-    mTreeRoot = arg_tree_root;
+    // mTreeRoot = arg_tree_root;
     list_active_nodes(mTreeRoot,mActiveNodes);
     std::sort(mActiveNodes.begin(),mActiveNodes.end(),compareVolumes);
 
