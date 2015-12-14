@@ -23,8 +23,8 @@ def plot_acc(file_list,label_list,title,outputFileName):
 #file_list = ['./acceptance2.dat','./acceptance10.dat',
 #    './acceptance50.dat','./acceptance100.dat']
 #label_list = ['2','10','50','100']
-file_list = ['./acceptance2near.dat','acceptance2all.dat']
-label_list = ['near','all']
+file_list = ['./acceptance2all20.dat','acceptance2all.dat']
+label_list = ['20','2']
 #title = 'lv = 1000, thr = 10'
 title = 'lv = 3000, thr = 10'
 #outputFileName = 'accVsDimLv1kThr10.png'

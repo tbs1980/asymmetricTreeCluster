@@ -5,5 +5,12 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Debug")
 endif()
 
+#add the customised package searches to the module path
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
+
+find_package (Eigen3 3.0.0 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
+
 enable_testing()
 add_subdirectory(tests)

@@ -134,7 +134,7 @@ void simulateNS(void)
     accFile.open("acceptance2all.dat",std::ios::trunc);
 
     // next loop through the sampling process
-    size_t numIter = 1000;
+    size_t numIter = 5000;
     size_t tot=0;
     size_t acc=0;
     for(size_t i=0;i<numIter;++i)
