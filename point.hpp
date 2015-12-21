@@ -13,19 +13,25 @@ public:
     typedef std::vector<realScalarType> realVectorType;
 
     point()
-    :mCoordinates(1,realScalarType(0)),mWeight(0)
+    :mCoordinates(1,realScalarType(0)),mWeight(0),mAccepted(true)
     {
 
     }
 
     point(size_t const numDims,realScalarType const weight)
-    :mCoordinates(numDims,realScalarType(0)),mWeight(weight)
+    :mCoordinates(numDims,realScalarType(0)),mWeight(weight),mAccepted(true)
     {
 
     }
 
     point(realVectorType const& coordinates,realScalarType const weight)
-    :mCoordinates(coordinates),mWeight(weight)
+    :mCoordinates(coordinates),mWeight(weight),mAccepted(true)
+    {
+        assert(coordinates.size()>0);
+    }
+
+    point(realVectorType const& coordinates,realScalarType const weight,bool accepted)
+    :mCoordinates(coordinates),mWeight(weight),mAccepted(accepted)
     {
         assert(coordinates.size()>0);
     }
@@ -60,9 +66,15 @@ public:
         return mCoordinates[i];
     }
 
+    bool accepted() const
+    {
+        return mAccepted;
+    }
+
 private:
     realVectorType mCoordinates;
     realScalarType mWeight;
+    bool mAccepted;
 };
 
 #endif//ATC_POINT_HPP

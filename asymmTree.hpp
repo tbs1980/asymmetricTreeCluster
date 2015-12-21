@@ -11,6 +11,13 @@
 #include <fstream>
 #include <random>
 
+enum nodeCharacterstic
+{
+    ACCEPTED,
+    REJECTED,
+    ACCEPTED_AND_REJECTED
+};
+
 template<class pointType>
 class asymmTree
 {
@@ -33,6 +40,8 @@ public:
     ,mHasLeftSubTree(false)
     ,mHasRighSubTree(false)
     ,mTreeActive(true)
+    ,mVolume(0)
+    ,mNodeChar(ACCEPTED)
     {
 
     }
@@ -61,6 +70,7 @@ public:
     ,mHasLeftSubTree(false)
     ,mHasRighSubTree(false)
     ,mTreeActive(true)
+    ,mNodeChar(ACCEPTED)
     {
         // sanity checks
         assert(thresholdForBranching>0);
@@ -87,6 +97,15 @@ public:
 
         // compute the mean and standard deviation
         computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn);
+
+        // set the volumn
+        mVolume = realScalarType(1);
+        for(size_t i=0;i<mNumDims;++i)
+        {
+            assert(boundMax[i] > boundMin[i]);
+
+            mVolume *= boundMax[i] - boundMin[i];
+        }
 
         // finally build tree
         buildTree();
@@ -121,6 +140,7 @@ public:
         mHasLeftSubTree = false;
         mHasRighSubTree = false;
         mTreeActive = true;
+        mNodeChar = ACCEPTED;
 
         // sanity checks
         assert(thresholdForBranching>0);
@@ -149,6 +169,15 @@ public:
 
         // compute the mean  and the standard deviation
         computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn);
+
+        // set the volumn
+        mVolume = realScalarType(1);
+        for(size_t i=0;i<mNumDims;++i)
+        {
+            assert(boundMax[i] > boundMin[i]);
+
+            mVolume *= boundMax[i] - boundMin[i];
+        }
 
         // finally build the tree
         buildTree();
@@ -181,8 +210,18 @@ public:
         mHasLeftSubTree = false;
         mHasRighSubTree = false;
         mTreeActive = true;
+        mNodeChar = ACCEPTED;
 
         assert(thresholdForBranching>0);
+
+        // set the volumn
+        mVolume = realScalarType(1);
+        for(size_t i=0;i<mNumDims;++i)
+        {
+            assert(boundMax[i] > boundMin[i]);
+
+            mVolume *= boundMax[i] - boundMin[i];
+        }
     }
 
     ~asymmTree()
@@ -423,6 +462,43 @@ public:
 
                 // compute the mean and standard deviation
                 computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn);
+
+                // flag accept / reject / accept-reject
+                size_t numAcc=0;
+                size_t numRej=0;
+                for(size_t i=0;i<mPoints.size();++i)
+                {
+                    if(mPoints[i].accepted())
+                    {
+                        numAcc += 1;
+                    }
+                    else
+                    {
+                        numRej += 1;
+                    }
+                }
+
+                if(numAcc > size_t(0) and numRej == size_t(0))
+                {
+                    mNodeChar = ACCEPTED;
+                }
+                else if(numAcc > size_t(0) and numRej > size_t(0))
+                {
+                    mNodeChar = ACCEPTED_AND_REJECTED;
+                }
+                else if(numAcc == size_t(0) and numRej > size_t(0))
+                {
+                    mNodeChar = REJECTED;
+                }
+                else if(numAcc == size_t(0) and numRej == size_t(0))
+                {
+                    assert(mPoints.size() == 0); // in this case we should have problem
+                }
+                else
+                {
+                    std::cout<<"This shold not hapen. numAcc = "<<numAcc<<", numRej="<<numRej<<std::endl;
+                    abort();
+                }
            }
         }
     }
@@ -1052,7 +1128,41 @@ private:
             // find the standard deviation weights as well
             computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn);
 
-
+            // flag accept / reject / accept-reject
+            size_t numAcc=0;
+            size_t numRej=0;
+            for(size_t i=0;i<mPoints.size();++i)
+            {
+                if(mPoints[i].accepted())
+                {
+                    numAcc += 1;
+                }
+                else
+                {
+                    numRej += 1;
+                }
+            }
+            if(numAcc > size_t(0) and numRej == size_t(0))
+            {
+                mNodeChar = ACCEPTED;
+            }
+            else if(numAcc > size_t(0) and numRej > size_t(0))
+            {
+                mNodeChar = ACCEPTED_AND_REJECTED;
+            }
+            else if(numAcc == size_t(0) and numRej > size_t(0))
+            {
+                mNodeChar = REJECTED;
+            }
+            else if(numAcc == size_t(0) and numRej == size_t(0))
+            {
+                assert(mPoints.size() == 0); // in this case we should have problem
+            }
+            else
+            {
+              std::cout<<"This shold not hapen. numAcc = "<<numAcc<<", numRej="<<numRej<<std::endl;
+                abort();
+            }
         }
     }
 
@@ -1096,6 +1206,8 @@ private:
     bool mTreeActive;
     realScalarType mWeightsStdDvn;
     realScalarType mWeightsMean;
+    realScalarType mVolume;
+    nodeCharacterstic mNodeChar;
 };
 
 #endif //ASYMM_TREE_HPP
