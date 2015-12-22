@@ -66,7 +66,12 @@ public:
         return mCoordinates[i];
     }
 
-    bool accepted() const
+    bool const & accepted() const
+    {
+        return mAccepted;
+    }
+
+    bool & accepted()
     {
         return mAccepted;
     }

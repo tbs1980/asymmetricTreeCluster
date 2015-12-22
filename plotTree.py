@@ -18,22 +18,34 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
     if len(tree.shape) == 1:
         tree = tree.reshape([1,tree.shape[0]])
 
-    startCol = 3;
-    numDims = (len(tree[0]) - startCol - 4)/2
+    # col 0 tree-index
+    # col 1 split-dimension
+    # col 2 points-size
+    # col 3 weight min
+    # col 4 weight max
+    # col 5 weight mean
+    # col 6 weight std-dvn
+    # col 7 volume of the node
+    # col 8 node-characterstic
+    # col 9 acceptance ratio of the node
+    # ----------------------------------
+    # col 10 -> end node min and node max
+
+    startCol = 10;
+
+    numDims = (len(tree[0]) - startCol)/2
 
     print("numDims ",numDims)
 
-    wtMin = tree[:,tree.shape[1]-4]
-    wtMax = tree[:,tree.shape[1]-3]
     numPts = tree[:,3]
+    wtMin = tree[:,3]
+    wtMax = tree[:,4]
 
-    #minWeight = np.min(wtMin[numPts>0])
-    #maxWeight = np.max(wtMax[numPts>0])
+    # what column should be used for heat map
+    heatMapPropertyCol = 9
 
-    minWeight = np.min(wtMin)
-    maxWeight = np.max(wtMax)
-
-    print(minWeight, maxWeight)
+    minWeight = np.min(tree[:,heatMapPropertyCol])
+    maxWeight = np.max(tree[:,heatMapPropertyCol])
 
     norm = mpl.colors.Normalize(vmin=minWeight, vmax=maxWeight)
     cmap = cm.hot
@@ -45,16 +57,18 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
 
         b1Max = nodeInfo[startCol+numDims+dim1]
         b2Max = nodeInfo[startCol+numDims+dim2]
+
         plt.plot([b1Min,b1Max],[b2Min,b2Min],color='k')
         plt.plot([b1Min,b1Max],[b2Max,b2Max],color='k')
         plt.plot([b1Min,b1Min],[b2Min,b2Max],color='k')
         plt.plot([b1Max,b1Max],[b2Min,b2Max],color='k')
 
-        numPoints = nodeInfo[2]
+        numPoints = nodeInfo[2] # col 2 points-size
         if numPoints > 0 :
-            treeInd = int(nodeInfo[0])
-            #plt.text(0.5*(b1Min+b1Max),0.5*(b2Min+b2Max),str(treeInd))
-            weight = nodeInfo[tree.shape[1]-2] # plotting the mean weight
+            treeInd = int(nodeInfo[0]) # col 0 tree-index
+
+            weight = nodeInfo[heatMapPropertyCol] # plotting the mean weight
+
             plt.fill_between([b1Min,b1Max],[b2Min,b2Min],[b2Max,b2Max],
                 color=cm.ScalarMappable(norm=norm, cmap=cmap).to_rgba(weight))
 
@@ -63,8 +77,6 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
         fig = plt.gcf()
         fig.gca().add_artist(circle1)
 
-    #ax = plt.gca()
-    #ax.set_axis_bgcolor('red')
     plt.show()
 
 if __name__ == "__main__" :

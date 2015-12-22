@@ -42,6 +42,7 @@ public:
     ,mTreeActive(true)
     ,mVolume(0)
     ,mNodeChar(ACCEPTED)
+    ,mAccRatio(1)
     {
 
     }
@@ -71,6 +72,7 @@ public:
     ,mHasRighSubTree(false)
     ,mTreeActive(true)
     ,mNodeChar(ACCEPTED)
+    ,mAccRatio(1)
     {
         // sanity checks
         assert(thresholdForBranching>0);
@@ -141,6 +143,7 @@ public:
         mHasRighSubTree = false;
         mTreeActive = true;
         mNodeChar = ACCEPTED;
+        mAccRatio = realScalarType(1);
 
         // sanity checks
         assert(thresholdForBranching>0);
@@ -211,6 +214,7 @@ public:
         mHasRighSubTree = false;
         mTreeActive = true;
         mNodeChar = ACCEPTED;
+        mAccRatio = realScalarType(1);
 
         assert(thresholdForBranching>0);
 
@@ -242,21 +246,28 @@ public:
         // TODO should we write a header?
         // the order is
         // tree-index,split-dimension,points-size,bound-min,bound-max,
-        // weight-min,weight-max,weight-mean,weight-std-dvn,
+        // weight-min,weight-max,weight-mean,weight-std-dvn,volume,node-type
 
-        outFile<<mTreeIndex<<","<<mSplitDimension<<","<<mPoints.size()<<",";
+        outFile<<mTreeIndex<<","    // 0 
+        <<mSplitDimension<<","      // 1
+        <<mPoints.size()<<","       // 2
+        <<mWeightMin<<","           // 3
+        <<mWeightMax<<","           // 4
+        <<mWeightsMean<<","         // 5
+        <<mWeightsStdDvn<<","       // 6
+        <<mVolume<<","              // 7 
+        <<(int)mNodeChar<<","       // 8
+        <<mAccRatio<<",";           // 9
+
         for(size_t i=0;i<mBoundMin.size();++i)
         {
             outFile<<mBoundMin[i]<<",";
         }
-        for(size_t i=0;i<mBoundMax.size();++i)
+        for(size_t i=0;i<mBoundMax.size() -1 ;++i)
         {
             outFile<<mBoundMax[i]<<",";
         }
-        outFile<<mWeightMin<<","
-            <<mWeightMax<<","
-            <<mWeightsMean<<","
-            <<mWeightsStdDvn<<std::endl;
+        outFile<<mBoundMax[mBoundMax.size() -1]<<std::endl;
 
         // go inside the trees and do the same
         if(mHasLeftSubTree)
@@ -477,6 +488,9 @@ public:
                         numRej += 1;
                     }
                 }
+
+                mAccRatio = (realScalarType)numAcc/(realScalarType)mPoints.size();
+                std::cout<<"mAccRatio = "<<mAccRatio<<std::endl;
 
                 if(numAcc > size_t(0) and numRej == size_t(0))
                 {
@@ -1129,6 +1143,7 @@ private:
             computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn);
 
             // flag accept / reject / accept-reject
+            // TODO check if this is done twice?
             size_t numAcc=0;
             size_t numRej=0;
             for(size_t i=0;i<mPoints.size();++i)
@@ -1142,6 +1157,9 @@ private:
                     numRej += 1;
                 }
             }
+
+            mAccRatio = (realScalarType)numAcc/(realScalarType)mPoints.size();
+
             if(numAcc > size_t(0) and numRej == size_t(0))
             {
                 mNodeChar = ACCEPTED;
@@ -1208,6 +1226,7 @@ private:
     realScalarType mWeightsMean;
     realScalarType mVolume;
     nodeCharacterstic mNodeChar;
+    realScalarType mAccRatio;
 };
 
 #endif //ASYMM_TREE_HPP

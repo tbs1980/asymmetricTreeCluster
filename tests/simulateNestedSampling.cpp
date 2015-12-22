@@ -36,7 +36,8 @@ void simulateNS(void)
 {
     typedef point<double> pointType;
     typedef std::vector<pointType> pointsArrayType;
-    typedef TreeSampler<pointType> asymmTreeType;
+    typedef asymmTree<pointType> asymmTreeType;
+    //typedef TreeSampler<pointType> asymmTreeType;
     typedef GaussLikelihood<double> GaussLikelihoodType;
 
     // define the Gauss dist for computing weights
@@ -52,9 +53,6 @@ void simulateNS(void)
         boundMin[i] = -double(2);
         boundMax[i] = double(2);
     }
-
-    //boundMin[1] = -double(5);
-    //boundMax[1] = double(15);
 
     size_t threshold = 10;
     size_t treeIndex = 0;
@@ -101,26 +99,9 @@ void simulateNS(void)
     ast.dumpTree(outFile);
     outFile.close();
 
-/*
-    pointType fpt = livePoints[livePointInds[0]];
-    std::cout<<"searching for nearest nodes for "<<fpt[0]<<"\t"<<fpt[1]<<std::endl;
-    pointType dist(numDims,double(0));
-    dist[0] = 2.0;
-    dist[1] = 2.0;
-    std::cout<<"distnace in each dimension is "<<dist[0]<<"\t"<<dist[1]<<std::endl;
-    std::vector<size_t> nearInds;
-    ast.findNearestNodes(fpt,dist,nearInds);
-    std::cout<<"nearest inds are "<<std::endl;
-    for(size_t i=0;i<nearInds.size();++i)
-    {
-        std::cout<<nearInds[i]<<std::endl;
-    }
-
-    return;
-*/
     // delte the nodes below the lmin
     // this will be the same as we havn't adde any new points
-    //ast.deleteNodes(livePoints[livePointInds[0]].weight());
+    // ast.deleteNodes(livePoints[livePointInds[0]].weight());
     // dump
     outFile.open("nsTreeInitLv.dat",std::ios::trunc);
     ast.dumpTree(outFile);
@@ -129,70 +110,41 @@ void simulateNS(void)
     //return;
 
     // createa a file for plotting acceptance rates
-    std::ofstream accFile;
+    //std::ofstream accFile;
     //accFile.open("acceptance2near.dat",std::ios::trunc);
-    accFile.open("acceptance2all.dat",std::ios::trunc);
+    //accFile.open("acceptance2all.dat",std::ios::trunc);
 
     // next loop through the sampling process
-    size_t numIter = 5000;
+    size_t numIter = 1000;
     size_t tot=0;
     size_t acc=0;
     for(size_t i=0;i<numIter;++i)
     {
-        //std::cout<<"\n----------Iteration "<<tot<<" ---------------"<<std::endl;
-        /*
-        if(tot > 20 )
-        {
-            break;
-        }
-        */
+        std::cout<<"\n----------Iteration "<<tot<<" ---------------"<<std::endl;
+
         pointType fpt = livePoints[livePointInds[0]];
-        /*
-        pointType nodDims(numDims,double(0));
-        bool nodeFound = false;
-        ast.findNodeAndItsDimensions(fpt,nodDims,nodeFound);
-        */
-        /*
-        std::cout<<"node dimensions are "<<std::endl;
-        for(size_t i=0;i<nodDims.size();++i)
-        {
-            std::cout<<nodDims[i]<<std::endl;
-        }
-        std::cout<<std::endl;*/
-
-
-        //pointType dist(numDims,double(0));
-        //dist[0] = 2.0;
-        //std::vector<size_t> nearInds;
-        //ast.findNearestNodes(fpt,nodDims,nearInds);
-        /*
-        std::cout<<"nearest inds are "<<std::endl;
-        for(size_t i=0;i<nearInds.size();++i)
-        {
-            std::cout<<nearInds[i]<<std::endl;
-        }*/
 
         //  get some random points
-        //pointType pt = ast.randomPoint(randGen);
-        pointType pt = ast.walkRandomPoint(randGen);
+        pointType pt = ast.randomPoint(randGen);
+        //pointType pt = ast.walkRandomPoint(randGen);
 
         //pointType pt = ast.randomPoint(fpt,randGen);
         double weight = gauss.logLik(pt.coords());
         pt.weight() = weight;
 
         // add this to the tree
-        pointsArrayType ptArr(1,pt);
+        //pointsArrayType ptArr(1,pt);
         //ast.addPoints(ptArr);
 
         // replace the live lowest point if necessary
         if(pt.weight() > livePoints[livePointInds[0]].weight())
         {
+            pt.accepted() = true;
+            pointsArrayType ptArr(1,pt);
             ast.addPoints(ptArr);
+
             // delete nodes if necessary
-            //std::cout<<"Deleting the nodes below "<<livePoints[livePointInds[0]][0]
-            //<<"\t"<<livePoints[livePointInds[0]][1]<<"\t"
-            //<<livePoints[livePointInds[0]].weight()<<std::endl;
-            ast.deleteNodes(livePoints[livePointInds[0]].weight());
+            //ast.deleteNodes(livePoints[livePointInds[0]].weight());
 
             // replace the min live point
             livePoints[livePointInds[0]] = pt;
@@ -200,6 +152,13 @@ void simulateNS(void)
             // increase the acc rate
             ++acc;
         }
+        else
+        {
+            pt.accepted() = false;
+            pointsArrayType ptArr(1,pt);
+            ast.addPoints(ptArr);
+        }
+
         ++tot;
 
         // re-sort the live points and find min live
@@ -211,13 +170,15 @@ void simulateNS(void)
         );
         //std::cout<<"lmin is "<<livePoints[livePointInds[0]].weight()<<"\t"<<(double)acc/(double)tot<<std::endl;
 
-        outFile.open("nsTreeIter.dat",std::ios::trunc);
-        ast.dumpTree(outFile);
-        outFile.close();
 
-        accFile<<i<<","<<(double)acc/(double)tot<<","<<livePoints[livePointInds[0]].weight()<<std::endl;
+        //accFile<<i<<","<<(double)acc/(double)tot<<","<<livePoints[livePointInds[0]].weight()<<std::endl;
     }
-     accFile.close();
+
+    outFile.open("nsTreeIter.dat",std::ios::trunc);
+    ast.dumpTree(outFile);
+    outFile.close();
+    
+    //accFile.close();
 
 }
 
