@@ -115,7 +115,7 @@ void simulateNS(void)
     //accFile.open("acceptance2all.dat",std::ios::trunc);
 
     // next loop through the sampling process
-    size_t numIter = 1000;
+    size_t numIter = 100;
     size_t tot=0;
     size_t acc=0;
     for(size_t i=0;i<numIter;++i)
@@ -145,6 +145,7 @@ void simulateNS(void)
 
             // delete nodes if necessary
             //ast.deleteNodes(livePoints[livePointInds[0]].weight());
+            ast.deleteNodes();
 
             // replace the min live point
             livePoints[livePointInds[0]] = pt;

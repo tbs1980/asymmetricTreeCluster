@@ -10,6 +10,7 @@
 #include <cmath>
 #include <fstream>
 #include <random>
+#include <numeric>
 
 enum nodeCharacterstic
 {
@@ -19,12 +20,38 @@ enum nodeCharacterstic
 };
 
 template<class pointType>
+struct nodeInformation
+{
+    typedef typename pointType::realScalarType realScalarType;
+
+    size_t mNumDims;
+    size_t mSplitDimension;
+    pointType mBoundMin;
+    pointType mBoundMax;
+    pointType mMedianVal;
+    size_t mThresholdForBranching;
+    size_t mTreeIndex;
+    size_t mTreeLevel;
+    realScalarType mWeightMin;
+    realScalarType mWeightMax;
+    bool mHasLeftSubTree;
+    bool mHasRighSubTree;
+    bool mTreeActive;
+    realScalarType mWeightsStdDvn;
+    realScalarType mWeightsMean;
+    realScalarType mVolume;
+    nodeCharacterstic mNodeChar;
+    realScalarType mAccRatio;
+};
+
+template<class pointType>
 class asymmTree
 {
 public:
     typedef typename pointType::realScalarType realScalarType;
     typedef asymmTree<pointType> asymmTreeType;
     typedef std::vector<pointType> pointsArrayType;
+    typedef nodeInformation<pointType> nodeInformationType;
 
     asymmTree()
     :mLeftSubTree(nullptr)
@@ -552,6 +579,102 @@ public:
         }
     }
 
+    void deleteActiveNodeByIndex(size_t treeIndex)
+    {
+        if(mHasLeftSubTree or mHasRighSubTree)
+        {
+            if(mHasRighSubTree)
+            {
+                mRightSubTree->deleteActiveNodeByIndex(treeIndex);
+                if(mRightSubTree->treeIsActive() == false)
+                {
+                    delete mRightSubTree;
+                    mRightSubTree = nullptr;
+                    mHasRighSubTree = false;
+                }
+            }
+            
+            if(mHasLeftSubTree)
+            {
+                mLeftSubTree->deleteActiveNodeByIndex(treeIndex);
+                if (mLeftSubTree->treeIsActive()==false)
+                {
+                    delete mLeftSubTree;
+                    mLeftSubTree = nullptr;
+                    mHasLeftSubTree = false;
+                }
+            }
+        }
+        else if(treeIndex == mTreeIndex)
+        {
+            std::cout<<"deleting node with index"<<treeIndex<<std::endl;
+            mPoints.clear();
+            mTreeActive = false;
+        }
+    }
+
+    void deleteNodes()
+    {
+        // step 1 compute the total volume of accepted and accepted-rejected nodes
+        std::vector<nodeInformationType> ndInfVect;
+        getTreeIndicesAndVolumesAcc(ndInfVect);
+
+        // only proceed if we have more than one node
+        if(ndInfVect.size() > 0)
+        {
+            std::cout<<"We have "<<ndInfVect.size()<<" acc-nodes "<<std::endl;
+            realScalarType accRejVolume = std::accumulate(ndInfVect.begin(), ndInfVect.end(), 
+                realScalarType(0),
+                [](realScalarType & a, nodeInformationType & b)
+                {
+                    return a != realScalarType(0) ? a + b.mVolume : b.mVolume ;
+                }
+                );
+            std::cout<<"Total volume of acc nodes "<<accRejVolume<<std::endl;
+
+            // step 2 define alpha
+            realScalarType reductionFactor(0.9);
+            assert(reductionFactor > realScalarType(0) and reductionFactor <= realScalarType(1) );
+
+            // step 3 compute the volume to be reduced if possible
+            realScalarType reducedVolume = ( realScalarType(1)/reductionFactor -realScalarType(1) )*accRejVolume;
+            std::cout<<"Reduced volume  = "<<reducedVolume<<std::endl;
+
+            // step 4 get the nodes with rejected points
+            ndInfVect.clear();
+            getTreeIndicesAndVolumesRejc(ndInfVect);
+
+            if(ndInfVect.size() > 0 )
+            {
+                std::cout<<"We have "<<ndInfVect.size()<<" rejec-nodes"<<std::endl;
+                // step 5 sort them according to the minimum likelihood of the node
+                std::sort(std::begin(ndInfVect),std::end(ndInfVect),
+                    [](nodeInformationType const & a, nodeInformationType const & b)
+                    {
+                        return a.mWeightMin < b.mWeightMin;
+                    }
+                    );
+
+                // step 6 delete the nodes
+                realScalarType volRejc(0);
+                for(size_t i=0;i<ndInfVect.size();++i)
+                {
+                    std::cout<<i<<"\t"<<ndInfVect[i].mVolume<<"\t"<<volRejc<<std::endl;
+                    if(volRejc + ndInfVect[i].mVolume >= reducedVolume)
+                    {
+                        break;
+                    }
+                    else
+                    {
+                        volRejc += ndInfVect[i].mVolume;
+                        std::cout<<"We should delete "<<ndInfVect[i].mTreeIndex<<std::endl;
+                        deleteActiveNodeByIndex(ndInfVect[i].mTreeIndex);
+                    }
+                }
+           }
+        }
+    }
+
     realScalarType weightMin() const
     {
         return mWeightMin;
@@ -595,6 +718,73 @@ public:
         else
         {
             inds.push_back(mTreeIndex);
+        }
+    }
+
+    nodeInformationType getNodeInformation() const
+    {
+        nodeInformationType ndInfo;
+
+        ndInfo.mNumDims = mNumDims;
+        ndInfo.mBoundMin = mBoundMin;
+        ndInfo.mBoundMax = mBoundMax;
+        ndInfo.mMedianVal = mMedianVal;
+        ndInfo.mThresholdForBranching = mThresholdForBranching;
+        ndInfo.mTreeIndex = mTreeIndex;
+        ndInfo.mTreeLevel = mTreeLevel;
+        ndInfo.mWeightMin = mWeightMin;
+        ndInfo.mWeightMax = mWeightMax;
+        ndInfo.mHasLeftSubTree = mHasLeftSubTree;
+        ndInfo.mHasRighSubTree = mHasRighSubTree;
+        ndInfo.mTreeActive = mTreeActive;
+        ndInfo.mWeightsStdDvn = mWeightsStdDvn;
+        ndInfo.mWeightsMean = mWeightsMean;
+        ndInfo.mVolume = mVolume;
+        ndInfo.mNodeChar = mNodeChar;
+        ndInfo.mAccRatio = mAccRatio;
+
+        return ndInfo;
+    }
+
+    void getTreeIndicesAndVolumesAcc(std::vector<nodeInformationType> & nodeInfoVect)
+    {
+        // TODO should we have a struct returning all the properties?
+        if(mHasLeftSubTree or mHasRighSubTree)
+        {
+            if(mHasLeftSubTree)
+            {
+                mLeftSubTree->getTreeIndicesAndVolumesAcc(nodeInfoVect);
+            }
+
+            if(mHasRighSubTree)
+            {
+                mRightSubTree->getTreeIndicesAndVolumesAcc(nodeInfoVect);
+            }
+        }
+        else if(mNodeChar == ACCEPTED) //or mNodeChar == ACCEPTED_AND_REJECTED)
+        {
+            nodeInfoVect.push_back( getNodeInformation() );
+        }
+    }
+
+    void getTreeIndicesAndVolumesRejc(std::vector<nodeInformationType> & nodeInfoVect)
+    {
+        // TODO should we have a struct returning all the properties?
+        if(mHasLeftSubTree or mHasRighSubTree)
+        {
+            if(mHasLeftSubTree)
+            {
+                mLeftSubTree->getTreeIndicesAndVolumesRejc(nodeInfoVect);
+            }
+
+            if(mHasRighSubTree)
+            {
+                mRightSubTree->getTreeIndicesAndVolumesRejc(nodeInfoVect);
+            }
+        }
+        else if(mNodeChar == ACCEPTED_AND_REJECTED or mNodeChar == REJECTED)
+        {
+            nodeInfoVect.push_back( getNodeInformation() );
         }
     }
 
@@ -1057,5 +1247,6 @@ private:
     nodeCharacterstic mNodeChar;
     realScalarType mAccRatio;
 };
+
 
 #endif //ASYMM_TREE_HPP
