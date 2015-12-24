@@ -71,43 +71,21 @@ void simulateNS(void)
     for(size_t i=0;i<numLivePoints;++i)
     {
         livePointInds[i] = i;
-        pointType pt = ast.randomPoint(randGen);
+        pointType pt = ast.getRandomPoint(randGen);
         double weight = gauss.logLik(pt.coords());
         pt.weight() = weight;
         livePoints[i] = pt;
+        ast.addPoint(pt,false);
+        std::cout<<std::endl;
     }
 
-    auto begin = std::begin(livePointInds);
-    auto end = std::end(livePointInds);
+    //return ;
 
-    // sort the live points and delete the nodes
-    // which have lmax < l*
-    std::sort(begin,end,
-        [livePoints](size_t const a,size_t const b)
-        {
-            return livePoints[a].weight() < livePoints[b].weight();
-        }
-    );
+    std::sort(livePoints.begin(),livePoints.end(),
+        [](pointType const & a,pointType const& b){ return a.weight() < b.weight(); });
 
     std::cout<<"At the begining lmin is "<<livePoints[livePointInds[0]].weight()<<std::endl;
 
-    // add these points to the tree
-    ast.addPoints(livePoints,true);
-    // dump
-    std::ofstream outFile;
-    outFile.open("nsTree.dat",std::ios::trunc);
-    ast.dumpTree(outFile);
-    outFile.close();
-
-    // delte the nodes below the lmin
-    // this will be the same as we havn't adde any new points
-    // ast.deleteNodes(livePoints[livePointInds[0]].weight());
-    // dump
-    outFile.open("nsTreeInitLv.dat",std::ios::trunc);
-    ast.dumpTree(outFile);
-    outFile.close();
-
-    //return;
 
     // createa a file for plotting acceptance rates
     //std::ofstream accFile;
@@ -125,26 +103,18 @@ void simulateNS(void)
         pointType fpt = livePoints[livePointInds[0]];
 
         //  get some random points
-        pointType pt = ast.randomPoint(randGen);
-        //pointType pt = ast.walkRandomPoint(randGen);
+        pointType pt = ast.getRandomPoint(randGen);
 
-        //pointType pt = ast.randomPoint(fpt,randGen);
         double weight = gauss.logLik(pt.coords());
         pt.weight() = weight;
-
-        // add this to the tree
-        //pointsArrayType ptArr(1,pt);
-        //ast.addPoints(ptArr);
 
         // replace the live lowest point if necessary
         if(pt.weight() > livePoints[livePointInds[0]].weight())
         {
             pt.accepted() = true;
-            pointsArrayType ptArr(1,pt);
-            ast.addPoints(ptArr);
+            ast.addPoint(pt);
 
             // delete nodes if necessary
-            //ast.deleteNodes(livePoints[livePointInds[0]].weight());
             ast.deleteNodes();
 
             // replace the min live point
@@ -156,25 +126,21 @@ void simulateNS(void)
         else
         {
             pt.accepted() = false;
-            pointsArrayType ptArr(1,pt);
-            ast.addPoints(ptArr);
+            ast.addPoint(pt);
         }
 
         ++tot;
 
-        // re-sort the live points and find min live
-        std::sort(begin,end,
-            [livePoints](size_t const a,size_t const b)
-            {
-                return livePoints[a].weight() < livePoints[b].weight();
-            }
-        );
+        std::sort(livePoints.begin(),livePoints.end(),
+            [](pointType const & a,pointType const& b){ return a.weight() < b.weight(); });
+
         //std::cout<<"lmin is "<<livePoints[livePointInds[0]].weight()<<"\t"<<(double)acc/(double)tot<<std::endl;
 
 
         //accFile<<i<<","<<(double)acc/(double)tot<<","<<livePoints[livePointInds[0]].weight()<<std::endl;
     }
 
+    std::ofstream outFile;
     outFile.open("nsTreeIter.dat",std::ios::trunc);
     ast.dumpTree(outFile);
     outFile.close();

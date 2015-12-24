@@ -380,6 +380,7 @@ public:
             else
             {
                 std::cout<<"This means we are trying to add point to a tree that we deleted"<<std::endl;
+                std::cout<<"The current node id = "<<mTreeIndex<<std::endl;
                 std::cout<<"numPointsLeft = "<<numPointsLeft<<std::endl;
                 std::cout<<"numPointsRight = "<<numPointsRight<<std::endl;
                 std::cout<<"mHasLeftSubTree = "<<mHasLeftSubTree<<std::endl;
@@ -458,6 +459,7 @@ public:
             {
                 // we are not ready to branch yet
                 // jut push back the points
+                std::cout<<"Adding the point to the node = "<<mTreeIndex<<std::endl;
 
                 // create a points array to store all points
                 // TODO is push back a better solution?
@@ -541,6 +543,53 @@ public:
                     abort();
                 }
            }
+        }
+    }
+
+    void addPoint(pointType const&  point,bool const makeTree = true)
+    {
+        assert(mThresholdForBranching>0);
+
+        if(mHasLeftSubTree or mHasRighSubTree)
+        {
+            if( point[mSplitDimension] < mMedianVal[mSplitDimension] )
+            {
+                if(mHasLeftSubTree)
+                {
+                    mLeftSubTree->addPoint(point);
+                }
+                else
+                {
+                    std::cout<<"This means we are trying to add point to a left-tree that we deleted"<<std::endl;
+                    std::cout<<"The current node id = "<<mTreeIndex<<std::endl;
+                    abort();
+                }
+            }
+            else
+            {
+                if(mHasRighSubTree)
+                {
+                    mRightSubTree->addPoint(point);
+                }
+                else
+                {
+                    std::cout<<"This means we are trying to add point to a right-tree that we deleted"<<std::endl;
+                    std::cout<<"The current node id = "<<mTreeIndex<<std::endl;
+                    abort();
+                }
+            }
+        }
+        else
+        {
+            std::cout<<"*****Adding the point to the node "<<mTreeIndex<<std::endl;
+            mPoints.push_back(point);
+            computeNodeCharacterstics();
+
+            if(makeTree == true and mPoints.size() + size_t(1) > mThresholdForBranching)
+            {
+                std::cout<<"We are builing the tree"<<std::endl;
+                buildTree();
+            }
         }
     }
 
@@ -788,6 +837,27 @@ public:
         }
     }
 
+    void getTreeInformation(std::vector<nodeInformationType> & nodeInfoVect)
+    {
+        // TODO should we have a struct returning all the properties?
+        if(mHasLeftSubTree or mHasRighSubTree)
+        {
+            if(mHasLeftSubTree)
+            {
+                mLeftSubTree->getTreeInformation(nodeInfoVect);
+            }
+
+            if(mHasRighSubTree)
+            {
+                mRightSubTree->getTreeInformation(nodeInfoVect);
+            }
+        }
+        else
+        {
+            nodeInfoVect.push_back( getNodeInformation() );
+        }
+    }
+
     void getBounds(pointType & bndMin, pointType & bndMax,size_t const treeIndex)
     {
         if(mTreeIndex == treeIndex)
@@ -927,7 +997,146 @@ public:
     asymmTreeType* leftSubTree()  {return mLeftSubTree;}
     asymmTreeType* rightSubTree() {return mRightSubTree;}
 
+    template<class RNGType>
+    pointType getRandomPoint(RNGType & rng)
+    {
+        // step 1 create a sorted list of active nodes by ascending volume
+        std::vector<nodeInformationType> ndInfVect;
+        getTreeInformation(ndInfVect);
+
+        assert( ndInfVect.size() > size_t(0) );
+
+        std::cout<<"Number of nodes present = "<<ndInfVect.size()<<std::endl;
+
+
+        std::sort(std::begin(ndInfVect),std::end(ndInfVect),
+            [](nodeInformationType const & a, nodeInformationType const & b)
+            {
+                return a.mVolume < b.mVolume;
+            }
+            );
+
+        // step 2 store cumulative volumes and reference indices
+        std::vector<realScalarType> fcvol(ndInfVect.size());
+        fcvol[0] = ndInfVect[0].mVolume;
+        for(size_t i=1;i<ndInfVect.size();++i)
+        {
+            assert(ndInfVect[i].mVolume > realScalarType(0) );
+            fcvol[i] = fcvol[i-1] + ndInfVect[i].mVolume;
+        }
+
+        // step 3 convert to cumulative fractional volumes
+        assert( fcvol[ndInfVect.size()-1] > realScalarType(0) );
+        realScalarType icvol = realScalarType(1) / fcvol[ndInfVect.size()-1];
+        for(size_t i=0;i<ndInfVect.size();++i)
+        {
+            fcvol[i] *= icvol;
+            //std::cout<<i<<"\t"<<fcvol[i]<<std::endl;
+        }
+
+        // step 4 uniformly select a vloume element 
+        // and find the corresponding node 
+        std::uniform_real_distribution<> distUniReal;
+        realScalarType uniVal = distUniReal(rng);
+
+        //std::cout<<"Random uni val generated is "<<uniVal<<std::endl;
+
+        auto lowBnd = std::lower_bound(fcvol.begin(),fcvol.end(),uniVal);
+
+        //std::cout<<"The lower bound is "<<std::distance(fcvol.begin(),lowBnd)<<std::endl;
+
+        auto idx = std::distance(fcvol.begin(),lowBnd);
+        size_t nodeSelected = ndInfVect[ idx ].mTreeIndex;
+
+        std::cout<<"*****Generating a random variate from "<<nodeSelected<<std::endl;
+
+        // step 5 generate a random variate from the node bounds
+        pointType boundMin = ndInfVect[ idx ].mBoundMin;
+        pointType boundMax = ndInfVect[ idx ].mBoundMax;
+
+        //std::cout<<"Bound min is "<<boundMin[0]<<"\t"<<boundMin[1]<<std::endl;
+        //std::cout<<"Bound max is "<<boundMax[0]<<"\t"<<boundMax[1]<<std::endl;
+
+        pointType randPnt(boundMin.size(),realScalarType(0));
+        for(size_t i=0;i<boundMin.size();++i)
+        {
+            assert(boundMin[i] < boundMax[i]);
+            randPnt[i] = boundMin[i] + (boundMax[i]-boundMin[i])*distUniReal(rng);
+        }
+
+        //std::cout<<"point generated is "<<randPnt[0]<<"\t"<<randPnt[1]<<std::endl;
+
+        return randPnt;
+
+    }
+
 private:
+
+    void computeNodeCharacterstics()
+    {
+        // sort and store the min and max
+        // set the point indices for sorting
+        std::vector<size_t> pointIndices(mPoints.size());
+        for(size_t i=0;i<pointIndices.size();++i)
+        {
+            pointIndices[i] = i;
+        }
+        typename std::vector<size_t>::iterator begin = std::begin(pointIndices);
+        typename std::vector<size_t>::iterator end = std::end(pointIndices);
+
+        // find the lmin and lmax right and left
+        auto wMinMax = std::minmax_element(begin,end,
+            [this](  size_t a, size_t b)
+            {
+                return ( mPoints[a].weight() < mPoints[b].weight() );
+            }
+        );
+        mWeightMin = mPoints[*wMinMax.first].weight();
+        mWeightMax = mPoints[*wMinMax.second].weight();
+
+        // compute the mean and standard deviation
+        computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn);
+
+        // flag accept / reject / accept-reject
+        size_t numAcc=0;
+        size_t numRej=0;
+        for(size_t i=0;i<mPoints.size();++i)
+        {
+            if(mPoints[i].accepted())
+            {
+                numAcc += 1;
+            }
+            else
+            {
+                numRej += 1;
+            }
+        }
+
+        mAccRatio = (realScalarType)numAcc/(realScalarType)mPoints.size();
+        std::cout<<"mAccRatio = "<<mAccRatio<<std::endl;
+
+        if(numAcc > size_t(0) and numRej == size_t(0))
+        {
+            mNodeChar = ACCEPTED;
+        }
+        else if(numAcc > size_t(0) and numRej > size_t(0))
+        {
+            mNodeChar = ACCEPTED_AND_REJECTED;
+        }
+        else if(numAcc == size_t(0) and numRej > size_t(0))
+        {
+            mNodeChar = REJECTED;
+        }
+        else if(numAcc == size_t(0) and numRej == size_t(0))
+        {
+            assert(mPoints.size() == 0); // in this case we should have problem
+        }
+        else
+        {
+            std::cout<<"This shold not hapen. numAcc = "<<numAcc<<", numRej="<<numRej<<std::endl;
+            abort();
+        }
+    }
 
     size_t findMaxVarDimension()
     {
