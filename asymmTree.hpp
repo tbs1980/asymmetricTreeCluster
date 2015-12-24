@@ -355,41 +355,6 @@ public:
         }
     }
 
-    void deleteNodes(realScalarType const weightStar)
-    {
-        if(mHasLeftSubTree or mHasRighSubTree)
-        {
-            if(mHasLeftSubTree)
-            {
-                mLeftSubTree->deleteNodes(weightStar);
-                if (mLeftSubTree->treeIsActive()==false)
-                {
-                    delete mLeftSubTree;
-                    mLeftSubTree = nullptr;
-                    mHasLeftSubTree = false;
-                }
-            }
-            if(mHasRighSubTree)
-            {
-                mRightSubTree->deleteNodes(weightStar);
-                if(mRightSubTree->treeIsActive() == false)
-                {
-                    delete mRightSubTree;
-                    mRightSubTree = nullptr;
-                    mHasRighSubTree = false;
-                }
-            }
-        }
-        //else if(mWeightMax <= weightStar)
-        //else if(mWeightsMean + realScalarType(1.)*mWeightsStdDvn <= weightStar)
-        else if(mWeightMax + realScalarType(2.)*mWeightsStdDvn < weightStar)
-        {
-
-            mPoints.clear();
-            mTreeActive = false;
-        }
-    }
-
     void deleteActiveNodeByIndex(size_t treeIndex)
     {
         if(mHasLeftSubTree or mHasRighSubTree)
