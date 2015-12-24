@@ -76,7 +76,7 @@ void simulateNS(void)
         pt.weight() = weight;
         livePoints[i] = pt;
         ast.addPoint(pt,false);
-        std::cout<<std::endl;
+        //std::cout<<std::endl;
     }
 
     //return ;
@@ -93,12 +93,12 @@ void simulateNS(void)
     //accFile.open("acceptance2all.dat",std::ios::trunc);
 
     // next loop through the sampling process
-    size_t numIter = 100;
+    size_t numIter = 1000;
     size_t tot=0;
     size_t acc=0;
     for(size_t i=0;i<numIter;++i)
     {
-        std::cout<<"\n----------Iteration "<<tot<<" ---------------"<<std::endl;
+        //std::cout<<"\n----------Iteration "<<tot<<" ---------------"<<std::endl;
 
         pointType fpt = livePoints[livePointInds[0]];
 

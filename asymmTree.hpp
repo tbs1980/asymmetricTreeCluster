@@ -343,13 +343,13 @@ public:
         }
         else
         {
-            std::cout<<"*****Adding the point to the node "<<mTreeIndex<<std::endl;
+            //std::cout<<"*****Adding the point to the node "<<mTreeIndex<<std::endl;
             mPoints.push_back(point);
             computeNodeCharacterstics();
 
             if(makeTree == true and mPoints.size() + size_t(1) > mThresholdForBranching)
             {
-                std::cout<<"We are builing the tree"<<std::endl;
+                //std::cout<<"We are builing the tree"<<std::endl;
                 buildTree();
             }
         }
@@ -383,7 +383,7 @@ public:
         }
         else if(treeIndex == mTreeIndex)
         {
-            std::cout<<"deleting node with index"<<treeIndex<<std::endl;
+            //std::cout<<"deleting node with index"<<treeIndex<<std::endl;
             mPoints.clear();
             mTreeActive = false;
         }
@@ -398,7 +398,7 @@ public:
         // only proceed if we have more than one node
         if(ndInfVect.size() > 0)
         {
-            std::cout<<"We have "<<ndInfVect.size()<<" acc-nodes "<<std::endl;
+            //std::cout<<"We have "<<ndInfVect.size()<<" acc-nodes "<<std::endl;
             realScalarType accRejVolume = std::accumulate(ndInfVect.begin(), ndInfVect.end(), 
                 realScalarType(0),
                 [](realScalarType & a, nodeInformationType & b)
@@ -406,7 +406,8 @@ public:
                     return a != realScalarType(0) ? a + b.mVolume : b.mVolume ;
                 }
                 );
-            std::cout<<"Total volume of acc nodes "<<accRejVolume<<std::endl;
+            
+            //std::cout<<"Total volume of acc nodes "<<accRejVolume<<std::endl;
 
             // step 2 define alpha
             realScalarType reductionFactor(0.9);
@@ -414,7 +415,8 @@ public:
 
             // step 3 compute the volume to be reduced if possible
             realScalarType reducedVolume = ( realScalarType(1)/reductionFactor -realScalarType(1) )*accRejVolume;
-            std::cout<<"Reduced volume  = "<<reducedVolume<<std::endl;
+            
+            //std::cout<<"Reduced volume  = "<<reducedVolume<<std::endl;
 
             // step 4 get the nodes with rejected points
             ndInfVect.clear();
@@ -422,7 +424,7 @@ public:
 
             if(ndInfVect.size() > 0 )
             {
-                std::cout<<"We have "<<ndInfVect.size()<<" rejec-nodes"<<std::endl;
+                //std::cout<<"We have "<<ndInfVect.size()<<" rejec-nodes"<<std::endl;
                 // step 5 sort them according to the minimum likelihood of the node
                 std::sort(std::begin(ndInfVect),std::end(ndInfVect),
                     [](nodeInformationType const & a, nodeInformationType const & b)
@@ -435,7 +437,7 @@ public:
                 realScalarType volRejc(0);
                 for(size_t i=0;i<ndInfVect.size();++i)
                 {
-                    std::cout<<i<<"\t"<<ndInfVect[i].mVolume<<"\t"<<volRejc<<std::endl;
+                    //std::cout<<i<<"\t"<<ndInfVect[i].mVolume<<"\t"<<volRejc<<std::endl;
                     if(volRejc + ndInfVect[i].mVolume >= reducedVolume)
                     {
                         break;
@@ -443,7 +445,7 @@ public:
                     else
                     {
                         volRejc += ndInfVect[i].mVolume;
-                        std::cout<<"We should delete "<<ndInfVect[i].mTreeIndex<<std::endl;
+                        //std::cout<<"We should delete "<<ndInfVect[i].mTreeIndex<<std::endl;
                         deleteActiveNodeByIndex(ndInfVect[i].mTreeIndex);
                     }
                 }
@@ -575,7 +577,7 @@ public:
 
         assert( ndInfVect.size() > size_t(0) );
 
-        std::cout<<"Number of nodes present = "<<ndInfVect.size()<<std::endl;
+        //std::cout<<"Number of nodes present = "<<ndInfVect.size()<<std::endl;
 
 
         std::sort(std::begin(ndInfVect),std::end(ndInfVect),
@@ -617,7 +619,7 @@ public:
         auto idx = std::distance(fcvol.begin(),lowBnd);
         size_t nodeSelected = ndInfVect[ idx ].mTreeIndex;
 
-        std::cout<<"*****Generating a random variate from "<<nodeSelected<<std::endl;
+        //std::cout<<"*****Generating a random variate from "<<nodeSelected<<std::endl;
 
         // step 5 generate a random variate from the node bounds
         pointType boundMin = ndInfVect[ idx ].mBoundMin;
@@ -682,7 +684,8 @@ private:
         }
 
         mAccRatio = (realScalarType)numAcc/(realScalarType)mPoints.size();
-        std::cout<<"mAccRatio = "<<mAccRatio<<std::endl;
+        
+        //std::cout<<"mAccRatio = "<<mAccRatio<<std::endl;
 
         if(numAcc > size_t(0) and numRej == size_t(0))
         {
