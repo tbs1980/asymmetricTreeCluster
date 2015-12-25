@@ -55,7 +55,7 @@ void simulateNS(void)
     }
 
     //boundMin[1] = -2;
-    boundMax[1] = 10;
+    //boundMax[1] = 10;
 
     size_t threshold = 10;
     size_t treeIndex = 0;
@@ -69,7 +69,7 @@ void simulateNS(void)
     //return;
 
     // create a set of live points
-    size_t numLivePoints = 100;
+    size_t numLivePoints = 1000;
     pointsArrayType livePoints(numLivePoints);
     std::vector<size_t> livePointInds(numLivePoints);
 
@@ -99,7 +99,7 @@ void simulateNS(void)
     //accFile.open("acceptance2all.dat",std::ios::trunc);
 
     // next loop through the sampling process
-    size_t numIter = 1;
+    size_t numIter = 3000;
     size_t tot=0;
     size_t acc=0;
     for(size_t i=0;i<numIter;++i)
@@ -150,6 +150,8 @@ void simulateNS(void)
     outFile.open("nsTreeIter.dat",std::ios::trunc);
     ast.dumpTree(outFile);
     outFile.close();
+
+    return;
     
     //accFile.close();
 

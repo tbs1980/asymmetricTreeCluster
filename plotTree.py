@@ -77,7 +77,11 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
         fig = plt.gcf()
         fig.gca().add_artist(circle1)
 
-    plt.show()
+    fig = plt.gca()
+    fig.set_axis_bgcolor('#B0B1B2')
+    
+    #plt.show()
+    plt.savefig('plotTree.svg')
 
 if __name__ == "__main__" :
     if len(sys.argv) == 2:
