@@ -157,6 +157,36 @@ public:
         }
     }
 
+    void dumpTreeForDotRecurse(std::ofstream & outFile) const
+    {
+        if(mHasLeftSubTree)
+        {
+            outFile<<mTreeIndex<<" -> "<<mLeftSubTree->treeIndex()<<std::endl;
+        }
+
+        if(mHasRighSubTree)
+        {
+            outFile<<mTreeIndex<<" -> "<<mRightSubTree->treeIndex()<<std::endl;
+        }
+
+        if(mHasLeftSubTree)
+        {
+            mLeftSubTree->dumpTreeForDotRecurse(outFile);
+        }
+
+        if(mHasRighSubTree)
+        {
+            mRightSubTree->dumpTreeForDotRecurse(outFile);
+        }
+    }
+
+    void dumpTreeForDot(std::ofstream & outFile) const
+    {
+        outFile<<"digraph graphname {\n";
+        dumpTreeForDotRecurse(outFile);
+        outFile<<"}";
+    }
+
 
     void addPoint(pointType const&  point, bool const makeTree = true)
     {
@@ -314,6 +344,11 @@ public:
     bool treeIsActive() const
     {
         return mTreeActive;
+    }
+
+    size_t treeIndex() const
+    {
+        return mTreeIndex;
     }
 
 

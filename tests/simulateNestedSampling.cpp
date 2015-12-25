@@ -69,7 +69,7 @@ void simulateNS(void)
     //return;
 
     // create a set of live points
-    size_t numLivePoints = 1000;
+    size_t numLivePoints = 100;
     pointsArrayType livePoints(numLivePoints);
     std::vector<size_t> livePointInds(numLivePoints);
 
@@ -99,7 +99,7 @@ void simulateNS(void)
     //accFile.open("acceptance2all.dat",std::ios::trunc);
 
     // next loop through the sampling process
-    size_t numIter = 1000;
+    size_t numIter = 1;
     size_t tot=0;
     size_t acc=0;
     for(size_t i=0;i<numIter;++i)
@@ -152,6 +152,10 @@ void simulateNS(void)
     outFile.close();
     
     //accFile.close();
+
+    outFile.open("nsTreeDotPlot.dot",std::ios::trunc);
+    ast.dumpTreeForDot(outFile);
+    outFile.close();
 
 }
 
