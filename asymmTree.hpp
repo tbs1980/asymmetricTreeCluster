@@ -121,23 +121,20 @@ public:
         }
     }
 
-    void dumpTree(std::ofstream & outFile)
+    void dumpTree(std::ofstream & outFile) const
     {
         // TODO should we write a header?
-        // the order is
-        // tree-index,split-dimension,points-size,bound-min,bound-max,
-        // weight-min,weight-max,weight-mean,weight-std-dvn,volume,node-type
-
-        outFile<<mTreeIndex<<","    // 0 
-        <<mSplitDimension<<","      // 1
-        <<mPoints.size()<<","       // 2
-        <<mWeightMin<<","           // 3
-        <<mWeightMax<<","           // 4
-        <<mWeightsMean<<","         // 5
-        <<mWeightsStdDvn<<","       // 6
-        <<mVolume<<","              // 7 
-        <<(int)mNodeChar<<","       // 8
-        <<mAccRatio<<",";           // 9
+        outFile
+        << mTreeIndex << ","           // 0 
+        << mSplitDimension << ","      // 1
+        << mPoints.size() << ","       // 2
+        << mWeightMin << ","           // 3
+        << mWeightMax << ","           // 4
+        << mWeightsMean << ","         // 5
+        << mWeightsStdDvn << ","       // 6
+        << mVolume << ","              // 7 
+        << (int)mNodeChar << ","       // 8
+        << mAccRatio << ",";           // 9
 
         for(size_t i=0;i<mBoundMin.size();++i)
         {
@@ -161,7 +158,7 @@ public:
     }
 
 
-    void addPoint(pointType const&  point,bool const makeTree = true)
+    void addPoint(pointType const&  point, bool const makeTree = true)
     {
         assert(mThresholdForBranching>0);
 
@@ -196,19 +193,17 @@ public:
         }
         else
         {
-            //std::cout<<"*****Adding the point to the node "<<mTreeIndex<<std::endl;
             mPoints.push_back(point);
             computeNodeCharacterstics();
 
             if(makeTree == true and mPoints.size() + size_t(1) > mThresholdForBranching)
             {
-                //std::cout<<"We are builing the tree"<<std::endl;
                 buildTree();
             }
         }
     }
 
-    void deleteActiveNodeByIndex(size_t treeIndex)
+    void deleteActiveNodeByIndex(size_t const treeIndex)
     {
         if(mHasLeftSubTree or mHasRighSubTree)
         {
@@ -236,7 +231,6 @@ public:
         }
         else if(treeIndex == mTreeIndex)
         {
-            //std::cout<<"deleting node with index"<<treeIndex<<std::endl;
             mPoints.clear();
             mTreeActive = false;
         }
@@ -306,15 +300,6 @@ public:
         }
     }
 
-    realScalarType weightMin() const
-    {
-        return mWeightMin;
-    }
-
-    realScalarType weightMax() const
-    {
-        return mWeightMax;
-    }
 
     bool hasLeftSubTree() const
     {
@@ -357,7 +342,7 @@ public:
         return ndInfo;
     }
 
-    void getTreeIndicesAndVolumesAcc(std::vector<nodeInformationType> & nodeInfoVect)
+    void getTreeIndicesAndVolumesAcc(std::vector<nodeInformationType> & nodeInfoVect) const
     {
         // TODO should we have a struct returning all the properties?
         if(mHasLeftSubTree or mHasRighSubTree)
@@ -378,7 +363,7 @@ public:
         }
     }
 
-    void getTreeIndicesAndVolumesRejc(std::vector<nodeInformationType> & nodeInfoVect)
+    void getTreeIndicesAndVolumesRejc(std::vector<nodeInformationType> & nodeInfoVect) const
     {
         // TODO should we have a struct returning all the properties?
         if(mHasLeftSubTree or mHasRighSubTree)
@@ -399,9 +384,8 @@ public:
         }
     }
 
-    void getTreeInformation(std::vector<nodeInformationType> & nodeInfoVect)
+    void getTreeInformation(std::vector<nodeInformationType> & nodeInfoVect) const
     {
-        // TODO should we have a struct returning all the properties?
         if(mHasLeftSubTree or mHasRighSubTree)
         {
             if(mHasLeftSubTree)
@@ -430,9 +414,6 @@ public:
 
         assert( ndInfVect.size() > size_t(0) );
 
-        //std::cout<<"Number of nodes present = "<<ndInfVect.size()<<std::endl;
-
-
         std::sort(std::begin(ndInfVect),std::end(ndInfVect),
             [](nodeInformationType const & a, nodeInformationType const & b)
             {
@@ -455,7 +436,6 @@ public:
         for(size_t i=0;i<ndInfVect.size();++i)
         {
             fcvol[i] *= icvol;
-            //std::cout<<i<<"\t"<<fcvol[i]<<std::endl;
         }
 
         // step 4 uniformly select a vloume element 
@@ -463,23 +443,13 @@ public:
         std::uniform_real_distribution<> distUniReal;
         realScalarType uniVal = distUniReal(rng);
 
-        //std::cout<<"Random uni val generated is "<<uniVal<<std::endl;
-
         auto lowBnd = std::lower_bound(fcvol.begin(),fcvol.end(),uniVal);
 
-        //std::cout<<"The lower bound is "<<std::distance(fcvol.begin(),lowBnd)<<std::endl;
-
         auto idx = std::distance(fcvol.begin(),lowBnd);
-        size_t nodeSelected = ndInfVect[ idx ].mTreeIndex;
-
-        //std::cout<<"*****Generating a random variate from "<<nodeSelected<<std::endl;
 
         // step 5 generate a random variate from the node bounds
         pointType boundMin = ndInfVect[ idx ].mBoundMin;
         pointType boundMax = ndInfVect[ idx ].mBoundMax;
-
-        //std::cout<<"Bound min is "<<boundMin[0]<<"\t"<<boundMin[1]<<std::endl;
-        //std::cout<<"Bound max is "<<boundMax[0]<<"\t"<<boundMax[1]<<std::endl;
 
         pointType randPnt(boundMin.size(),realScalarType(0));
         for(size_t i=0;i<boundMin.size();++i)
@@ -488,10 +458,7 @@ public:
             randPnt[i] = boundMin[i] + (boundMax[i]-boundMin[i])*distUniReal(rng);
         }
 
-        //std::cout<<"point generated is "<<randPnt[0]<<"\t"<<randPnt[1]<<std::endl;
-
         return randPnt;
-
     }
 
 private:
@@ -575,7 +542,7 @@ private:
         }
     }
 
-    size_t findMaxVarDimension()
+    size_t findMaxVarDimension() const
     {
         size_t dimWithMaxVar = 0;
         realScalarType varMax(0);
@@ -614,12 +581,99 @@ private:
         return dimWithMaxVar;
     }
 
+    size_t findMaxFisherInfoDimension() const
+    {
+        assert(mPoints.size() > size_t(3)); // otherwise we cant use this
+
+        // since we have enough points we can create new tress
+        std::vector<size_t> pointIndices(mPoints.size());
+
+        // set the point indices for sorting
+        for(size_t i=0;i<pointIndices.size();++i)
+        {
+            pointIndices[i] = i;
+        }
+
+        auto begin = std::begin(pointIndices);
+        auto end = std::end(pointIndices);
+
+        // for each dimension find the median and the Fisher discriminant
+        std::vector<realScalarType> discrDiff(mPoints[0].size());
+
+        for(size_t dim=size_t(0);dim<mPoints[0].size();++dim)
+        {
+            // sort the points in the current dimension
+            std::sort(begin, end,
+                [this,dim]( size_t const a, size_t const b)
+                {
+                    return ( mPoints[a][dim] < mPoints[b][dim] );
+                }
+            );
+
+            // find the median
+            auto rangeSize = std::distance(begin, end);
+            auto median = begin + rangeSize/2;
+            assert(rangeSize>0);
+
+            // TODO is this step necessary?
+            while(median != begin && mPoints[*(median)][dim] == mPoints[*(median - 1)][dim] )
+            {
+                --median;
+            }
+
+            // set the new bounds
+            pointType const boundMinLeft = mBoundMin;
+            pointType const boundMaxLeft = mPoints[*(median)];
+            pointType const boundMinRight = mPoints[*(median)]; //TODO is this correct? should this be the next point?
+            pointType const boundMaxRight = mBoundMax;
+            
+            // find the Euclidian distance between the min and max for the current dimension
+            realScalarType const distLeft = std::abs( boundMaxLeft[dim] - boundMinLeft[dim] );
+            realScalarType const distRight =  std::abs( boundMaxRight[dim] - boundMinRight[dim] );
+
+            assert( distLeft>realScalarType(0) and distRight>realScalarType(0) );
+
+            // find the lmin and lmax right and left
+            auto wMinMaxLeft = std::minmax_element(begin, median,
+                [this](  size_t const a, size_t const b)
+                {
+                    return ( mPoints[a].weight() < mPoints[b].weight() );
+                }
+            );
+            auto wMinMaxRight = std::minmax_element( (median+1), end,
+                [this](  size_t const a, size_t const b)
+                {
+                    return ( mPoints[a].weight() < mPoints[b].weight() );
+                }
+            );
+
+            realScalarType const wMinLeftVal = mPoints[*wMinMaxLeft.first].weight();
+            realScalarType const wMaxLeftVal = mPoints[*wMinMaxLeft.second].weight();
+            realScalarType const wMinRightVal = mPoints[*wMinMaxRight.first].weight();
+            realScalarType const wMaxRightVal = mPoints[*wMinMaxRight.second].weight();
+
+            // find the left and right discriminats
+            realScalarType discrLeft = wMaxLeftVal - wMinLeftVal;
+            realScalarType discrRight = wMaxRightVal - wMinRightVal;
+
+            // find the difference between the two sides
+            discrDiff[dim] = discrRight - discrLeft;
+        }
+
+        // find the dimension with the lowest discriminant
+        auto discrMax = std::max_element( std::begin(discrDiff),std::end(discrDiff) );
+
+        // set the split dimension as the one with the lowest discriminant
+        return (size_t) std::distance( std::begin(discrDiff), discrMax );
+    }
+
     void buildTree()
     {
 
         // check if we have enough points for branching
         assert(mThresholdForBranching >0);
-        if(mPoints.size()>mThresholdForBranching)// and mTreeLevel <2)
+
+        if(mPoints.size() > mThresholdForBranching)
         {
             // since we have enough points we can create new tress
             std::vector<size_t> pointIndices(mPoints.size());
@@ -630,99 +684,19 @@ private:
                 pointIndices[i] = i;
             }
 
-            typename std::vector<size_t>::iterator begin = std::begin(pointIndices);
-            typename std::vector<size_t>::iterator end = std::end(pointIndices);
-
-            // for each dimension find the median and the Fisher discriminant
-            /*
-            std::vector<realScalarType> normDiscr(mPoints[0].size());
-            for(size_t dim=0;dim<mPoints[0].size();++dim)
-            {
-                // sort the points in the current dimension
-                std::sort(begin, end,
-                    [this,dim]( size_t a, size_t b)
-                    {
-                        return ( mPoints[a][dim] < mPoints[b][dim] );
-                    }
-                );
-
-                // find the median
-                auto rangeSize = std::distance(begin, end);
-                auto median = begin + rangeSize/2;
-                assert(rangeSize>0);
-
-                // TODO is this step necessary?
-                while(median != begin && mPoints[*(median)][dim] == mPoints[*(median - 1)][dim] )
-                {
-                    --median;
-                }
-
-                // set the new bounds
-                pointType const boundMinLeft = mBoundMin;
-                pointType const boundMaxLeft = mPoints[*(median)];
-                pointType const boundMinRight = mPoints[*(median)]; //TODO is this correct? should this be the next point?
-                pointType const boundMaxRight = mBoundMax;
-
-                // find the Euclidian distance between the min and max for the current dimension
-                realScalarType const distLeft = std::abs( boundMaxLeft[dim] - boundMinLeft[dim] );
-                realScalarType const distRight =  std::abs( boundMaxRight[dim] - boundMinRight[dim] );
-
-                if((distLeft>0) == false)
-                {
-                    std::cout<<"We have a problem with the distance"<<std::endl;
-                    for(size_t ii =0;ii<mPoints.size();++ii)
-                    {
-                        std::cout<<ii<<"\t"<<mPoints[ii][mSplitDimension]<<std::endl;
-                    }
-                }
-
-                // find the lmin and lmax right and left
-                auto wMinMaxLeft = std::minmax_element(begin,median,
-                    [this](  size_t a, size_t b)
-                    {
-                        return ( mPoints[a].weight() < mPoints[b].weight() );
-                    }
-                );
-                auto wMinMaxRight = std::minmax_element( (median+1),end,
-                    [this](  size_t a, size_t b)
-                    {
-                        return ( mPoints[a].weight() < mPoints[b].weight() );
-                    }
-                );
-
-
-                realScalarType const wMinLeftVal = mPoints[*wMinMaxLeft.first].weight();
-                realScalarType const wMaxLeftVal = mPoints[*wMinMaxLeft.second].weight();
-                realScalarType const wMinRightVal = mPoints[*wMinMaxRight.first].weight();
-                realScalarType const wMaxRightVal = mPoints[*wMinMaxRight.second].weight();
-
-                // find the left and right discriminats
-                assert(distLeft>0);
-                assert(distRight>0);
-
-                realScalarType discLeft = std::abs(wMaxLeftVal-wMinLeftVal);///distLeft;
-                realScalarType discRight = std::abs(wMaxRightVal-wMinRightVal);///distRight;
-
-                // find the difference between the two sides
-                normDiscr[dim] = std::abs(discRight - discLeft);
-            }
-
-            // find the dimension with the lowest discriminant
-            auto discrMax = std::max_element(std::begin(normDiscr),std::end(normDiscr));
-            */
-
-            // set the split dimension as the one with the lowest discriminant
-            //mSplitDimension = std::distance(std::begin(normDiscr),discrMax);
-
             //mSplitDimension = findMaxVarDimension();
 
-            // sort the points in the split dimension
+            auto begin = std::begin(pointIndices);
+            auto end = std::end(pointIndices);
+
+            // sort the point-indeices in the split dimension
             std::sort(begin, end,
                 [this]( size_t a, size_t b)
                 {
                     return ( mPoints[a][mSplitDimension] < mPoints[b][mSplitDimension] );
                 }
             );
+
             auto rangeSize = std::distance(begin, end);
             auto median = begin + rangeSize/2;
 
@@ -739,22 +713,21 @@ private:
             pointType boundMinRight = mBoundMin;
             pointType boundMaxRight = mBoundMax;
 
-
             // the split dimension will have a new bound coming from median point
             boundMaxLeft[mSplitDimension] = mPoints[*(median)][mSplitDimension];
             boundMinRight[mSplitDimension] = mPoints[*(median)][mSplitDimension];
 
-            assert(boundMinLeft[mSplitDimension] < boundMaxLeft[mSplitDimension]);
-            assert(boundMinRight[mSplitDimension] < boundMaxRight[mSplitDimension]);
+            assert( boundMinLeft[mSplitDimension] < boundMaxLeft[mSplitDimension] );
+            assert( boundMinRight[mSplitDimension] < boundMaxRight[mSplitDimension] );
 
             // since we have decided the split dimension we can set the node bounds here
             mMedianVal = mPoints[*(median)];
 
             // make points for the left and right tree
-            pointsArrayType pointsLeft(std::distance(begin, median));
-            pointsArrayType pointsRight(std::distance((median),end));
+            pointsArrayType pointsLeft( std::distance(begin, median) );
+            pointsArrayType pointsRight( std::distance(median, end) );
 
-            assert(pointsLeft.size() + pointsRight.size() == mPoints.size());
+            assert( pointsLeft.size() + pointsRight.size() == mPoints.size() );
 
             for(size_t i=0;i<pointsLeft.size();++i)
             {
@@ -766,9 +739,10 @@ private:
                 pointsRight[i] = mPoints[ pointIndices[i+pointsLeft.size()] ];
             }
 
-            assert(pointsLeft.size()>0);
-            assert(pointsRight.size()>0);
+            assert( pointsLeft.size() > size_t(0) );
+            assert( pointsRight.size() > size_t(0) );
 
+            // branch
             mLeftSubTree = new asymmTreeType(pointsLeft,boundMinLeft,boundMaxLeft,
                 mThresholdForBranching,(2*mTreeIndex+1),(mTreeLevel+1),(mSplitDimension +1) % mNumDims);
             mHasLeftSubTree = true;
@@ -777,75 +751,14 @@ private:
                 mThresholdForBranching,(2*mTreeIndex+2),(mTreeLevel+1),(mSplitDimension +1) % mNumDims);
             mHasRighSubTree = true;
 
+            // clear the points in the currect branch
             mPoints.clear();
+
+            // TODO set the branch to inactive?
         }
         else
         {
-            // then we need to find the min and maximum likelihoods
-            std::vector<size_t> pointIndices(mPoints.size());
-
-            // set the point indices for sorting
-            for(size_t i=0;i<pointIndices.size();++i)
-            {
-                pointIndices[i] = i;
-            }
-
-            typename std::vector<size_t>::iterator begin = std::begin(pointIndices);
-            typename std::vector<size_t>::iterator end = std::end(pointIndices);
-
-            // find the lmin and lmax right and left
-            auto wMinMax = std::minmax_element(begin,end,
-                [this](  size_t a, size_t b)
-                {
-                    return ( mPoints[a].weight() < mPoints[b].weight() );
-                }
-            );
-
-            mWeightMin = mPoints[*wMinMax.first].weight();
-            mWeightMax = mPoints[*wMinMax.second].weight();
-
-            // find the standard deviation weights as well
-            computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn);
-
-            // flag accept / reject / accept-reject
-            // TODO check if this is done twice?
-            size_t numAcc=0;
-            size_t numRej=0;
-            for(size_t i=0;i<mPoints.size();++i)
-            {
-                if(mPoints[i].accepted())
-                {
-                    numAcc += 1;
-                }
-                else
-                {
-                    numRej += 1;
-                }
-            }
-
-            mAccRatio = (realScalarType)numAcc/(realScalarType)mPoints.size();
-
-            if(numAcc > size_t(0) and numRej == size_t(0))
-            {
-                mNodeChar = ACCEPTED;
-            }
-            else if(numAcc > size_t(0) and numRej > size_t(0))
-            {
-                mNodeChar = ACCEPTED_AND_REJECTED;
-            }
-            else if(numAcc == size_t(0) and numRej > size_t(0))
-            {
-                mNodeChar = REJECTED;
-            }
-            else if(numAcc == size_t(0) and numRej == size_t(0))
-            {
-                assert(mPoints.size() == 0); // in this case we should have problem
-            }
-            else
-            {
-              std::cout<<"This shold not hapen. numAcc = "<<numAcc<<", numRej="<<numRej<<std::endl;
-                abort();
-            }
+            computeNodeCharacterstics();
         }
     }
 
