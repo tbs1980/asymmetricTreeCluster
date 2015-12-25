@@ -89,7 +89,6 @@ public:
     ,mSplitDimension(splitDimension)
     ,mBoundMin(boundMin)
     ,mBoundMax(boundMax)
-    ,mMedianVal(boundMin)
     ,mThresholdForBranching(thresholdForBranching)
     ,mTreeIndex(treeIndex)
     ,mTreeLevel(level)
@@ -98,160 +97,14 @@ public:
     ,mHasLeftSubTree(false)
     ,mHasRighSubTree(false)
     ,mTreeActive(true)
+    ,mVolume(0)
     ,mNodeChar(ACCEPTED)
     ,mAccRatio(1)
     {
-        // sanity checks
-        assert(thresholdForBranching>0);
-
-        std::vector<size_t> pointIndices(mPoints.size());
-
-        // set the point indices for sorting
-        for(size_t i=0;i<pointIndices.size();++i)
+        computeNodeCharacterstics();
+        if(points.size() >0)
         {
-            pointIndices[i] = i;
-        }
-        typename std::vector<size_t>::iterator begin = std::begin(pointIndices);
-        typename std::vector<size_t>::iterator end = std::end(pointIndices);
-
-        // find the lmin and lmax right and left
-        auto wMinMax = std::minmax_element(begin,end,
-            [this](  size_t a, size_t b)
-            {
-                return ( mPoints[a].weight() < mPoints[b].weight() );
-            }
-        );
-        mWeightMin = mPoints[*wMinMax.first].weight();
-        mWeightMax = mPoints[*wMinMax.second].weight();
-
-        // compute the mean and standard deviation
-        computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn);
-
-        // set the volumn
-        mVolume = realScalarType(1);
-        for(size_t i=0;i<mNumDims;++i)
-        {
-            assert(boundMax[i] > boundMin[i]);
-
-            mVolume *= boundMax[i] - boundMin[i];
-        }
-
-        // finally build tree
-        buildTree();
-    }
-
-    void setup(pointsArrayType const&  points,
-        pointType  const&  boundMin,
-        pointType  const&  boundMax,
-        size_t const thresholdForBranching,
-        size_t const treeIndex,
-        size_t const level
-    )
-    {
-        assert(mHasLeftSubTree == false and mHasRighSubTree == false);
-
-        // TODO we need to check if the tree is already built?
-        // if tree exists we need to delete it first
-        // a delete tree functionality needed
-        mLeftSubTree = nullptr;
-        mRightSubTree = nullptr;
-        mPoints = points;
-        mNumDims = boundMin.size();
-        mSplitDimension = size_t(0);
-        mBoundMin = boundMin;
-        mBoundMax = boundMax;
-        mMedianVal = boundMin;
-        mThresholdForBranching = thresholdForBranching;
-        mTreeIndex = treeIndex;
-        mTreeLevel = level;
-        mWeightMin = realScalarType(0);
-        mWeightMax = realScalarType(0);
-        mHasLeftSubTree = false;
-        mHasRighSubTree = false;
-        mTreeActive = true;
-        mNodeChar = ACCEPTED;
-        mAccRatio = realScalarType(1);
-
-        // sanity checks
-        assert(thresholdForBranching>0);
-        // TODO more checks required here
-
-        // set the point indices for sorting
-        std::vector<size_t> pointIndices(mPoints.size());
-        for(size_t i=0;i<pointIndices.size();++i)
-        {
-            pointIndices[i] = i;
-        }
-
-        typename std::vector<size_t>::iterator begin = std::begin(pointIndices);
-        typename std::vector<size_t>::iterator end = std::end(pointIndices);
-
-        // find the lmin and lmax right and left
-        auto wMinMax = std::minmax_element(begin,end,
-            [this](  size_t a, size_t b)
-            {
-                return ( mPoints[a].weight() < mPoints[b].weight() );
-            }
-        );
-
-        mWeightMin = mPoints[*wMinMax.first].weight();
-        mWeightMax = mPoints[*wMinMax.second].weight();
-
-        // compute the mean  and the standard deviation
-        computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn);
-
-        // set the volumn
-        mVolume = realScalarType(1);
-        for(size_t i=0;i<mNumDims;++i)
-        {
-            assert(boundMax[i] > boundMin[i]);
-
-            mVolume *= boundMax[i] - boundMin[i];
-        }
-
-        // finally build the tree
-        buildTree();
-    }
-
-    void setup(pointType  const&  boundMin,
-        pointType  const&  boundMax,
-        size_t const thresholdForBranching,
-        size_t const treeIndex,
-        size_t const level
-    )
-    {
-        assert(mHasLeftSubTree == false and mHasRighSubTree == false);
-
-        // TODO we need to check if the tree is already built?
-        // if tree exists we need to delete it first
-        // a delete tree functionality needed
-        mLeftSubTree = nullptr;
-        mRightSubTree = nullptr;
-        mNumDims = boundMin.size();
-        mSplitDimension = size_t(0);
-        mBoundMin = boundMin;
-        mBoundMax = boundMax;
-        mMedianVal = boundMin;
-        mThresholdForBranching = thresholdForBranching;
-        mTreeIndex = treeIndex;
-        mTreeLevel = level;
-        mWeightMin = realScalarType(0);
-        mWeightMax = realScalarType(0);
-        mHasLeftSubTree = false;
-        mHasRighSubTree = false;
-        mTreeActive = true;
-        mNodeChar = ACCEPTED;
-        mAccRatio = realScalarType(1);
-
-        assert(thresholdForBranching>0);
-
-        // set the volumn
-        mVolume = realScalarType(1);
-        for(size_t i=0;i<mNumDims;++i)
-        {
-            assert(boundMax[i] > boundMin[i]);
-
-            mVolume *= boundMax[i] - boundMin[i];
+            buildTree();
         }
     }
 
@@ -647,66 +500,78 @@ private:
     {
         // sort and store the min and max
         // set the point indices for sorting
-        std::vector<size_t> pointIndices(mPoints.size());
-        for(size_t i=0;i<pointIndices.size();++i)
+        // TODO check if mPoints is already sorted
+        assert(mThresholdForBranching > 0);
+
+        // set the volume
+        mVolume = realScalarType(1);
+        for(size_t i=0;i<mNumDims;++i)
         {
-            pointIndices[i] = i;
+            assert(mBoundMax[i] > mBoundMin[i]);
+            mVolume *= mBoundMax[i] - mBoundMin[i];
         }
-        typename std::vector<size_t>::iterator begin = std::begin(pointIndices);
-        typename std::vector<size_t>::iterator end = std::end(pointIndices);
 
-        // find the lmin and lmax right and left
-        auto wMinMax = std::minmax_element(begin,end,
-            [this](  size_t a, size_t b)
-            {
-                return ( mPoints[a].weight() < mPoints[b].weight() );
-            }
-        );
-        mWeightMin = mPoints[*wMinMax.first].weight();
-        mWeightMax = mPoints[*wMinMax.second].weight();
-
-        // compute the mean and standard deviation
-        computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn);
-
-        // flag accept / reject / accept-reject
-        size_t numAcc=0;
-        size_t numRej=0;
-        for(size_t i=0;i<mPoints.size();++i)
+        if(mPoints.size() > size_t(0))
         {
-            if(mPoints[i].accepted())
+            std::vector<size_t> pointIndices( mPoints.size() );
+            for(size_t i=0;i<pointIndices.size();++i)
             {
-                numAcc += 1;
+                pointIndices[i] = i;
+            }
+
+            // find the lmin and lmax right and left
+            auto wMinMax = std::minmax_element(std::begin(pointIndices),std::end(pointIndices),
+                [this](  size_t const a, size_t const b)
+                {
+                    return ( mPoints[a].weight() < mPoints[b].weight() );
+                }
+            );
+
+            mWeightMin = mPoints[*wMinMax.first].weight();
+            mWeightMax = mPoints[*wMinMax.second].weight();
+
+            // compute the mean and standard deviation
+            computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn); // TOTO should this be static?
+
+
+            // flag accept / reject / accept-reject
+            size_t numAcc(0);
+            size_t numRej(0);
+            for(size_t i=0;i<mPoints.size();++i)
+            {
+                if(mPoints[i].accepted())
+                {
+                    numAcc += size_t(1);
+                }
+                else
+                {
+                    numRej += size_t(1);
+                }
+            }
+
+            mAccRatio = (realScalarType)numAcc/(realScalarType)mPoints.size();
+            
+            if(numAcc > size_t(0) and numRej == size_t(0))
+            {
+                mNodeChar = ACCEPTED;
+            }
+            else if(numAcc > size_t(0) and numRej > size_t(0))
+            {
+                mNodeChar = ACCEPTED_AND_REJECTED;
+            }
+            else if(numAcc == size_t(0) and numRej > size_t(0))
+            {
+                mNodeChar = REJECTED;
+            }
+            else if(numAcc == size_t(0) and numRej == size_t(0))
+            {
+                assert(mPoints.size() == 0); // in this case we should have problem
             }
             else
             {
-                numRej += 1;
+                std::cout<<"This shold not hapen. numAcc = "<<numAcc<<", numRej="<<numRej<<std::endl;
+                abort();
             }
-        }
-
-        mAccRatio = (realScalarType)numAcc/(realScalarType)mPoints.size();
-        
-        //std::cout<<"mAccRatio = "<<mAccRatio<<std::endl;
-
-        if(numAcc > size_t(0) and numRej == size_t(0))
-        {
-            mNodeChar = ACCEPTED;
-        }
-        else if(numAcc > size_t(0) and numRej > size_t(0))
-        {
-            mNodeChar = ACCEPTED_AND_REJECTED;
-        }
-        else if(numAcc == size_t(0) and numRej > size_t(0))
-        {
-            mNodeChar = REJECTED;
-        }
-        else if(numAcc == size_t(0) and numRej == size_t(0))
-        {
-            assert(mPoints.size() == 0); // in this case we should have problem
-        }
-        else
-        {
-            std::cout<<"This shold not hapen. numAcc = "<<numAcc<<", numRej="<<numRej<<std::endl;
-            abort();
         }
     }
 
@@ -714,7 +579,7 @@ private:
     {
         size_t dimWithMaxVar = 0;
         realScalarType varMax(0);
-        for(size_t dim=0;dim<mPoints[0].size();++dim)
+        for(size_t dim= size_t(0);dim<mPoints[0].size();++dim)
         {
             realScalarType sum(0);
             realScalarType sum2(0);
@@ -731,7 +596,7 @@ private:
             realScalarType var = sum2 - sum*sum;
             assert(var >= realScalarType(0));
 
-            if(dim == 0)
+            if(dim == size_t(0))
             {
                 varMax = var;
                 dimWithMaxVar = dim;
