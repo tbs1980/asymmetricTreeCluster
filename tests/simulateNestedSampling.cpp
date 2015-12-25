@@ -54,6 +54,9 @@ void simulateNS(void)
         boundMax[i] = double(2);
     }
 
+    //boundMin[1] = -2;
+    boundMax[1] = 10;
+
     size_t threshold = 10;
     size_t treeIndex = 0;
     size_t level = 0;
@@ -96,7 +99,7 @@ void simulateNS(void)
     //accFile.open("acceptance2all.dat",std::ios::trunc);
 
     // next loop through the sampling process
-    size_t numIter = 100;
+    size_t numIter = 1000;
     size_t tot=0;
     size_t acc=0;
     for(size_t i=0;i<numIter;++i)

@@ -621,18 +621,6 @@ private:
                 --median;
             }
 
-            // set the new bounds
-            pointType const boundMinLeft = mBoundMin;
-            pointType const boundMaxLeft = mPoints[*(median)];
-            pointType const boundMinRight = mPoints[*(median)]; //TODO is this correct? should this be the next point?
-            pointType const boundMaxRight = mBoundMax;
-            
-            // find the Euclidian distance between the min and max for the current dimension
-            realScalarType const distLeft = std::abs( boundMaxLeft[dim] - boundMinLeft[dim] );
-            realScalarType const distRight =  std::abs( boundMaxRight[dim] - boundMinRight[dim] );
-
-            assert( distLeft>realScalarType(0) and distRight>realScalarType(0) );
-
             // find the lmin and lmax right and left
             auto wMinMaxLeft = std::minmax_element(begin, median,
                 [this](  size_t const a, size_t const b)
@@ -653,11 +641,13 @@ private:
             realScalarType const wMaxRightVal = mPoints[*wMinMaxRight.second].weight();
 
             // find the left and right discriminats
-            realScalarType discrLeft = wMaxLeftVal - wMinLeftVal;
-            realScalarType discrRight = wMaxRightVal - wMinRightVal;
+            realScalarType discrLeft = wMaxLeftVal - wMinLeftVal;//std::abs( wMaxLeftVal - wMinLeftVal );
+            realScalarType discrRight = wMaxRightVal - wMinRightVal;//std::abs( wMaxRightVal - wMinRightVal );
 
             // find the difference between the two sides
-            discrDiff[dim] = discrRight - discrLeft;
+            discrDiff[dim] = discrRight - discrLeft;//std::abs( discrRight - discrLeft );
+
+            std::cout<<"dim = "<<dim<<"\t"<<" discr= "<<discrDiff[dim]<<std::endl;
         }
 
         // find the dimension with the lowest discriminant
@@ -684,7 +674,8 @@ private:
                 pointIndices[i] = i;
             }
 
-            //mSplitDimension = findMaxVarDimension();
+            mSplitDimension = findMaxVarDimension();
+            //mSplitDimension = findMaxFisherInfoDimension();
 
             auto begin = std::begin(pointIndices);
             auto end = std::end(pointIndices);
