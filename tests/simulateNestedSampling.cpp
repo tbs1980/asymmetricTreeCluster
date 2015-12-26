@@ -3,7 +3,7 @@
 #include <random>
 #include <fstream>
 
-#include "treeSampler.hpp"
+//#include "treeSampler.hpp"
 
 template<typename realScalarType>
 class GaussLikelihood

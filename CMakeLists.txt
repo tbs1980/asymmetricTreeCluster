@@ -9,8 +9,8 @@ endif()
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 
-find_package (Eigen3 3.0.0 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIR})
+#find_package (Eigen3 3.0.0 REQUIRED)
+#include_directories(${EIGEN3_INCLUDE_DIR})
 
 enable_testing()
 add_subdirectory(tests)
