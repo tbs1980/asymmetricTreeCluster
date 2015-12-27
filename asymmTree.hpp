@@ -296,14 +296,14 @@ public:
             //std::cout<<"Reduced volume  = "<<reducedVolume<<std::endl;
 
             // step 4 get the nodes with rejected points
-            ndInfVect.clear();
-            getTreeIndicesAndVolumesRejc(ndInfVect);
+            std::vector<nodeInformationType> ndInfVectRejc;
+            getTreeIndicesAndVolumesRejc(ndInfVectRejc);
 
-            if(ndInfVect.size() > 0 )
+            if( ndInfVectRejc.size() > 0 )
             {
-                //std::cout<<"We have "<<ndInfVect.size()<<" rejec-nodes"<<std::endl;
+                //std::cout<<"We have "<<ndInfVectRejc.size()<<" rejec-nodes"<<std::endl;
                 // step 5 sort them according to the minimum likelihood of the node
-                std::sort(std::begin(ndInfVect),std::end(ndInfVect),
+                std::sort(std::begin(ndInfVectRejc),std::end(ndInfVectRejc),
                     [](nodeInformationType const & a, nodeInformationType const & b)
                     {
                         return a.mWeightMin < b.mWeightMin;
@@ -312,18 +312,18 @@ public:
 
                 // step 6 delete the nodes
                 realScalarType volRejc(0);
-                for(size_t i=0;i<ndInfVect.size();++i)
+                for(size_t i=0;i<ndInfVectRejc.size();++i)
                 {
-                    //std::cout<<i<<"\t"<<ndInfVect[i].mVolume<<"\t"<<volRejc<<std::endl;
-                    if(volRejc + ndInfVect[i].mVolume >= reducedVolume)
+                    //std::cout<<i<<"\t"<<ndInfVectRejc[i].mVolume<<"\t"<<volRejc<<std::endl;
+                    if(volRejc + ndInfVectRejc[i].mVolume >= reducedVolume)
                     {
                         break;
                     }
                     else
                     {
-                        volRejc += ndInfVect[i].mVolume;
-                        //std::cout<<"We should delete "<<ndInfVect[i].mTreeIndex<<std::endl;
-                        deleteActiveNodeByIndex(ndInfVect[i].mTreeIndex);
+                        volRejc += ndInfVectRejc[i].mVolume;
+                        //std::cout<<"We should delete "<<ndInfVectRejc[i].mTreeIndex<<std::endl;
+                        deleteActiveNodeByIndex(ndInfVectRejc[i].mTreeIndex);
                     }
                 }
            }
