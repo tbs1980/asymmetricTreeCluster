@@ -70,6 +70,7 @@ public:
     ,mVolume(0)
     ,mNodeChar(ACCEPTED)
     ,mAccRatio(1)
+    ,mReductionFactor(1)
     {
 
     }
@@ -80,7 +81,8 @@ public:
         size_t const thresholdForBranching,
         size_t const treeIndex,
         size_t const level,
-        size_t const splitDimension=size_t(0)
+        size_t const splitDimension,
+        realScalarType const reductionFactor
     )
     :mLeftSubTree(nullptr)
     ,mRightSubTree(nullptr)
@@ -100,6 +102,7 @@ public:
     ,mVolume(0)
     ,mNodeChar(ACCEPTED)
     ,mAccRatio(1)
+    ,mReductionFactor(reductionFactor)
     {
         computeNodeCharacterstics();
         if(points.size() >0)
@@ -287,11 +290,10 @@ public:
             //std::cout<<"Total volume of acc nodes "<<accRejVolume<<std::endl;
 
             // step 2 define alpha
-            realScalarType reductionFactor(0.9);
-            assert(reductionFactor > realScalarType(0) and reductionFactor <= realScalarType(1) );
+            assert(mReductionFactor > realScalarType(0.5) and mReductionFactor <= realScalarType(1) );
 
             // step 3 compute the volume to be reduced if possible
-            realScalarType reducedVolume = ( realScalarType(1)/reductionFactor -realScalarType(1) )*accRejVolume;
+            realScalarType reducedVolume = ( realScalarType(1)/mReductionFactor -realScalarType(1) )*accRejVolume;
             
             //std::cout<<"Reduced volume  = "<<reducedVolume<<std::endl;
 
@@ -349,6 +351,16 @@ public:
     size_t treeIndex() const
     {
         return mTreeIndex;
+    }
+
+    realScalarType reductionFactor() const
+    {
+        return mReductionFactor;
+    }
+
+    void setReductionFactor(realScalarType const reductionFactor)
+    {
+        mReductionFactor = reductionFactor;
     }
 
 
@@ -770,11 +782,13 @@ private:
 
             // branch
             mLeftSubTree = new asymmTreeType(pointsLeft,boundMinLeft,boundMaxLeft,
-                mThresholdForBranching,(2*mTreeIndex+1),(mTreeLevel+1),(mSplitDimension +1) % mNumDims);
+                mThresholdForBranching,(2*mTreeIndex+1),(mTreeLevel+1),
+                (mSplitDimension +1) % mNumDims, mReductionFactor);
             mHasLeftSubTree = true;
 
             mRightSubTree = new asymmTreeType(pointsRight,boundMinRight,boundMaxRight,
-                mThresholdForBranching,(2*mTreeIndex+2),(mTreeLevel+1),(mSplitDimension +1) % mNumDims);
+                mThresholdForBranching,(2*mTreeIndex+2),(mTreeLevel+1),
+                (mSplitDimension +1) % mNumDims, mReductionFactor);
             mHasRighSubTree = true;
 
             // clear the points in the currect branch
@@ -831,6 +845,7 @@ private:
     realScalarType mVolume;
     nodeCharacterstic mNodeChar;
     realScalarType mAccRatio;
+    realScalarType mReductionFactor;
 };
 
 

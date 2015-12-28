@@ -57,16 +57,15 @@ void simulateNS(void)
     //boundMin[1] = -2;
     //boundMax[1] = 10;
 
-    size_t threshold = 10;
-    size_t treeIndex = 0;
-    size_t level = 0;
+    pointsArrayType emptyArry;
+    size_t threshold(10);
+    size_t treeIndex(0);
+    size_t level(0);
+    size_t splitDimension(0);
+    double reductionFactor(0.9);
 
     // define the tree
-    asymmTreeType ast;
-    pointsArrayType emptyArry;
-    ast = asymmTreeType(emptyArry,boundMin,boundMax,threshold,treeIndex,level);
-
-    //return;
+    asymmTreeType ast(emptyArry,boundMin,boundMax,threshold,treeIndex,level,splitDimension,reductionFactor);
 
     // create a set of live points
     size_t numLivePoints = 1000;
