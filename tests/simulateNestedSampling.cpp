@@ -65,7 +65,7 @@ void simulateNS(void)
     double reductionFactor(0.9);
 
     // define the tree
-    asymmTreeType ast(emptyArry,boundMin,boundMax,threshold,treeIndex,level,splitDimension,reductionFactor);
+    asymmTreeType ast(emptyArry,boundMin,boundMax,threshold,treeIndex,level,splitDimension);
 
     // create a set of live points
     size_t numLivePoints = 1000;
@@ -120,7 +120,7 @@ void simulateNS(void)
             ast.addPoint(pt);
 
             // delete nodes if necessary
-            ast.deleteNodes();
+            ast.deleteNodes(reductionFactor);
 
             // replace the min live point
             livePoints[livePointInds[0]] = pt;
