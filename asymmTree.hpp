@@ -44,13 +44,44 @@ struct nodeInformation
     realScalarType mAccRatio;
 };
 
+/**
+ * \class asymmTree
+ * \brief A class for building an asymmetric k-d tree given a set of points
+ * \tparam pointType point-type
+ *
+ * This class builds a k-d tree from a given set of points. The points are 
+ * always stored in the final nodes, ie, the ones without any sub-nodes. The
+ * partitioning crieteria can be chosen at build time. The class contains
+ * methods for generating uniform random points from active nodes. The nodes
+ * falls outside accepted region can be deleted.
+ */
 template<class pointType>
 class asymmTree
 {
 public:
+
+    /**
+     * \typedef typename pointType::realScalarType realScalarType
+     * \brief real floating point type
+     */
     typedef typename pointType::realScalarType realScalarType;
+
+    /**
+     * \typedef asymmTree<pointType> asymmTreeType
+     * \brief define the self type
+     */
     typedef asymmTree<pointType> asymmTreeType;
+
+    /**
+     * \typedef std::vector<pointType> pointsArrayType;
+     * \brief a vector of points
+     */
     typedef std::vector<pointType> pointsArrayType;
+
+    /**
+     * \typedef nodeInformation<pointType> nodeInformationType;
+     * \brief node information
+     */
     typedef nodeInformation<pointType> nodeInformationType;
 
     asymmTree()
