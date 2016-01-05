@@ -49,7 +49,7 @@ struct nodeInformation
  * \brief A class for building an asymmetric k-d tree given a set of points
  * \tparam pointType point-type
  *
- * This class builds a k-d tree from a given set of points. The points are 
+ * This class builds a k-d tree from a given set of points. The points are
  * always stored in the final nodes, ie, the ones without any sub-nodes. The
  * partitioning crieteria can be chosen at build time. The class contains
  * methods for generating uniform random points from active nodes. The nodes
@@ -84,6 +84,10 @@ public:
      */
     typedef nodeInformation<pointType> nodeInformationType;
 
+    /**
+     * \brief The default constructor. Allocates no memory and nodes,
+     * just the root node is constructed.
+     */
     asymmTree()
     :mLeftSubTree(nullptr)
     ,mRightSubTree(nullptr)
@@ -105,6 +109,18 @@ public:
 
     }
 
+    /**
+     * \brief A constructor that sets up a nodes using the charactestics
+     * specified.
+     *
+     * \param points points to construct the tree
+     * \param boundMin the lower bounds of the node
+     * \param boundMax the upper bounds of the node
+     * \param thresholdForBranching threshold (number of points) at which the node is split
+     * \param treeIndex an index for the node
+     * \param level level of the node in the tree
+     * \param splitDimension the dimension in which the tree is split
+     */
     asymmTree(pointsArrayType const&  points,
         pointType  const&  boundMin,
         pointType  const&  boundMax,
@@ -139,6 +155,9 @@ public:
         }
     }
 
+    /**
+     * \brief the default destructor
+     */
     ~asymmTree()
     {
         if(mLeftSubTree != nullptr)
@@ -156,14 +175,14 @@ public:
     {
         // TODO should we write a header?
         outFile
-        << mTreeIndex << ","           // 0 
+        << mTreeIndex << ","           // 0
         << mSplitDimension << ","      // 1
         << mPoints.size() << ","       // 2
         << mWeightMin << ","           // 3
         << mWeightMax << ","           // 4
         << mWeightsMean << ","         // 5
         << mWeightsStdDvn << ","       // 6
-        << mVolume << ","              // 7 
+        << mVolume << ","              // 7
         << (int)mNodeChar << ","       // 8
         << mAccRatio << ",";           // 9
 
@@ -278,7 +297,7 @@ public:
                     mHasRighSubTree = false;
                 }
             }
-            
+
             if(mHasLeftSubTree)
             {
                 mLeftSubTree->deleteActiveNodeByIndex(treeIndex);
@@ -307,14 +326,14 @@ public:
         if(ndInfVect.size() > 0)
         {
             //std::cout<<"We have "<<ndInfVect.size()<<" acc-nodes "<<std::endl;
-            realScalarType accRejVolume = std::accumulate(ndInfVect.begin(), ndInfVect.end(), 
+            realScalarType accRejVolume = std::accumulate(ndInfVect.begin(), ndInfVect.end(),
                 realScalarType(0),
                 [](realScalarType & a, nodeInformationType & b)
                 {
                     return a != realScalarType(0) ? a + b.mVolume : b.mVolume ;
                 }
                 );
-            
+
             //std::cout<<"Total volume of acc nodes "<<accRejVolume<<std::endl;
 
             // step 2 define alpha
@@ -322,7 +341,7 @@ public:
 
             // step 3 compute the volume to be reduced if possible
             realScalarType reducedVolume = ( realScalarType(1)/reductionFactor -realScalarType(1) )*accRejVolume;
-            
+
             //std::cout<<"Reduced volume  = "<<reducedVolume<<std::endl;
 
             // step 4 get the nodes with rejected points
@@ -502,8 +521,8 @@ public:
             fcvol[i] *= icvol;
         }
 
-        // step 4 uniformly select a vloume element 
-        // and find the corresponding node 
+        // step 4 uniformly select a vloume element
+        // and find the corresponding node
         std::uniform_real_distribution<> distUniReal;
         realScalarType uniVal = distUniReal(rng);
 
@@ -581,7 +600,7 @@ private:
             }
 
             mAccRatio = (realScalarType)numAcc/(realScalarType)mPoints.size();
-            
+
             if(numAcc > size_t(0) and numRej == size_t(0))
             {
                 mNodeChar = ACCEPTED;
