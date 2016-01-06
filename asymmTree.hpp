@@ -171,6 +171,10 @@ public:
         }
     }
 
+    /**
+     * \brief A function that dumps the tree information to a file
+     * @param outFile a file handle for the output file
+     */
     void dumpTree(std::ofstream & outFile) const
     {
         // TODO should we write a header?
@@ -207,29 +211,10 @@ public:
         }
     }
 
-    void dumpTreeForDotRecurse(std::ofstream & outFile) const
-    {
-        if(mHasLeftSubTree)
-        {
-            outFile<<mTreeIndex<<" -> "<<mLeftSubTree->treeIndex()<<std::endl;
-        }
-
-        if(mHasRighSubTree)
-        {
-            outFile<<mTreeIndex<<" -> "<<mRightSubTree->treeIndex()<<std::endl;
-        }
-
-        if(mHasLeftSubTree)
-        {
-            mLeftSubTree->dumpTreeForDotRecurse(outFile);
-        }
-
-        if(mHasRighSubTree)
-        {
-            mRightSubTree->dumpTreeForDotRecurse(outFile);
-        }
-    }
-
+    /**
+     * \brief a function that outputs the tree in a dot diagram format
+     * @param outFile a file handle for the output file
+     */
     void dumpTreeForDot(std::ofstream & outFile) const
     {
         outFile<<"digraph graphname {\n";
@@ -237,7 +222,11 @@ public:
         outFile<<"}";
     }
 
-
+    /**
+     * \brief A method that adds a point into the tree
+     * @param point    the point to be added
+     * @param makeTree a flag to build tree at the same time
+     */
     void addPoint(pointType const&  point, bool const makeTree = true)
     {
         assert(mThresholdForBranching>0);
@@ -283,6 +272,10 @@ public:
         }
     }
 
+    /**
+     * \para A method for deleting a node specified by the index
+     * @param treeIndex The tree index of the node to be deleted
+     */
     void deleteActiveNodeByIndex(size_t const treeIndex)
     {
         if(mHasLeftSubTree or mHasRighSubTree)
@@ -545,6 +538,33 @@ public:
     }
 
 private:
+
+    /**
+     * \brief A function that outputs the tree in a dot diagram format
+     * @param outFile a file handle for the output file
+     */
+    void dumpTreeForDotRecurse(std::ofstream & outFile) const
+    {
+        if(mHasLeftSubTree)
+        {
+            outFile<<mTreeIndex<<" -> "<<mLeftSubTree->treeIndex()<<std::endl;
+        }
+
+        if(mHasRighSubTree)
+        {
+            outFile<<mTreeIndex<<" -> "<<mRightSubTree->treeIndex()<<std::endl;
+        }
+
+        if(mHasLeftSubTree)
+        {
+            mLeftSubTree->dumpTreeForDotRecurse(outFile);
+        }
+
+        if(mHasRighSubTree)
+        {
+            mRightSubTree->dumpTreeForDotRecurse(outFile);
+        }
+    }
 
     void computeNodeCharacterstics()
     {
