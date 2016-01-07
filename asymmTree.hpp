@@ -309,6 +309,14 @@ public:
         }
     }
 
+    /**
+     * \brief A method for deleting the nodes according to a volume factor
+     * @param reductionFactor the factor by whihc the nodes to be deleted
+     *
+     * This function delete all the nodes that contain REJECTED points so that
+     * volume of the deleted nodes equal to (1/reductionFactor -1) times the
+     * volume of the ACCEPTED points.
+     */
     void deleteNodes(realScalarType const reductionFactor)
     {
         // step 1 compute the total volume of accepted and accepted-rejected nodes
@@ -372,22 +380,37 @@ public:
         }
     }
 
-
+    /**
+     * \brief A function that returns true if left sub tree exisits
+     * @return true if left subtree exists, otherwise false
+     */
     bool hasLeftSubTree() const
     {
         return mHasLeftSubTree;
     }
 
+    /**
+     * \brief A function that returns true if right sub tree exists
+     * @return true if right sub tree exists, otherwise false
+     */
     bool hasRightSubTree() const
     {
         return mHasRighSubTree;
     }
 
+    /**
+     * \brief A function that returns true if tree is active
+     * @return true if tree is active, otherwise false
+     */
     bool treeIsActive() const
     {
         return mTreeActive;
     }
 
+    /**
+     * \brief A function that returns the tree index of the node
+     * @return tree index of the node
+     */
     size_t treeIndex() const
     {
         return mTreeIndex;
