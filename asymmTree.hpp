@@ -416,6 +416,10 @@ public:
         return mTreeIndex;
     }
 
+    /**
+     * \brief retrieve the node information into a structure
+     * @return node information
+     */
     nodeInformationType getNodeInformation() const
     {
         nodeInformationType ndInfo;
@@ -441,6 +445,10 @@ public:
         return ndInfo;
     }
 
+    /**
+     * \brief retrieve node information for the accepted nodes
+     * @param nodeInfoVect a vector containing the node information of accepted nodes
+     */
     void getTreeIndicesAndVolumesAcc(std::vector<nodeInformationType> & nodeInfoVect) const
     {
         // TODO should we have a struct returning all the properties?
@@ -462,6 +470,10 @@ public:
         }
     }
 
+    /**
+     * \brief retrieve node information for the rejected nodes
+     * @param nodeInfoVect a vector containing the node information of rejected nodes
+     */
     void getTreeIndicesAndVolumesRejc(std::vector<nodeInformationType> & nodeInfoVect) const
     {
         // TODO should we have a struct returning all the properties?
@@ -483,6 +495,10 @@ public:
         }
     }
 
+    /**
+     * \brief retrieve node information for all the nodes
+     * @param nodeInfoVect a vector containing the node information of all nodes
+     */
     void getTreeInformation(std::vector<nodeInformationType> & nodeInfoVect) const
     {
         if(mHasLeftSubTree or mHasRighSubTree)
