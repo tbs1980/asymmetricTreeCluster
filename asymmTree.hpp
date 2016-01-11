@@ -313,6 +313,14 @@ public:
         }
     }
 
+    /**
+     * \brief A method for deleting the nodes according to a volume factor
+     * @param reductionFactor the factor by whihc the nodes to be deleted
+     *
+     * This function delete all the nodes that contain REJECTED points so that
+     * volume of the deleted nodes equal to (1/reductionFactor -1) times the
+     * volume of the ACCEPTED points.
+     */
     size_t deleteNodes(realScalarType const reductionFactor)
     {
         size_t numNodesDeleted(0);
@@ -381,27 +389,46 @@ public:
         return numNodesDeleted;
     }
 
-
+    /**
+     * \brief A function that returns true if left sub tree exisits
+     * @return true if left subtree exists, otherwise false
+     */
     bool hasLeftSubTree() const
     {
         return mHasLeftSubTree;
     }
 
+    /**
+     * \brief A function that returns true if right sub tree exists
+     * @return true if right sub tree exists, otherwise false
+     */
     bool hasRightSubTree() const
     {
         return mHasRighSubTree;
     }
 
+    /**
+     * \brief A function that returns true if tree is active
+     * @return true if tree is active, otherwise false
+     */
     bool treeIsActive() const
     {
         return mTreeActive;
     }
 
+    /**
+     * \brief A function that returns the tree index of the node
+     * @return tree index of the node
+     */
     size_t treeIndex() const
     {
         return mTreeIndex;
     }
 
+    /**
+     * \brief retrieve the node information into a structure
+     * @return node information
+     */
     nodeInformationType getNodeInformation() const
     {
         nodeInformationType ndInfo;
@@ -427,6 +454,10 @@ public:
         return ndInfo;
     }
 
+    /**
+     * \brief retrieve node information for the accepted nodes
+     * @param nodeInfoVect a vector containing the node information of accepted nodes
+     */
     void getTreeIndicesAndVolumesAcc(std::vector<nodeInformationType> & nodeInfoVect) const
     {
         // TODO should we have a struct returning all the properties?
@@ -448,6 +479,10 @@ public:
         }
     }
 
+    /**
+     * \brief retrieve node information for the rejected nodes
+     * @param nodeInfoVect a vector containing the node information of rejected nodes
+     */
     void getTreeIndicesAndVolumesRejc(std::vector<nodeInformationType> & nodeInfoVect) const
     {
         // TODO should we have a struct returning all the properties?
@@ -469,6 +504,10 @@ public:
         }
     }
 
+    /**
+     * \brief retrieve node information for all the nodes
+     * @param nodeInfoVect a vector containing the node information of all nodes
+     */
     void getTreeInformation(std::vector<nodeInformationType> & nodeInfoVect) const
     {
         if(mHasLeftSubTree or mHasRighSubTree)
