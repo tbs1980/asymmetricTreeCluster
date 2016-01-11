@@ -683,6 +683,41 @@ public:
         }
     }
 
+    pointType & searchPoint(pointType const & point)
+    {
+        if( mHasLeftSubTree or mHasRighSubTree)
+        {
+            // go to the left sub tree and point[mSplitDimension] < mMedianVal[mSplitDimension] 
+            if( point[mSplitDimension] < mMedianVal[mSplitDimension] )
+            {
+                if(mHasLeftSubTree)
+                {
+                    mLeftSubTree->searchPoint(point);
+                }
+            }
+            else 
+            {
+                if(mHasRighSubTree)
+                {
+                    mRightSubTree->searchPoint(point);
+                }
+            }
+        }
+        else
+        {
+            for(size_t i=0;i<mPoints.size();++i)
+            {
+                if( mPoints[i].pointId() == point.pointId() )
+                {
+                    std::cout<<"Found point"<<std::endl;
+                    return mPoints[i];
+                }
+            }
+
+            abort();
+        }
+    }
+
 private:
 
     /**

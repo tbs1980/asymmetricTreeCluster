@@ -20,28 +20,32 @@ public:
     typedef std::vector<realScalarType> realVectorType;
     typedef pointCharacterstic pointCharactersticType;
 
+    static size_t sPointId;
+
     point()
     :mCoordinates(1,realScalarType(0)),mWeight(0),mPointChar(REFERENCE_POINT)
     {
-
+        ++sPointId;
     }
 
     point(size_t const numDims,realScalarType const weight)
     :mCoordinates(numDims,realScalarType(0)),mWeight(weight),mPointChar(REFERENCE_POINT)
     {
-
+        ++sPointId;
     }
 
     point(realVectorType const& coordinates,realScalarType const weight)
     :mCoordinates(coordinates),mWeight(weight),mPointChar(REFERENCE_POINT)
     {
         assert(coordinates.size()>0);
+        ++sPointId;
     }
 
     point(realVectorType const& coordinates,realScalarType const weight,pointCharactersticType pointChar)
     :mCoordinates(coordinates),mWeight(weight),mPointChar(pointChar)
     {
         assert(coordinates.size()>0);
+        ++sPointId;
     }
 
     realScalarType const& weight() const
@@ -84,10 +88,19 @@ public:
         return mPointChar;
     }
 
+    size_t const & pointId() const
+    {
+        return sPointId;
+    }
+
 private:
     realVectorType mCoordinates;
     realScalarType mWeight;
     pointCharactersticType mPointChar;
+    //size_t mPointId;
 };
+
+// initialise the variable
+template<class _realScalarType > size_t  point<_realScalarType>::sPointId = size_t(0);
 
 #endif //ASYM_TREE_POINT_HPP

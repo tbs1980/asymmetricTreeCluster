@@ -116,10 +116,13 @@ void simulateNS(void)
             if(pt.weight() > livePoints[livePointInds[0]].weight())
             {
                 pt.pointChar() = ACCEPTED_POINT;
-                ast.addPoint(pt,false);
+                ast.addPoint(pt,true);
 
                 // delete nodes if necessary
                 //ast.deleteNodes(reductionFactor);
+
+                // flag the point as rejected
+                ast.searchPoint( livePoints[livePointInds[0]] ).pointChar() = REJECTED_POINT;
 
                 // replace the min live point
                 livePoints[livePointInds[0]] = pt;
@@ -130,7 +133,7 @@ void simulateNS(void)
             else
             {
                 pt.pointChar() = REJECTED_POINT;
-                ast.addPoint(pt,false);
+                ast.addPoint(pt,true);
             }
 
             ++tot;
@@ -141,10 +144,10 @@ void simulateNS(void)
 
         // at the end of each cycle check if are ready to build tree
         //asymmTreeType tempAst(emptyArry,boundMin,boundMax,threshold,treeIndex,level,splitDimension);
-        asymmTreeType tempAst = ast;
-        tempAst.buildTree();
-        size_t numNodesDeleted = tempAst.deleteNodes(reductionFactor);
-        std::cout<<"nodes deleted = "<<numNodesDeleted<<std::endl;
+        //asymmTreeType tempAst = ast;
+        //tempAst.buildTree();
+        //size_t numNodesDeleted = tempAst.deleteNodes(reductionFactor);
+        //std::cout<<"nodes deleted = "<<numNodesDeleted<<std::endl;
         
     }
 
