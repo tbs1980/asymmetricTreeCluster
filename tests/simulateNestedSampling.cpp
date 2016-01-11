@@ -79,6 +79,7 @@ void simulateNS(void)
         pointType pt = ast.getRandomPoint(randGen);
         double weight = gauss.logLik(pt.coords());
         pt.weight() = weight;
+        pt.pointChar() = REFERENCE_POINT;
         livePoints[i] = pt;
         ast.addPoint(pt,false);
         //std::cout<<std::endl;
@@ -91,58 +92,60 @@ void simulateNS(void)
 
     std::cout<<"At the begining lmin is "<<livePoints[livePointInds[0]].weight()<<std::endl;
 
-
-    // createa a file for plotting acceptance rates
-    //std::ofstream accFile;
-    //accFile.open("acceptance2near.dat",std::ios::trunc);
-    //accFile.open("acceptance2all.dat",std::ios::trunc);
+    //return;
 
     // next loop through the sampling process
-    size_t numIter = 3000;
-    size_t tot=0;
-    size_t acc=0;
-    for(size_t i=0;i<numIter;++i)
+    size_t numIter = 1;
+    for(size_t j=0;j<numIter;++j)
     {
-        //std::cout<<"\n----------Iteration "<<tot<<" ---------------"<<std::endl;
-
-        pointType fpt = livePoints[livePointInds[0]];
-
-        //  get some random points
-        pointType pt = ast.getRandomPoint(randGen);
-
-        double weight = gauss.logLik(pt.coords());
-        pt.weight() = weight;
-
-        // replace the live lowest point if necessary
-        if(pt.weight() > livePoints[livePointInds[0]].weight())
+        size_t tot=0;
+        size_t acc=0;
+        for(size_t i=0;i<numLivePoints;++i)
         {
-            pt.accepted() = true;
-            ast.addPoint(pt);
+            //std::cout<<"\n----------Iteration "<<tot<<" ---------------"<<std::endl;
 
-            // delete nodes if necessary
-            ast.deleteNodes(reductionFactor);
+            pointType fpt = livePoints[livePointInds[0]];
 
-            // replace the min live point
-            livePoints[livePointInds[0]] = pt;
+            //  get some random points
+            pointType pt = ast.getRandomPoint(randGen);
 
-            // increase the acc rate
-            ++acc;
+            double weight = gauss.logLik(pt.coords());
+            pt.weight() = weight;
+
+            // replace the live lowest point if necessary
+            if(pt.weight() > livePoints[livePointInds[0]].weight())
+            {
+                pt.pointChar() = ACCEPTED_POINT;
+                ast.addPoint(pt,false);
+
+                // delete nodes if necessary
+                //ast.deleteNodes(reductionFactor);
+
+                // replace the min live point
+                livePoints[livePointInds[0]] = pt;
+
+                // increase the acc rate
+                ++acc;
+            }
+            else
+            {
+                pt.pointChar() = REJECTED_POINT;
+                ast.addPoint(pt,false);
+            }
+
+            ++tot;
+
+            std::sort(livePoints.begin(),livePoints.end(),
+                [](pointType const & a,pointType const& b){ return a.weight() < b.weight(); });
         }
-        else
-        {
-            pt.accepted() = false;
-            ast.addPoint(pt);
-        }
 
-        ++tot;
-
-        std::sort(livePoints.begin(),livePoints.end(),
-            [](pointType const & a,pointType const& b){ return a.weight() < b.weight(); });
-
-        //std::cout<<"lmin is "<<livePoints[livePointInds[0]].weight()<<"\t"<<(double)acc/(double)tot<<std::endl;
-
-
-        //accFile<<i<<","<<(double)acc/(double)tot<<","<<livePoints[livePointInds[0]].weight()<<std::endl;
+        // at the end of each cycle check if are ready to build tree
+        //asymmTreeType tempAst(emptyArry,boundMin,boundMax,threshold,treeIndex,level,splitDimension);
+        asymmTreeType tempAst = ast;
+        tempAst.buildTree();
+        size_t numNodesDeleted = tempAst.deleteNodes(reductionFactor);
+        std::cout<<"nodes deleted = "<<numNodesDeleted<<std::endl;
+        
     }
 
     std::ofstream outFile;

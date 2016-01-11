@@ -14,9 +14,10 @@
 
 enum nodeCharacterstic
 {
-    ACCEPTED,
-    REJECTED,
-    ACCEPTED_AND_REJECTED
+    REFERENCE_NODE,
+    ACCEPTED_NODE,
+    REJECTED_NODE,
+    ACCEPTED_AND_REJECTED_NODE
 };
 
 template<class pointType>
@@ -88,6 +89,9 @@ public:
      * \brief The default constructor. Allocates no memory and nodes,
      * just the root node is constructed.
      */
+    
+    typedef typename pointType::pointCharactersticType pointCharactersticType;
+
     asymmTree()
     :mLeftSubTree(nullptr)
     ,mRightSubTree(nullptr)
@@ -103,7 +107,7 @@ public:
     ,mHasRighSubTree(false)
     ,mTreeActive(true)
     ,mVolume(0)
-    ,mNodeChar(ACCEPTED)
+    ,mNodeChar(REFERENCE_NODE)
     ,mAccRatio(1)
     {
 
@@ -145,7 +149,7 @@ public:
     ,mHasRighSubTree(false)
     ,mTreeActive(true)
     ,mVolume(0)
-    ,mNodeChar(ACCEPTED)
+    ,mNodeChar(REFERENCE_NODE)
     ,mAccRatio(1)
     {
         computeNodeCharacterstics();
@@ -309,8 +313,10 @@ public:
         }
     }
 
-    void deleteNodes(realScalarType const reductionFactor)
+    size_t deleteNodes(realScalarType const reductionFactor)
     {
+        size_t numNodesDeleted(0);
+
         // step 1 compute the total volume of accepted and accepted-rejected nodes
         std::vector<nodeInformationType> ndInfVect;
         getTreeIndicesAndVolumesAcc(ndInfVect);
@@ -366,10 +372,13 @@ public:
                         volRejc += ndInfVectRejc[i].mVolume;
                         //std::cout<<"We should delete "<<ndInfVectRejc[i].mTreeIndex<<std::endl;
                         deleteActiveNodeByIndex(ndInfVectRejc[i].mTreeIndex);
+                        ++numNodesDeleted;
                     }
                 }
            }
         }
+
+        return numNodesDeleted;
     }
 
 
@@ -433,7 +442,7 @@ public:
                 mRightSubTree->getTreeIndicesAndVolumesAcc(nodeInfoVect);
             }
         }
-        else if(mNodeChar == ACCEPTED) //or mNodeChar == ACCEPTED_AND_REJECTED)
+        else if(mNodeChar == ACCEPTED_NODE or mNodeChar == ACCEPTED_AND_REJECTED_NODE)
         {
             nodeInfoVect.push_back( getNodeInformation() );
         }
@@ -454,7 +463,7 @@ public:
                 mRightSubTree->getTreeIndicesAndVolumesRejc(nodeInfoVect);
             }
         }
-        else if(mNodeChar == ACCEPTED_AND_REJECTED or mNodeChar == REJECTED)
+        else if(mNodeChar == REJECTED_NODE)
         {
             nodeInfoVect.push_back( getNodeInformation() );
         }
@@ -537,6 +546,104 @@ public:
         return randPnt;
     }
 
+    void buildTree()
+    {
+
+        // check if we have enough points for branching
+        assert(mThresholdForBranching >0);
+
+        if(mPoints.size() > mThresholdForBranching)
+        {
+            // since we have enough points we can create new tress
+            std::vector<size_t> pointIndices(mPoints.size());
+
+            // set the point indices for sorting
+            for(size_t i=0;i<pointIndices.size();++i)
+            {
+                pointIndices[i] = i;
+            }
+
+            mSplitDimension = findMaxVarDimension();
+            //mSplitDimension = findMaxFisherInfoDimension();
+
+            auto begin = std::begin(pointIndices);
+            auto end = std::end(pointIndices);
+
+            // sort the point-indeices in the split dimension
+            std::sort(begin, end,
+                [this]( size_t a, size_t b)
+                {
+                    return ( mPoints[a][mSplitDimension] < mPoints[b][mSplitDimension] );
+                }
+            );
+
+            auto rangeSize = std::distance(begin, end);
+            auto median = begin + rangeSize/2;
+
+            // TODO is this step really necessary?
+            while(median != begin &&
+                mPoints[*(median)][mSplitDimension] == mPoints[*(median - 1)][mSplitDimension] )
+            {
+                --median;
+            }
+
+            // set the new bounds
+            pointType boundMinLeft = mBoundMin;
+            pointType boundMaxLeft = mBoundMax;
+            pointType boundMinRight = mBoundMin;
+            pointType boundMaxRight = mBoundMax;
+
+            // the split dimension will have a new bound coming from median point
+            boundMaxLeft[mSplitDimension] = mPoints[*(median)][mSplitDimension];
+            boundMinRight[mSplitDimension] = mPoints[*(median)][mSplitDimension];
+
+            assert( boundMinLeft[mSplitDimension] < boundMaxLeft[mSplitDimension] );
+            assert( boundMinRight[mSplitDimension] < boundMaxRight[mSplitDimension] );
+
+            // since we have decided the split dimension we can set the node bounds here
+            mMedianVal = mPoints[*(median)];
+
+            // make points for the left and right tree
+            pointsArrayType pointsLeft( std::distance(begin, median) );
+            pointsArrayType pointsRight( std::distance(median, end) );
+
+            assert( pointsLeft.size() + pointsRight.size() == mPoints.size() );
+
+            for(size_t i=0;i<pointsLeft.size();++i)
+            {
+                pointsLeft[i] = mPoints[ pointIndices[i] ];
+            }
+
+            for(size_t i=0;i<pointsRight.size();++i)
+            {
+                pointsRight[i] = mPoints[ pointIndices[i+pointsLeft.size()] ];
+            }
+
+            assert( pointsLeft.size() > size_t(0) );
+            assert( pointsRight.size() > size_t(0) );
+
+            // branch
+            mLeftSubTree = new asymmTreeType(pointsLeft,boundMinLeft,boundMaxLeft,
+                mThresholdForBranching,(2*mTreeIndex+1),(mTreeLevel+1),
+                (mSplitDimension +1) % mNumDims);
+            mHasLeftSubTree = true;
+
+            mRightSubTree = new asymmTreeType(pointsRight,boundMinRight,boundMaxRight,
+                mThresholdForBranching,(2*mTreeIndex+2),(mTreeLevel+1),
+                (mSplitDimension +1) % mNumDims);
+            mHasRighSubTree = true;
+
+            // clear the points in the currect branch
+            mPoints.clear();
+
+            // TODO set the branch to inactive?
+        }
+        else
+        {
+            computeNodeCharacterstics();
+        }
+    }
+
 private:
 
     /**
@@ -609,11 +716,11 @@ private:
             size_t numRej(0);
             for(size_t i=0;i<mPoints.size();++i)
             {
-                if(mPoints[i].accepted())
+                if(mPoints[i].pointChar() == pointCharactersticType::ACCEPTED_POINT)
                 {
                     numAcc += size_t(1);
                 }
-                else
+                else if(mPoints[i].pointChar() == pointCharactersticType::REJECTED_POINT)
                 {
                     numRej += size_t(1);
                 }
@@ -623,16 +730,19 @@ private:
 
             if(numAcc > size_t(0) and numRej == size_t(0))
             {
-                mNodeChar = ACCEPTED;
+                mNodeChar = ACCEPTED_NODE;
             }
             else if(numAcc > size_t(0) and numRej > size_t(0))
             {
-                mNodeChar = ACCEPTED_AND_REJECTED;
+                mNodeChar = ACCEPTED_AND_REJECTED_NODE;
             }
             else if(numAcc == size_t(0) and numRej > size_t(0))
             {
-                mNodeChar = REJECTED;
+                mNodeChar = REJECTED_NODE;
             }
+            // default is REFERENCE_NODE
+
+            /*
             else if(numAcc == size_t(0) and numRej == size_t(0))
             {
                 assert(mPoints.size() == 0); // in this case we should have problem
@@ -641,7 +751,7 @@ private:
             {
                 std::cout<<"This shold not hapen. numAcc = "<<numAcc<<", numRej="<<numRej<<std::endl;
                 abort();
-            }
+            }*/
         }
     }
 
@@ -760,103 +870,6 @@ private:
         return (size_t) std::distance( std::begin(discrDiff), discrMax );
     }
 
-    void buildTree()
-    {
-
-        // check if we have enough points for branching
-        assert(mThresholdForBranching >0);
-
-        if(mPoints.size() > mThresholdForBranching)
-        {
-            // since we have enough points we can create new tress
-            std::vector<size_t> pointIndices(mPoints.size());
-
-            // set the point indices for sorting
-            for(size_t i=0;i<pointIndices.size();++i)
-            {
-                pointIndices[i] = i;
-            }
-
-            mSplitDimension = findMaxVarDimension();
-            //mSplitDimension = findMaxFisherInfoDimension();
-
-            auto begin = std::begin(pointIndices);
-            auto end = std::end(pointIndices);
-
-            // sort the point-indeices in the split dimension
-            std::sort(begin, end,
-                [this]( size_t a, size_t b)
-                {
-                    return ( mPoints[a][mSplitDimension] < mPoints[b][mSplitDimension] );
-                }
-            );
-
-            auto rangeSize = std::distance(begin, end);
-            auto median = begin + rangeSize/2;
-
-            // TODO is this step really necessary?
-            while(median != begin &&
-                mPoints[*(median)][mSplitDimension] == mPoints[*(median - 1)][mSplitDimension] )
-            {
-                --median;
-            }
-
-            // set the new bounds
-            pointType boundMinLeft = mBoundMin;
-            pointType boundMaxLeft = mBoundMax;
-            pointType boundMinRight = mBoundMin;
-            pointType boundMaxRight = mBoundMax;
-
-            // the split dimension will have a new bound coming from median point
-            boundMaxLeft[mSplitDimension] = mPoints[*(median)][mSplitDimension];
-            boundMinRight[mSplitDimension] = mPoints[*(median)][mSplitDimension];
-
-            assert( boundMinLeft[mSplitDimension] < boundMaxLeft[mSplitDimension] );
-            assert( boundMinRight[mSplitDimension] < boundMaxRight[mSplitDimension] );
-
-            // since we have decided the split dimension we can set the node bounds here
-            mMedianVal = mPoints[*(median)];
-
-            // make points for the left and right tree
-            pointsArrayType pointsLeft( std::distance(begin, median) );
-            pointsArrayType pointsRight( std::distance(median, end) );
-
-            assert( pointsLeft.size() + pointsRight.size() == mPoints.size() );
-
-            for(size_t i=0;i<pointsLeft.size();++i)
-            {
-                pointsLeft[i] = mPoints[ pointIndices[i] ];
-            }
-
-            for(size_t i=0;i<pointsRight.size();++i)
-            {
-                pointsRight[i] = mPoints[ pointIndices[i+pointsLeft.size()] ];
-            }
-
-            assert( pointsLeft.size() > size_t(0) );
-            assert( pointsRight.size() > size_t(0) );
-
-            // branch
-            mLeftSubTree = new asymmTreeType(pointsLeft,boundMinLeft,boundMaxLeft,
-                mThresholdForBranching,(2*mTreeIndex+1),(mTreeLevel+1),
-                (mSplitDimension +1) % mNumDims);
-            mHasLeftSubTree = true;
-
-            mRightSubTree = new asymmTreeType(pointsRight,boundMinRight,boundMaxRight,
-                mThresholdForBranching,(2*mTreeIndex+2),(mTreeLevel+1),
-                (mSplitDimension +1) % mNumDims);
-            mHasRighSubTree = true;
-
-            // clear the points in the currect branch
-            mPoints.clear();
-
-            // TODO set the branch to inactive?
-        }
-        else
-        {
-            computeNodeCharacterstics();
-        }
-    }
 
     void computeMeanStdDvnOfWeights(pointsArrayType const & points,realScalarType & mean, realScalarType & stdDvn)
     {
