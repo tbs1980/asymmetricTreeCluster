@@ -81,7 +81,8 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
     fig.set_axis_bgcolor('#B0B1B2')
     
     #plt.show()
-    plt.savefig('plotTree.svg')
+    #plt.savefig('plotTree.svg')
+    plt.savefig('plotTree.png')
 
 if __name__ == "__main__" :
     if len(sys.argv) == 2:
