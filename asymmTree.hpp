@@ -683,7 +683,7 @@ public:
         }
     }
 
-    pointType & searchPoint(pointType const & point)
+    void searchAndReplacePoint(pointType const & point)
     {
         if( mHasLeftSubTree or mHasRighSubTree)
         {
@@ -692,14 +692,14 @@ public:
             {
                 if(mHasLeftSubTree)
                 {
-                    mLeftSubTree->searchPoint(point);
+                    mLeftSubTree->searchAndReplacePoint(point);
                 }
             }
             else 
             {
                 if(mHasRighSubTree)
                 {
-                    mRightSubTree->searchPoint(point);
+                    mRightSubTree->searchAndReplacePoint(point);
                 }
             }
         }
@@ -707,14 +707,20 @@ public:
         {
             for(size_t i=0;i<mPoints.size();++i)
             {
+                //std::cout<<i<<"\t"<<mPoints[i][0]<<"\t"<<point[0]<<"\t"<<mPoints[i].pointId()<<"\t"<<point.pointId()<<std::endl;
                 if( mPoints[i].pointId() == point.pointId() )
                 {
-                    std::cout<<"Found point"<<std::endl;
-                    return mPoints[i];
+                    //std::cout<<"Found point"<<std::endl;
+                    //std::cout<<"before point char = "<<(int)mPoints[i].pointChar()<<"\t corrd 0 = "<<mPoints[i][0]<<std::endl;
+                    mPoints[i] = point;
+                    //std::cout<<"after point char = "<<(int)mPoints[i].pointChar()<<"\t corrd 0 = "<<mPoints[i][0]<<std::endl;
+                    break;
                 }
             }
+            //std::cout<<std::endl;
 
-            abort();
+            //std::cout<<"didn't find the point"<<std::endl;
+            //abort();
         }
     }
 

@@ -72,6 +72,8 @@ void simulateNS(void)
     pointsArrayType livePoints(numLivePoints);
     std::vector<size_t> livePointInds(numLivePoints);
 
+    size_t pointId(100);
+
     std::mt19937 randGen;
     for(size_t i=0;i<numLivePoints;++i)
     {
@@ -80,6 +82,8 @@ void simulateNS(void)
         double weight = gauss.logLik(pt.coords());
         pt.weight() = weight;
         pt.pointChar() = REFERENCE_POINT;
+        pt.pointId() = pointId;
+        ++pointId;
         livePoints[i] = pt;
         ast.addPoint(pt,false);
         //std::cout<<std::endl;
@@ -108,6 +112,8 @@ void simulateNS(void)
 
             //  get some random points
             pointType pt = ast.getRandomPoint(randGen);
+            pt.pointId() = pointId;
+            ++pointId;
 
             double weight = gauss.logLik(pt.coords());
             pt.weight() = weight;
@@ -115,17 +121,21 @@ void simulateNS(void)
             // replace the live lowest point if necessary
             if(pt.weight() > livePoints[livePointInds[0]].weight())
             {
+
                 pt.pointChar() = ACCEPTED_POINT;
                 ast.addPoint(pt,true);
 
                 // delete nodes if necessary
                 //ast.deleteNodes(reductionFactor);
 
-                // flag the point as rejected
-                ast.searchPoint( livePoints[livePointInds[0]] ).pointChar() = REJECTED_POINT;
+                // flag the point that is going to be replaced as rejected in the tree
+                //std::cout<<"Searching for point with id "<<livePoints[ livePointInds[0] ].pointId()<<std::endl;
+                livePoints[ livePointInds[0] ].pointChar() = REJECTED_POINT;
+                ast.searchAndReplacePoint( livePoints[ livePointInds[0] ] ) ;//.pointChar() = REJECTED_POINT;
 
                 // replace the min live point
                 livePoints[livePointInds[0]] = pt;
+                //std::cout<<"After assigning the point id is "<<livePoints[ livePointInds[0] ].pointId()<<std::endl;
 
                 // increase the acc rate
                 ++acc;

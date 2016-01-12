@@ -20,32 +20,28 @@ public:
     typedef std::vector<realScalarType> realVectorType;
     typedef pointCharacterstic pointCharactersticType;
 
-    static size_t sPointId;
+    //static size_t sPointId;
 
     point()
-    :mCoordinates(1,realScalarType(0)),mWeight(0),mPointChar(REFERENCE_POINT)
+    :mCoordinates(1,realScalarType(0)),mWeight(0),mPointChar(REFERENCE_POINT),mPointId(0)
     {
-        ++sPointId;
     }
 
     point(size_t const numDims,realScalarType const weight)
-    :mCoordinates(numDims,realScalarType(0)),mWeight(weight),mPointChar(REFERENCE_POINT)
+    :mCoordinates(numDims,realScalarType(0)),mWeight(weight),mPointChar(REFERENCE_POINT),mPointId(0)
     {
-        ++sPointId;
     }
 
     point(realVectorType const& coordinates,realScalarType const weight)
-    :mCoordinates(coordinates),mWeight(weight),mPointChar(REFERENCE_POINT)
+    :mCoordinates(coordinates),mWeight(weight),mPointChar(REFERENCE_POINT),mPointId(0)
     {
         assert(coordinates.size()>0);
-        ++sPointId;
     }
 
     point(realVectorType const& coordinates,realScalarType const weight,pointCharactersticType pointChar)
-    :mCoordinates(coordinates),mWeight(weight),mPointChar(pointChar)
+    :mCoordinates(coordinates),mWeight(weight),mPointChar(pointChar),mPointId(0)
     {
         assert(coordinates.size()>0);
-        ++sPointId;
     }
 
     realScalarType const& weight() const
@@ -90,17 +86,22 @@ public:
 
     size_t const & pointId() const
     {
-        return sPointId;
+        return mPointId;
+    }
+
+    size_t & pointId()
+    {
+        return mPointId;
     }
 
 private:
     realVectorType mCoordinates;
     realScalarType mWeight;
     pointCharactersticType mPointChar;
-    //size_t mPointId;
+    size_t mPointId;
 };
 
 // initialise the variable
-template<class _realScalarType > size_t  point<_realScalarType>::sPointId = size_t(0);
+//template<class _realScalarType > size_t  point<_realScalarType>::sPointId = size_t(0);
 
 #endif //ASYM_TREE_POINT_HPP
