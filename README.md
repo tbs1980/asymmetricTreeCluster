@@ -2,5 +2,6 @@
 
 > A code for clustering analysis using asymmetric tree structure
 
-This code builds a kd-tree based on samples from a hyper space. The nodes "self-organises" in a way such that there more more nodes close the higher denstiy of the underlying function. Below is an example.
+This code builds a kd-tree based on samples chosen from the hyper space. The nodes "self-organise" in a way such that boundaries of nodes aligns closely with the contours of the underlying function. Below is an example.
 ![Gaussian function](./img/plotTree.png)
+![Tree](./img/plotTreeGraph.png)

@@ -166,7 +166,7 @@ void simulateNS(void)
     ast.dumpTree(outFile);
     outFile.close();
 
-    return;
+    //return;
     
     //accFile.close();
 
