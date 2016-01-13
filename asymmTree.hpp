@@ -333,7 +333,7 @@ public:
         if(ndInfVect.size() > 0)
         {
             //std::cout<<"We have "<<ndInfVect.size()<<" acc-nodes "<<std::endl;
-            realScalarType accRejVolume = std::accumulate(ndInfVect.begin(), ndInfVect.end(),
+            realScalarType accRejVolume_Vc = std::accumulate(ndInfVect.begin(), ndInfVect.end(),
                 realScalarType(0),
                 [](realScalarType & a, nodeInformationType & b)
                 {
@@ -341,13 +341,13 @@ public:
                 }
                 );
 
-            //std::cout<<"Total volume of acc nodes "<<accRejVolume<<std::endl;
+            std::cout<<"Total volume of acc nodes "<<accRejVolume_Vc<<std::endl;
 
             // step 2 define alpha
             assert(reductionFactor > realScalarType(0.5) and reductionFactor <= realScalarType(1) );
 
             // step 3 compute the volume to be reduced if possible
-            realScalarType reducedVolume = ( realScalarType(1)/reductionFactor -realScalarType(1) )*accRejVolume;
+            //realScalarType reducedVolume = ( realScalarType(1)/reductionFactor -realScalarType(1) )*accRejVolume_Vc;
 
             //std::cout<<"Reduced volume  = "<<reducedVolume<<std::endl;
 
@@ -357,6 +357,20 @@ public:
 
             if( ndInfVectRejc.size() > 0 )
             {
+                realScalarType rejVolume_Vr = std::accumulate(ndInfVectRejc.begin(), ndInfVectRejc.end(),
+                    realScalarType(0),
+                    [](realScalarType & a, nodeInformationType & b)
+                    {
+                        return a != realScalarType(0) ? a + b.mVolume : b.mVolume ;
+                    }
+                    );
+
+                realScalarType fractionVr = accRejVolume_Vc/rejVolume_Vr*( realScalarType(1)/reductionFactor - realScalarType(1) );
+
+                assert( fractionVr > realScalarType(0) );
+
+                std::cout<<"Fraction of Vr to be deleted = "<<fractionVr<<std::endl;
+
                 //std::cout<<"We have "<<ndInfVectRejc.size()<<" rejec-nodes"<<std::endl;
                 // step 5 sort them according to the minimum likelihood of the node
                 std::sort(std::begin(ndInfVectRejc),std::end(ndInfVectRejc),
@@ -367,17 +381,17 @@ public:
                     );
 
                 // step 6 delete the nodes
-                realScalarType volRejc(0);
+                realScalarType volRejcNow(0);
                 for(size_t i=0;i<ndInfVectRejc.size();++i)
                 {
-                    //std::cout<<i<<"\t"<<ndInfVectRejc[i].mVolume<<"\t"<<volRejc<<std::endl;
-                    if(volRejc + ndInfVectRejc[i].mVolume >= reducedVolume)
+                    //std::cout<<i<<"\t"<<ndInfVectRejc[i].mVolume<<"\t"<<volRejcNow<<std::endl;
+                    if( ( volRejcNow + ndInfVectRejc[i].mVolume )/rejVolume_Vr >= fractionVr)
                     {
                         break;
                     }
                     else
                     {
-                        volRejc += ndInfVectRejc[i].mVolume;
+                        volRejcNow += ndInfVectRejc[i].mVolume;
                         //std::cout<<"We should delete "<<ndInfVectRejc[i].mTreeIndex<<std::endl;
                         deleteActiveNodeByIndex(ndInfVectRejc[i].mTreeIndex);
                         ++numNodesDeleted;
@@ -423,6 +437,11 @@ public:
     size_t treeIndex() const
     {
         return mTreeIndex;
+    }
+
+    pointsArrayType const & getPoints() const
+    {
+        return mPoints;
     }
 
     /**

@@ -104,7 +104,7 @@ void simulateNS(void)
     {
         size_t tot=0;
         size_t acc=0;
-        for(size_t i=0;i<numLivePoints;++i)
+        for(size_t i=0;i<numLivePoints*2;++i)
         {
             //std::cout<<"\n----------Iteration "<<tot<<" ---------------"<<std::endl;
 
@@ -123,7 +123,7 @@ void simulateNS(void)
             {
 
                 pt.pointChar() = ACCEPTED_POINT;
-                ast.addPoint(pt,true);
+                ast.addPoint(pt,false);
 
                 // delete nodes if necessary
                 //ast.deleteNodes(reductionFactor);
@@ -143,7 +143,7 @@ void simulateNS(void)
             else
             {
                 pt.pointChar() = REJECTED_POINT;
-                ast.addPoint(pt,true);
+                ast.addPoint(pt,false);
             }
 
             ++tot;
@@ -152,21 +152,38 @@ void simulateNS(void)
                 [](pointType const & a,pointType const& b){ return a.weight() < b.weight(); });
         }
 
+        
         // at the end of each cycle check if are ready to build tree
-        //asymmTreeType tempAst(emptyArry,boundMin,boundMax,threshold,treeIndex,level,splitDimension);
+        asymmTreeType tempAst(emptyArry,boundMin,boundMax,threshold,treeIndex,level,splitDimension);
+        pointsArrayType allPoints = ast.getPoints();
+        for(size_t i=0;i<allPoints.size();++i)
+        {
+            tempAst.addPoint(allPoints[i],false);
+        }
         //asymmTreeType tempAst = ast;
-        //tempAst.buildTree();
-        //size_t numNodesDeleted = tempAst.deleteNodes(reductionFactor);
-        //std::cout<<"nodes deleted = "<<numNodesDeleted<<std::endl;
+        tempAst.buildTree();
+        size_t numNodesDeleted = tempAst.deleteNodes(reductionFactor);
+        std::cout<<"nodes deleted from the temp tree = "<<numNodesDeleted<<std::endl;
+
+        std::cout<<"deleting nodes from the base tree "<<std::endl;
+        if(numNodesDeleted > size_t(0))
+        {
+            ast.buildTree();
+            ast.deleteNodes(reductionFactor);
+        }
         
     }
+
+    //std::cout<<"done looping "<<std::endl;
+
+    //return ;
 
     std::ofstream outFile;
     outFile.open("nsTreeIter.dat",std::ios::trunc);
     ast.dumpTree(outFile);
     outFile.close();
 
-    //return;
+    return;
     
     //accFile.close();
 

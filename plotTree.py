@@ -42,7 +42,7 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
     wtMax = tree[:,4]
 
     # what column should be used for heat map
-    heatMapPropertyCol = 3
+    heatMapPropertyCol = 5
 
     minWeight = np.min(tree[np.where(numPts>0) ,heatMapPropertyCol])
     maxWeight = np.max(tree[np.where(numPts>0) ,heatMapPropertyCol])
