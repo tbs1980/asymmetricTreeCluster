@@ -23,17 +23,17 @@ public:
     //static size_t sPointId;
 
     point()
-    :mCoordinates(1,realScalarType(0)),mWeight(0),mPointChar(REFERENCE_POINT),mPointId(0)
+    :mCoordinates(1,realScalarType(0)),mWeight(0),mPointChar(ACCEPTED_POINT),mPointId(0)
     {
     }
 
     point(size_t const numDims,realScalarType const weight)
-    :mCoordinates(numDims,realScalarType(0)),mWeight(weight),mPointChar(REFERENCE_POINT),mPointId(0)
+    :mCoordinates(numDims,realScalarType(0)),mWeight(weight),mPointChar(ACCEPTED_POINT),mPointId(0)
     {
     }
 
     point(realVectorType const& coordinates,realScalarType const weight)
-    :mCoordinates(coordinates),mWeight(weight),mPointChar(REFERENCE_POINT),mPointId(0)
+    :mCoordinates(coordinates),mWeight(weight),mPointChar(ACCEPTED_POINT),mPointId(0)
     {
         assert(coordinates.size()>0);
     }

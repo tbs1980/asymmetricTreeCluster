@@ -2,6 +2,7 @@
 #include <point.hpp>
 #include <random>
 #include <fstream>
+#include <string>
 
 //#include "treeSampler.hpp"
 
@@ -50,8 +51,8 @@ void simulateNS(void)
 
     for(size_t i=0;i<numDims;++i)
     {
-        boundMin[i] = -double(2);
-        boundMax[i] = double(2);
+        boundMin[i] = -double(5);
+        boundMax[i] = double(5);
     }
 
     //boundMin[1] = -2;
@@ -62,7 +63,7 @@ void simulateNS(void)
     size_t treeIndex(0);
     size_t level(0);
     size_t splitDimension(0);
-    double reductionFactor(0.9);
+    double reductionFactor(0.6);
 
     // define the tree
     asymmTreeType ast(emptyArry,boundMin,boundMax,threshold,treeIndex,level,splitDimension);
@@ -81,7 +82,7 @@ void simulateNS(void)
         pointType pt = ast.getRandomPoint(randGen);
         double weight = gauss.logLik(pt.coords());
         pt.weight() = weight;
-        pt.pointChar() = REFERENCE_POINT;
+        pt.pointChar() = ACCEPTED_POINT;
         pt.pointId() = pointId;
         ++pointId;
         livePoints[i] = pt;
@@ -97,14 +98,16 @@ void simulateNS(void)
     std::cout<<"At the begining lmin is "<<livePoints[livePointInds[0]].weight()<<std::endl;
 
     //return;
+    //std::ofstream outFilePoints;
+    //outFilePoints.open("points.dat",std::ios::trunc);
 
     // next loop through the sampling process
-    size_t numIter = 1;
+    size_t numIter = 10;
     for(size_t j=0;j<numIter;++j)
     {
         size_t tot=0;
         size_t acc=0;
-        for(size_t i=0;i<numLivePoints*2;++i)
+        for(size_t i=0;i<numLivePoints;++i)
         {
             //std::cout<<"\n----------Iteration "<<tot<<" ---------------"<<std::endl;
 
@@ -123,10 +126,8 @@ void simulateNS(void)
             {
 
                 pt.pointChar() = ACCEPTED_POINT;
-                ast.addPoint(pt,false);
+                ast.addPoint(pt,true);
 
-                // delete nodes if necessary
-                //ast.deleteNodes(reductionFactor);
 
                 // flag the point that is going to be replaced as rejected in the tree
                 //std::cout<<"Searching for point with id "<<livePoints[ livePointInds[0] ].pointId()<<std::endl;
@@ -137,14 +138,20 @@ void simulateNS(void)
                 livePoints[livePointInds[0]] = pt;
                 //std::cout<<"After assigning the point id is "<<livePoints[ livePointInds[0] ].pointId()<<std::endl;
 
+
+                // delete nodes if necessary
+                ast.deleteNodes(reductionFactor);
+
                 // increase the acc rate
                 ++acc;
             }
             else
             {
                 pt.pointChar() = REJECTED_POINT;
-                ast.addPoint(pt,false);
+                ast.addPoint(pt,true);
             }
+
+            //outFilePoints<<pt[0]<<"\t"<<pt[1]<<std::endl;
 
             ++tot;
 
@@ -154,6 +161,7 @@ void simulateNS(void)
 
         
         // at the end of each cycle check if are ready to build tree
+        /*
         asymmTreeType tempAst(emptyArry,boundMin,boundMax,threshold,treeIndex,level,splitDimension);
         pointsArrayType allPoints = ast.getPoints();
         for(size_t i=0;i<allPoints.size();++i)
@@ -165,16 +173,37 @@ void simulateNS(void)
         size_t numNodesDeleted = tempAst.deleteNodes(reductionFactor);
         std::cout<<"nodes deleted from the temp tree = "<<numNodesDeleted<<std::endl;
 
+        
         std::cout<<"deleting nodes from the base tree "<<std::endl;
         if(numNodesDeleted > size_t(0))
         {
             ast.buildTree();
             ast.deleteNodes(reductionFactor);
-        }
-        
+        }*/
+
+        /*
+        if(j==0)
+        {
+            ast.buildTree();
+        }*/
+
+        //sast.deleteNodes(reductionFactor);
+
+        /*
+        std::ofstream outFile;
+        std::string fileNameOut("nsTreeIter_");
+        fileNameOut = fileNameOut + std::to_string(j)  + std::string(".dat");
+        std::cout<<"fileNameOut  = "<<fileNameOut<<std::endl;
+        outFile.open(fileNameOut,std::ios::trunc);
+        ast.dumpTree(outFile);
+        outFile.close();*/
+ 
+
     }
 
-    //std::cout<<"done looping "<<std::endl;
+    //outFilePoints.close();
+
+    std::cout<<"done looping "<<std::endl;
 
     //return ;
 

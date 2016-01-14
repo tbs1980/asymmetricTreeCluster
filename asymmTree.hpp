@@ -341,7 +341,7 @@ public:
                 }
                 );
 
-            std::cout<<"Total volume of acc nodes "<<accRejVolume_Vc<<std::endl;
+            //std::cout<<"Total volume of acc nodes "<<accRejVolume_Vc<<std::endl;
 
             // step 2 define alpha
             assert(reductionFactor > realScalarType(0.5) and reductionFactor <= realScalarType(1) );
@@ -369,7 +369,7 @@ public:
 
                 assert( fractionVr > realScalarType(0) );
 
-                std::cout<<"Fraction of Vr to be deleted = "<<fractionVr<<std::endl;
+                //std::cout<<"Fraction of Vr to be deleted = "<<fractionVr<<std::endl;
 
                 //std::cout<<"We have "<<ndInfVectRejc.size()<<" rejec-nodes"<<std::endl;
                 // step 5 sort them according to the minimum likelihood of the node
@@ -384,11 +384,13 @@ public:
                 realScalarType volRejcNow(0);
                 for(size_t i=0;i<ndInfVectRejc.size();++i)
                 {
+                    
                     //std::cout<<i<<"\t"<<ndInfVectRejc[i].mVolume<<"\t"<<volRejcNow<<std::endl;
                     if( ( volRejcNow + ndInfVectRejc[i].mVolume )/rejVolume_Vr >= fractionVr)
                     {
                         break;
                     }
+                    
                     else
                     {
                         volRejcNow += ndInfVectRejc[i].mVolume;
@@ -396,6 +398,17 @@ public:
                         deleteActiveNodeByIndex(ndInfVectRejc[i].mTreeIndex);
                         ++numNodesDeleted;
                     }
+
+                    /*
+                    volRejcNow += ndInfVectRejc[i].mVolume;
+                    deleteActiveNodeByIndex(ndInfVectRejc[i].mTreeIndex);
+                    ++numNodesDeleted;
+
+                    if( ( volRejcNow  )/rejVolume_Vr >= fractionVr)
+                    {
+                        break;
+                    }*/
+
                 }
            }
         }

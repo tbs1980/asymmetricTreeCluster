@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import sys
 import matplotlib.cm as cm
 import matplotlib as mpl
+from math import exp
 
 def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
     """
@@ -44,11 +45,11 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
     # what column should be used for heat map
     heatMapPropertyCol = 5
 
-    minWeight = np.min(tree[np.where(numPts>0) ,heatMapPropertyCol])
-    maxWeight = np.max(tree[np.where(numPts>0) ,heatMapPropertyCol])
+    minWeight = exp(np.min(tree[np.where(numPts>0) ,heatMapPropertyCol]))
+    maxWeight = exp(np.max(tree[np.where(numPts>0) ,heatMapPropertyCol]))
 
     norm = mpl.colors.Normalize(vmin=minWeight, vmax=maxWeight)
-    cmap = cm.hot
+    cmap = cm.Spectral_r
 
     for nodeInfo in tree:
         #if int(nodeInfo[1]) == int(dim1) or int(nodeInfo[1]) == int(dim2):
@@ -67,7 +68,7 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
         if numPoints > 0 :
             treeInd = int(nodeInfo[0]) # col 0 tree-index
 
-            weight = nodeInfo[heatMapPropertyCol] # plotting the mean weight
+            weight = exp(nodeInfo[heatMapPropertyCol]) # plotting the mean weight
 
             plt.fill_between([b1Min,b1Max],[b2Min,b2Min],[b2Max,b2Max],
                 color=cm.ScalarMappable(norm=norm, cmap=cmap).to_rgba(weight))
@@ -82,7 +83,10 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
     
     #plt.show()
     #plt.savefig('plotTree.svg')
-    plt.savefig('plotTree.png')
+    plt.axes().set_aspect('equal', 'datalim')
+    plt.axes().set_xlim(-5,5)
+    plt.axes().set_ylim(-5,5)
+    plt.savefig(treeDumpFileName.replace("dat","png"),transparent=True)
 
 if __name__ == "__main__" :
     if len(sys.argv) == 2:
