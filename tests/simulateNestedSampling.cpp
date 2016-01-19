@@ -102,7 +102,7 @@ void simulateNS(void)
     //outFilePoints.open("points.dat",std::ios::trunc);
 
     // next loop through the sampling process
-    size_t numIter = 10;
+    size_t numIter = 3;
     for(size_t j=0;j<numIter;++j)
     {
         size_t tot=0;
@@ -159,7 +159,7 @@ void simulateNS(void)
                 [](pointType const & a,pointType const& b){ return a.weight() < b.weight(); });
         }
 
-        
+
         // at the end of each cycle check if are ready to build tree
         /*
         asymmTreeType tempAst(emptyArry,boundMin,boundMax,threshold,treeIndex,level,splitDimension);
@@ -173,7 +173,7 @@ void simulateNS(void)
         size_t numNodesDeleted = tempAst.deleteNodes(reductionFactor);
         std::cout<<"nodes deleted from the temp tree = "<<numNodesDeleted<<std::endl;
 
-        
+
         std::cout<<"deleting nodes from the base tree "<<std::endl;
         if(numNodesDeleted > size_t(0))
         {
@@ -189,15 +189,15 @@ void simulateNS(void)
 
         //sast.deleteNodes(reductionFactor);
 
-        /*
+
         std::ofstream outFile;
         std::string fileNameOut("nsTreeIter_");
         fileNameOut = fileNameOut + std::to_string(j)  + std::string(".dat");
         std::cout<<"fileNameOut  = "<<fileNameOut<<std::endl;
         outFile.open(fileNameOut,std::ios::trunc);
         ast.dumpTree(outFile);
-        outFile.close();*/
- 
+        outFile.close();
+
 
     }
 
@@ -205,7 +205,7 @@ void simulateNS(void)
 
     std::cout<<"done looping "<<std::endl;
 
-    //return ;
+    return ;
 
     std::ofstream outFile;
     outFile.open("nsTreeIter.dat",std::ios::trunc);
@@ -213,7 +213,7 @@ void simulateNS(void)
     outFile.close();
 
     return;
-    
+
     //accFile.close();
 
     outFile.open("nsTreeDotPlot.dot",std::ios::trunc);

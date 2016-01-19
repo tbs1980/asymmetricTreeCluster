@@ -89,7 +89,7 @@ public:
      * \brief The default constructor. Allocates no memory and nodes,
      * just the root node is constructed.
      */
-    
+
     typedef typename pointType::pointCharactersticType pointCharactersticType;
 
     asymmTree()
@@ -376,7 +376,8 @@ public:
                 std::sort(std::begin(ndInfVectRejc),std::end(ndInfVectRejc),
                     [](nodeInformationType const & a, nodeInformationType const & b)
                     {
-                        return a.mWeightMin < b.mWeightMin;
+                        //return a.mWeightMin < b.mWeightMin;
+                        return a.mWeightMax < b.mWeightMax;
                     }
                     );
 
@@ -384,13 +385,13 @@ public:
                 realScalarType volRejcNow(0);
                 for(size_t i=0;i<ndInfVectRejc.size();++i)
                 {
-                    
+
                     //std::cout<<i<<"\t"<<ndInfVectRejc[i].mVolume<<"\t"<<volRejcNow<<std::endl;
                     if( ( volRejcNow + ndInfVectRejc[i].mVolume )/rejVolume_Vr >= fractionVr)
                     {
                         break;
                     }
-                    
+
                     else
                     {
                         volRejcNow += ndInfVectRejc[i].mVolume;
@@ -719,7 +720,7 @@ public:
     {
         if( mHasLeftSubTree or mHasRighSubTree)
         {
-            // go to the left sub tree and point[mSplitDimension] < mMedianVal[mSplitDimension] 
+            // go to the left sub tree and point[mSplitDimension] < mMedianVal[mSplitDimension]
             if( point[mSplitDimension] < mMedianVal[mSplitDimension] )
             {
                 if(mHasLeftSubTree)
@@ -727,7 +728,7 @@ public:
                     mLeftSubTree->searchAndReplacePoint(point);
                 }
             }
-            else 
+            else
             {
                 if(mHasRighSubTree)
                 {
