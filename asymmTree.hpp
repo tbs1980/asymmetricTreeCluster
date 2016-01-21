@@ -618,6 +618,9 @@ public:
         return randPnt;
     }
 
+    /**
+     * \brief A method that build tree. 
+     */
     void buildTree()
     {
 
