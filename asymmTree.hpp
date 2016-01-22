@@ -555,9 +555,18 @@ public:
                 mRightSubTree->getTreeInformation(nodeInfoVect);
             }
         }
-        else
+        else //if(mPoints.size() > size_t(0)) // this to make sure that the node selected is actually a node with points
         {
-            nodeInfoVect.push_back( getNodeInformation() );
+            //std::cout<<"adding node "<<mTreeIndex<<" with points "<<mPoints.size()<<std::endl;
+            if( mTreeActive )
+            {
+                if(mTreeIndex == size_t(7))
+                {
+                    std::cout<<"WE are adding node "<<mTreeIndex<<" with points "<<mPoints.size()<<std::endl;
+                }
+                nodeInfoVect.push_back( getNodeInformation() );
+            }
+            
         }
     }
 
@@ -712,6 +721,7 @@ public:
             mPoints.clear();
 
             // TODO set the branch to inactive?
+            mTreeActive = false;
         }
         else
         {
