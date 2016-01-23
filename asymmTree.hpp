@@ -566,11 +566,17 @@ public:
                 }
                 nodeInfoVect.push_back( getNodeInformation() );
             }
-            
+
         }
     }
 
 
+    /**
+     * \brief A function for generating a uniform random point
+     * \tparam RNGType Random number generator type
+     * \param rng random number generator
+     * \return a randon point uniformly genrated from the nodes.
+     */
     template<class RNGType>
     pointType getRandomPoint(RNGType & rng)
     {
@@ -628,7 +634,7 @@ public:
     }
 
     /**
-     * \brief A method that build tree. 
+     * \brief A method that build tree.
      */
     void buildTree()
     {
