@@ -128,6 +128,8 @@ void simulateNS(void)
                 pt.pointChar() = ACCEPTED_POINT;
                 ast.addPoint(pt,true);
 
+                assert(ast.hasLeftSubTree() == true or ast.hasRightSubTree()==true);
+
 
                 // flag the point that is going to be replaced as rejected in the tree
                 //std::cout<<"Searching for point with id "<<livePoints[ livePointInds[0] ].pointId()<<std::endl;
@@ -138,6 +140,10 @@ void simulateNS(void)
                 livePoints[livePointInds[0]] = pt;
                 //std::cout<<"After assigning the point id is "<<livePoints[ livePointInds[0] ].pointId()<<std::endl;
 
+                std::ofstream outFileErr;
+                outFileErr.open("errorTree.dat",std::ios::trunc);
+                ast.dumpTree(outFileErr);
+                outFileErr.close();
 
                 // delete nodes if necessary
                 ast.deleteNodes(reductionFactor);

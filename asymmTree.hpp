@@ -292,22 +292,28 @@ public:
                     delete mRightSubTree;
                     mRightSubTree = nullptr;
                     mHasRighSubTree = false;
+                    assert(treeIndex != size_t(0));
                 }
             }
 
             if(mHasLeftSubTree)
             {
                 mLeftSubTree->deleteActiveNodeByIndex(treeIndex);
-                if (mLeftSubTree->treeIsActive()==false)
+                if (mLeftSubTree->treeIsActive() == false)
                 {
                     delete mLeftSubTree;
                     mLeftSubTree = nullptr;
                     mHasLeftSubTree = false;
+                    assert(treeIndex != size_t(0));
                 }
             }
         }
         else if(treeIndex == mTreeIndex)
         {
+            if(treeIndex == size_t(0))
+            {
+                std::cout<<"========> Settng the node 0 to inactive "<<std::endl;
+            }
             mPoints.clear();
             mTreeActive = false;
         }
@@ -317,7 +323,7 @@ public:
      * \brief A method for deleting the nodes according to a volume factor
      * @param reductionFactor the factor by whihc the nodes to be deleted
      *
-     * This function delete all the nodes that contain REJECTED points so that
+     * This function deletes all the nodes that contain REJECTED points so that
      * volume of the deleted nodes equal to (1/reductionFactor -1) times the
      * volume of the ACCEPTED points.
      */
@@ -557,14 +563,28 @@ public:
         }
         else //if(mPoints.size() > size_t(0)) // this to make sure that the node selected is actually a node with points
         {
-            //std::cout<<"adding node "<<mTreeIndex<<" with points "<<mPoints.size()<<std::endl;
+            std::cout<<"trying to adding node "<<mTreeIndex<<" with points "<<mPoints.size()<<std::endl;
             if( mTreeActive )
             {
-                if(mTreeIndex == size_t(7))
-                {
-                    std::cout<<"WE are adding node "<<mTreeIndex<<" with points "<<mPoints.size()<<std::endl;
-                }
+                std::cout<<"Success"<<std::endl;
                 nodeInfoVect.push_back( getNodeInformation() );
+            }
+            else
+            {
+                if(mHasLeftSubTree )
+                {
+                    std::cout<<" mHasLeftSubTree "<<std::endl;
+                }
+                if(mHasRighSubTree)
+                {
+                    std::cout<<" mHasRighSubTree "<<std::endl;
+                }
+
+                std::cout<<mBoundMin[0]<<"\t"<<mBoundMin[1]<<std::endl;
+                std::cout<<mBoundMax[0]<<"\t"<<mBoundMax[1]<<std::endl;
+                //std::cout<<mLeftSubTree->treeIndex()<<std::endl;
+                //std::cout<<mRightSubTree->treeIndex()<<std::endl;
+                std::cout<<"Failure"<<std::endl;
             }
 
         }
@@ -583,6 +603,14 @@ public:
         // step 1 create a sorted list of active nodes by ascending volume
         std::vector<nodeInformationType> ndInfVect;
         getTreeInformation(ndInfVect);
+
+        if(ndInfVect.size() == 0)
+        {
+            std::cout<<"Our search for nodes returned zero. Printing the tree now"<<std::endl;
+            std::ofstream of("dumpTreeFromError.dat");
+            dumpTree(of);
+            of.close();
+        }
 
         assert( ndInfVect.size() > size_t(0) );
 
