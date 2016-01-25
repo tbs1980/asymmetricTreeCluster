@@ -292,6 +292,7 @@ public:
                     delete mRightSubTree;
                     mRightSubTree = nullptr;
                     mHasRighSubTree = false;
+                    std::cout<<"@ "<<mTreeIndex<<" setting mHasRighSubTree = false"<<std::endl;
                     assert(treeIndex != size_t(0));
                 }
             }
@@ -310,10 +311,12 @@ public:
         }
         else if(treeIndex == mTreeIndex)
         {
+            /*
             if(treeIndex == size_t(0))
             {
                 std::cout<<"========> Settng the node 0 to inactive "<<std::endl;
-            }
+            }*/
+            std::cout<<"deleting the node "<<treeIndex<<std::endl;
             mPoints.clear();
             mTreeActive = false;
         }
@@ -338,7 +341,7 @@ public:
         // only proceed if we have more than one node
         if(ndInfVect.size() > 0)
         {
-            //std::cout<<"We have "<<ndInfVect.size()<<" acc-nodes "<<std::endl;
+            std::cout<<"We have "<<ndInfVect.size()<<" acc-nodes "<<std::endl;
             realScalarType accRejVolume_Vc = std::accumulate(ndInfVect.begin(), ndInfVect.end(),
                 realScalarType(0),
                 [](realScalarType & a, nodeInformationType & b)
@@ -360,6 +363,7 @@ public:
             // step 4 get the nodes with rejected points
             std::vector<nodeInformationType> ndInfVectRejc;
             getTreeIndicesAndVolumesRejc(ndInfVectRejc);
+            std::cout<<"We have "<<ndInfVectRejc.size()<<" rej-nodes "<<std::endl;
 
             if( ndInfVectRejc.size() > 0 )
             {
@@ -401,7 +405,7 @@ public:
                     else
                     {
                         volRejcNow += ndInfVectRejc[i].mVolume;
-                        //std::cout<<"We should delete "<<ndInfVectRejc[i].mTreeIndex<<std::endl;
+                        std::cout<<"We should delete "<<ndInfVectRejc[i].mTreeIndex<<std::endl;
                         deleteActiveNodeByIndex(ndInfVectRejc[i].mTreeIndex);
                         ++numNodesDeleted;
                     }
@@ -563,10 +567,10 @@ public:
         }
         else //if(mPoints.size() > size_t(0)) // this to make sure that the node selected is actually a node with points
         {
-            std::cout<<"trying to adding node "<<mTreeIndex<<" with points "<<mPoints.size()<<std::endl;
+            //std::cout<<"trying to adding node "<<mTreeIndex<<" with points "<<mPoints.size()<<std::endl;
             if( mTreeActive )
             {
-                std::cout<<"Success"<<std::endl;
+                //std::cout<<"Success"<<std::endl;
                 nodeInfoVect.push_back( getNodeInformation() );
             }
             else
@@ -744,6 +748,7 @@ public:
             mLeftSubTree = new asymmTreeType(pointsLeft,boundMinLeft,boundMaxLeft,
                 mThresholdForBranching,(2*mTreeIndex+1),(mTreeLevel+1),
                 (mSplitDimension +1) % mNumDims);
+            if(mTreeIndex==size_t(0)) std::cout<<"@ "<<mTreeIndex<<" setting the mLeftSubTree = true"<<std::endl;
             mHasLeftSubTree = true;
 
             mRightSubTree = new asymmTreeType(pointsRight,boundMinRight,boundMaxRight,

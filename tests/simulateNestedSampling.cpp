@@ -141,12 +141,17 @@ void simulateNS(void)
                 //std::cout<<"After assigning the point id is "<<livePoints[ livePointInds[0] ].pointId()<<std::endl;
 
                 std::ofstream outFileErr;
-                outFileErr.open("errorTree.dat",std::ios::trunc);
+                outFileErr.open("errorTreeBefore.dat",std::ios::trunc);
                 ast.dumpTree(outFileErr);
                 outFileErr.close();
 
                 // delete nodes if necessary
-                ast.deleteNodes(reductionFactor);
+                size_t nds = ast.deleteNodes(reductionFactor);
+                std::cout<<"Nodes deleted = "<<nds<<std::endl;
+
+                outFileErr.open("errorTreeAfter.dat",std::ios::trunc);
+                ast.dumpTree(outFileErr);
+                outFileErr.close();
 
                 // increase the acc rate
                 ++acc;
