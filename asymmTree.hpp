@@ -287,13 +287,13 @@ public:
             if(mHasRighSubTree)
             {
                 mRightSubTree->deleteActiveNodeByIndex(treeIndex);
-                if(mRightSubTree->treeIsActive() == false)
+                if(mRightSubTree->hasLeftSubTree() == false and mRightSubTree)
                 {
                     delete mRightSubTree;
                     mRightSubTree = nullptr;
                     mHasRighSubTree = false;
                     std::cout<<"@ "<<mTreeIndex<<" setting mHasRighSubTree = false"<<std::endl;
-                    assert(treeIndex != size_t(0));
+                    //assert(treeIndex != size_t(0));
                 }
             }
 
@@ -305,7 +305,7 @@ public:
                     delete mLeftSubTree;
                     mLeftSubTree = nullptr;
                     mHasLeftSubTree = false;
-                    assert(treeIndex != size_t(0));
+                    //assert(treeIndex != size_t(0));
                 }
             }
         }

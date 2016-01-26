@@ -102,7 +102,7 @@ void simulateNS(void)
     //outFilePoints.open("points.dat",std::ios::trunc);
 
     // next loop through the sampling process
-    size_t numIter = 3;
+    size_t numIter = 1;
     for(size_t j=0;j<numIter;++j)
     {
         size_t tot=0;
