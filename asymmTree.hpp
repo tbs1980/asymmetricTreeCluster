@@ -287,8 +287,9 @@ public:
             if(mHasRighSubTree)
             {
                 mRightSubTree->deleteActiveNodeByIndex(treeIndex);
-                if(mRightSubTree->hasLeftSubTree() == false and mRightSubTree)
+                if( mRightSubTree->hasLeftSubTree() == false and mRightSubTree->hasRightSubTree() == false and mRightSubTree->treeIsActive() == false)
                 {
+                    std::cout<<"RIGHT At node "<<mTreeIndex<<" we have on the left "<<mRightSubTree->hasLeftSubTree()<<" and on the right "<<mRightSubTree->hasRightSubTree()<<std::endl;
                     delete mRightSubTree;
                     mRightSubTree = nullptr;
                     mHasRighSubTree = false;
@@ -300,11 +301,13 @@ public:
             if(mHasLeftSubTree)
             {
                 mLeftSubTree->deleteActiveNodeByIndex(treeIndex);
-                if (mLeftSubTree->treeIsActive() == false)
+                if ( mLeftSubTree->hasLeftSubTree() == false and mLeftSubTree->hasRightSubTree() == false and mLeftSubTree->treeIsActive() == false)
                 {
+                    std::cout<<"LEFT At node "<<mTreeIndex<<" we have on the left "<<mLeftSubTree->hasLeftSubTree()<<" and on the right "<<mLeftSubTree->hasRightSubTree()<<std::endl;
                     delete mLeftSubTree;
                     mLeftSubTree = nullptr;
                     mHasLeftSubTree = false;
+                    std::cout<<"@ "<<mTreeIndex<<" setting mHasLeftSubTree = false"<<std::endl;
                     //assert(treeIndex != size_t(0));
                 }
             }
