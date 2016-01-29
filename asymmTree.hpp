@@ -287,39 +287,31 @@ public:
             if(mHasRighSubTree)
             {
                 mRightSubTree->deleteActiveNodeByIndex(treeIndex);
-                if( mRightSubTree->hasLeftSubTree() == false and mRightSubTree->hasRightSubTree() == false and mRightSubTree->treeIsActive() == false)
+                if( mRightSubTree->hasLeftSubTree() == false
+                    and mRightSubTree->hasRightSubTree() == false
+                    and mRightSubTree->treeIsActive() == false)
                 {
-                    std::cout<<"RIGHT At node "<<mTreeIndex<<" we have on the left "<<mRightSubTree->hasLeftSubTree()<<" and on the right "<<mRightSubTree->hasRightSubTree()<<std::endl;
                     delete mRightSubTree;
                     mRightSubTree = nullptr;
                     mHasRighSubTree = false;
-                    std::cout<<"@ "<<mTreeIndex<<" setting mHasRighSubTree = false"<<std::endl;
-                    //assert(treeIndex != size_t(0));
                 }
             }
 
             if(mHasLeftSubTree)
             {
                 mLeftSubTree->deleteActiveNodeByIndex(treeIndex);
-                if ( mLeftSubTree->hasLeftSubTree() == false and mLeftSubTree->hasRightSubTree() == false and mLeftSubTree->treeIsActive() == false)
+                if ( mLeftSubTree->hasLeftSubTree() == false
+                    and mLeftSubTree->hasRightSubTree() == false
+                    and mLeftSubTree->treeIsActive() == false)
                 {
-                    std::cout<<"LEFT At node "<<mTreeIndex<<" we have on the left "<<mLeftSubTree->hasLeftSubTree()<<" and on the right "<<mLeftSubTree->hasRightSubTree()<<std::endl;
                     delete mLeftSubTree;
                     mLeftSubTree = nullptr;
                     mHasLeftSubTree = false;
-                    std::cout<<"@ "<<mTreeIndex<<" setting mHasLeftSubTree = false"<<std::endl;
-                    //assert(treeIndex != size_t(0));
                 }
             }
         }
         else if(treeIndex == mTreeIndex)
         {
-            /*
-            if(treeIndex == size_t(0))
-            {
-                std::cout<<"========> Settng the node 0 to inactive "<<std::endl;
-            }*/
-            std::cout<<"deleting the node "<<treeIndex<<std::endl;
             mPoints.clear();
             mTreeActive = false;
         }
@@ -344,7 +336,7 @@ public:
         // only proceed if we have more than one node
         if(ndInfVect.size() > 0)
         {
-            std::cout<<"We have "<<ndInfVect.size()<<" acc-nodes "<<std::endl;
+            // std::cout<<"We have "<<ndInfVect.size()<<" acc-nodes "<<std::endl;
             realScalarType accRejVolume_Vc = std::accumulate(ndInfVect.begin(), ndInfVect.end(),
                 realScalarType(0),
                 [](realScalarType & a, nodeInformationType & b)
@@ -366,7 +358,7 @@ public:
             // step 4 get the nodes with rejected points
             std::vector<nodeInformationType> ndInfVectRejc;
             getTreeIndicesAndVolumesRejc(ndInfVectRejc);
-            std::cout<<"We have "<<ndInfVectRejc.size()<<" rej-nodes "<<std::endl;
+            //std::cout<<"We have "<<ndInfVectRejc.size()<<" rej-nodes "<<std::endl;
 
             if( ndInfVectRejc.size() > 0 )
             {
@@ -408,7 +400,7 @@ public:
                     else
                     {
                         volRejcNow += ndInfVectRejc[i].mVolume;
-                        std::cout<<"We should delete "<<ndInfVectRejc[i].mTreeIndex<<std::endl;
+                        // std::cout<<"We should delete "<<ndInfVectRejc[i].mTreeIndex<<std::endl;
                         deleteActiveNodeByIndex(ndInfVectRejc[i].mTreeIndex);
                         ++numNodesDeleted;
                     }
@@ -587,11 +579,11 @@ public:
                     std::cout<<" mHasRighSubTree "<<std::endl;
                 }
 
-                std::cout<<mBoundMin[0]<<"\t"<<mBoundMin[1]<<std::endl;
-                std::cout<<mBoundMax[0]<<"\t"<<mBoundMax[1]<<std::endl;
+                //std::cout<<mBoundMin[0]<<"\t"<<mBoundMin[1]<<std::endl;
+                //std::cout<<mBoundMax[0]<<"\t"<<mBoundMax[1]<<std::endl;
                 //std::cout<<mLeftSubTree->treeIndex()<<std::endl;
                 //std::cout<<mRightSubTree->treeIndex()<<std::endl;
-                std::cout<<"Failure"<<std::endl;
+                //std::cout<<"Failure"<<std::endl;
             }
 
         }
@@ -751,7 +743,7 @@ public:
             mLeftSubTree = new asymmTreeType(pointsLeft,boundMinLeft,boundMaxLeft,
                 mThresholdForBranching,(2*mTreeIndex+1),(mTreeLevel+1),
                 (mSplitDimension +1) % mNumDims);
-            if(mTreeIndex==size_t(0)) std::cout<<"@ "<<mTreeIndex<<" setting the mLeftSubTree = true"<<std::endl;
+            //if(mTreeIndex==size_t(0)) std::cout<<"@ "<<mTreeIndex<<" setting the mLeftSubTree = true"<<std::endl;
             mHasLeftSubTree = true;
 
             mRightSubTree = new asymmTreeType(pointsRight,boundMinRight,boundMaxRight,

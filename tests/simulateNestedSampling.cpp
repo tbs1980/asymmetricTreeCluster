@@ -102,7 +102,7 @@ void simulateNS(void)
     //outFilePoints.open("points.dat",std::ios::trunc);
 
     // next loop through the sampling process
-    size_t numIter = 1;
+    size_t numIter = 3;
     for(size_t j=0;j<numIter;++j)
     {
         size_t tot=0;
@@ -147,7 +147,7 @@ void simulateNS(void)
 
                 // delete nodes if necessary
                 size_t nds = ast.deleteNodes(reductionFactor);
-                std::cout<<"Nodes deleted = "<<nds<<std::endl;
+                //std::cout<<"Nodes deleted = "<<nds<<std::endl;
 
                 outFileErr.open("errorTreeAfter.dat",std::ios::trunc);
                 ast.dumpTree(outFileErr);
