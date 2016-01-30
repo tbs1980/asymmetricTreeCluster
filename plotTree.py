@@ -45,8 +45,11 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
     # what column should be used for heat map
     heatMapPropertyCol = 4
 
-    minWeight = exp(np.min(tree[np.where(numPts>0) ,heatMapPropertyCol]))
-    maxWeight = exp(np.max(tree[np.where(numPts>0) ,heatMapPropertyCol]))
+    #minWeight = exp(np.min(tree[np.where(numPts>0) ,heatMapPropertyCol]))
+    #maxWeight = exp(np.max(tree[np.where(numPts>0) ,heatMapPropertyCol]))
+
+    minWeight = exp(np.min(tree[: ,heatMapPropertyCol]))
+    maxWeight = exp(np.max(tree[: ,heatMapPropertyCol]))
 
     norm = mpl.colors.Normalize(vmin=minWeight, vmax=maxWeight)
     cmap = cm.Spectral_r

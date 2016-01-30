@@ -97,20 +97,15 @@ void simulateNS(void)
 
     std::cout<<"At the begining lmin is "<<livePoints[livePointInds[0]].weight()<<std::endl;
 
-    //return;
-    //std::ofstream outFilePoints;
-    //outFilePoints.open("points.dat",std::ios::trunc);
-
+    bool buildTreeNow(false);
     // next loop through the sampling process
-    size_t numIter = 3;
+    size_t numIter = 7;
     for(size_t j=0;j<numIter;++j)
     {
         size_t tot=0;
         size_t acc=0;
         for(size_t i=0;i<numLivePoints;++i)
         {
-            //std::cout<<"\n----------Iteration "<<tot<<" ---------------"<<std::endl;
-
             pointType fpt = livePoints[livePointInds[0]];
 
             //  get some random points
@@ -124,34 +119,16 @@ void simulateNS(void)
             // replace the live lowest point if necessary
             if(pt.weight() > livePoints[livePointInds[0]].weight())
             {
-
-                pt.pointChar() = ACCEPTED_POINT;
-                ast.addPoint(pt,true);
-
-                assert(ast.hasLeftSubTree() == true or ast.hasRightSubTree()==true);
-
-
                 // flag the point that is going to be replaced as rejected in the tree
-                //std::cout<<"Searching for point with id "<<livePoints[ livePointInds[0] ].pointId()<<std::endl;
                 livePoints[ livePointInds[0] ].pointChar() = REJECTED_POINT;
                 ast.searchAndReplacePoint( livePoints[ livePointInds[0] ] ) ;//.pointChar() = REJECTED_POINT;
 
+
+                pt.pointChar() = ACCEPTED_POINT;
+                ast.addPoint(pt,buildTreeNow);
+
                 // replace the min live point
                 livePoints[livePointInds[0]] = pt;
-                //std::cout<<"After assigning the point id is "<<livePoints[ livePointInds[0] ].pointId()<<std::endl;
-
-                std::ofstream outFileErr;
-                outFileErr.open("errorTreeBefore.dat",std::ios::trunc);
-                ast.dumpTree(outFileErr);
-                outFileErr.close();
-
-                // delete nodes if necessary
-                size_t nds = ast.deleteNodes(reductionFactor);
-                //std::cout<<"Nodes deleted = "<<nds<<std::endl;
-
-                outFileErr.open("errorTreeAfter.dat",std::ios::trunc);
-                ast.dumpTree(outFileErr);
-                outFileErr.close();
 
                 // increase the acc rate
                 ++acc;
@@ -159,10 +136,8 @@ void simulateNS(void)
             else
             {
                 pt.pointChar() = REJECTED_POINT;
-                ast.addPoint(pt,true);
+                ast.addPoint(pt,buildTreeNow);
             }
-
-            //outFilePoints<<pt[0]<<"\t"<<pt[1]<<std::endl;
 
             ++tot;
 
@@ -171,35 +146,37 @@ void simulateNS(void)
         }
 
 
-        // at the end of each cycle check if are ready to build tree
-        /*
-        asymmTreeType tempAst(emptyArry,boundMin,boundMax,threshold,treeIndex,level,splitDimension);
-        pointsArrayType allPoints = ast.getPoints();
-        for(size_t i=0;i<allPoints.size();++i)
+        if( buildTreeNow ==true )
         {
-            tempAst.addPoint(allPoints[i],false);
-        }
-        //asymmTreeType tempAst = ast;
-        tempAst.buildTree();
-        size_t numNodesDeleted = tempAst.deleteNodes(reductionFactor);
-        std::cout<<"nodes deleted from the temp tree = "<<numNodesDeleted<<std::endl;
-
-
-        std::cout<<"deleting nodes from the base tree "<<std::endl;
-        if(numNodesDeleted > size_t(0))
-        {
-            ast.buildTree();
+            std::cout<<"Deleting the nodes "<<std::endl;
+            // we delete nodes at each iteration
             ast.deleteNodes(reductionFactor);
-        }*/
-
-        /*
-        if(j==0)
+        }
+        else
         {
-            ast.buildTree();
-        }*/
+            assert(buildTreeNow == false);
+            // at the end of each cycle check if are ready to build tree
+            asymmTreeType tempAst(emptyArry,boundMin,boundMax,threshold,treeIndex,level,splitDimension);
+            pointsArrayType allPoints = ast.getPoints();
+            for(size_t i=0;i<allPoints.size();++i)
+            {
+                tempAst.addPoint(allPoints[i],false);
+            }
+            tempAst.buildTree();
+            size_t numNodesDeleted = tempAst.deleteNodes(reductionFactor);
+            std::cout<<"nodes deleted from the temp tree = "<<numNodesDeleted<<std::endl;
 
-        //sast.deleteNodes(reductionFactor);
 
+            std::cout<<"deleting nodes from the base tree "<<std::endl;
+            if(numNodesDeleted > size_t(0))
+            {
+                std::cout<<"Setting the buildTree = true "<<std::endl;
+                buildTreeNow = true;
+                //ast.buildTree();
+                //ast.deleteNodes(reductionFactor);
+            }
+
+        }
 
         std::ofstream outFile;
         std::string fileNameOut("nsTreeIter_");

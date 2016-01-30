@@ -334,7 +334,7 @@ public:
         getTreeIndicesAndVolumesAcc(ndInfVect);
 
         // only proceed if we have more than one node
-        if(ndInfVect.size() > 0)
+        if(ndInfVect.size() > 0) // TODO should this be 1?
         {
             // std::cout<<"We have "<<ndInfVect.size()<<" acc-nodes "<<std::endl;
             realScalarType accRejVolume_Vc = std::accumulate(ndInfVect.begin(), ndInfVect.end(),
@@ -596,6 +596,7 @@ public:
      * \param rng random number generator
      * \return a randon point uniformly genrated from the nodes.
      */
+/*
     template<class RNGType>
     pointType getRandomPoint(RNGType & rng)
     {
@@ -645,6 +646,92 @@ public:
         auto lowBnd = std::lower_bound(fcvol.begin(),fcvol.end(),uniVal);
 
         auto idx = std::distance(fcvol.begin(),lowBnd);
+
+        // step 5 generate a random variate from the node bounds
+        pointType boundMin = ndInfVect[ idx ].mBoundMin;
+        pointType boundMax = ndInfVect[ idx ].mBoundMax;
+
+        pointType randPnt(boundMin.size(),realScalarType(0));
+        for(size_t i=0;i<boundMin.size();++i)
+        {
+            assert(boundMin[i] < boundMax[i]);
+            randPnt[i] = boundMin[i] + (boundMax[i]-boundMin[i])*distUniReal(rng);
+        }
+
+        return randPnt;
+    }
+*/
+    template<class RNGType>
+    pointType getRandomPoint(RNGType & rng)
+    {
+        // step 1 create a sorted list of active nodes by ascending volume
+        std::vector<nodeInformationType> ndInfVect;
+        getTreeInformation(ndInfVect);
+
+        if(ndInfVect.size() == 0)
+        {
+            std::cout<<"Our search for nodes returned zero. Printing the tree now"<<std::endl;
+            std::ofstream of("dumpTreeFromError.dat");
+            dumpTree(of);
+            of.close();
+        }
+
+        assert( ndInfVect.size() > size_t(0) );
+
+        std::sort(std::begin(ndInfVect),std::end(ndInfVect),
+            [](nodeInformationType const & a, nodeInformationType const & b)
+            {
+                return a.mVolume < b.mVolume;
+            }
+            );
+
+        // step 2 store cumulative volumes and reference indices
+        std::vector<realScalarType> fcvol(ndInfVect.size());
+        fcvol[0] = ndInfVect[0].mVolume;
+        for(size_t i=1;i<ndInfVect.size();++i)
+        {
+            assert(ndInfVect[i].mVolume > realScalarType(0) );
+            fcvol[i] = fcvol[i-1] + ndInfVect[i].mVolume;
+        }
+
+        // step 3 convert to cumulative fractional volumes
+        assert( fcvol[ndInfVect.size()-1] > realScalarType(0) );
+        realScalarType icvol = realScalarType(1) / fcvol[ndInfVect.size()-1];
+        for(size_t i=0;i<ndInfVect.size();++i)
+        {
+            fcvol[i] *= icvol;
+        }
+
+        // step 4 uniformly select a vloume element
+        // and find the corresponding node
+        std::uniform_real_distribution<> distUniReal;
+        realScalarType uniVal = distUniReal(rng);
+
+        // Intial bounding solutions
+        size_t klo,khi,k;
+        klo = 0;
+        khi = ndInfVect.size() - 1;
+
+        // Binary search for lower and upper bounding x values
+        while (khi-klo > 1)
+        {
+            k = (khi+klo) >> 1;
+            if( fcvol[k] > uniVal )
+            {
+                khi = k;
+            }
+            else
+            {
+                klo=k;
+            }
+        }
+
+        // Assert that the solutions are within the range of input x values
+        assert( khi >= 0 && klo >= 0);
+        assert( khi < ndInfVect.size() && klo < ndInfVect.size() );
+
+        // Step regression: use the low-bounding x value to predict y
+        size_t idx = klo;
 
         // step 5 generate a random variate from the node bounds
         pointType boundMin = ndInfVect[ idx ].mBoundMin;
@@ -788,6 +875,7 @@ public:
             for(size_t i=0;i<mPoints.size();++i)
             {
                 //std::cout<<i<<"\t"<<mPoints[i][0]<<"\t"<<point[0]<<"\t"<<mPoints[i].pointId()<<"\t"<<point.pointId()<<std::endl;
+                /*
                 if( mPoints[i].pointId() == point.pointId() )
                 {
                     //std::cout<<"Found point"<<std::endl;
@@ -796,6 +884,24 @@ public:
                     //std::cout<<"after point char = "<<(int)mPoints[i].pointChar()<<"\t corrd 0 = "<<mPoints[i][0]<<std::endl;
                     break;
                 }
+                */
+               bool replace=true;
+               for(size_t j=0;j<mPoints[0].size();++j)
+               {
+                   if( std::abs( mPoints[i][j] -  point[j] ) > std::numeric_limits<realScalarType>::epsilon() )
+                   {
+                       replace = false;
+                       break;
+                   }
+               }
+
+               if(replace)
+               {
+                   //std::cout<<"Found point"<<std::endl;
+                   //std::cout<<"before point char = "<<(int)mPoints[i].pointChar()<<"\t corrd 0 = "<<mPoints[i][0]<<std::endl;
+                   mPoints[i] = point;
+                   //std::cout<<"after point char = "<<(int)mPoints[i].pointChar()<<"\t corrd 0 = "<<mPoints[i][0]<<std::endl;
+               }
             }
             //std::cout<<std::endl;
 
