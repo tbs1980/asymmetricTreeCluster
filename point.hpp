@@ -84,6 +84,11 @@ public:
         return mPointChar;
     }
 
+    void set_PointChar(pointCharactersticType new_char)
+    {
+      mPointChar = new_char;
+    }
+
     size_t const & pointId() const
     {
         return mPointId;
