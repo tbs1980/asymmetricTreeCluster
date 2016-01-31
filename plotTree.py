@@ -50,6 +50,8 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
 
     minWeight = exp(np.min(tree[: ,heatMapPropertyCol]))
     maxWeight = exp(np.max(tree[: ,heatMapPropertyCol]))
+    wmi = np.min(tree[: ,heatMapPropertyCol])
+    wma = np.max(tree[: ,heatMapPropertyCol])
 
     norm = mpl.colors.Normalize(vmin=minWeight, vmax=maxWeight)
     cmap = cm.Spectral_r
@@ -62,19 +64,24 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
         b1Max = nodeInfo[startCol+numDims+dim1]
         b2Max = nodeInfo[startCol+numDims+dim2]
 
-        plt.plot([b1Min,b1Max],[b2Min,b2Min],color='k')
-        plt.plot([b1Min,b1Max],[b2Max,b2Max],color='k')
-        plt.plot([b1Min,b1Min],[b2Min,b2Max],color='k')
-        plt.plot([b1Max,b1Max],[b2Min,b2Max],color='k')
+        if nodeInfo[-1] == 1:
+            plt.plot([b1Min,b1Max],[b2Min,b2Min],color='k',linewidth=2)
+            plt.plot([b1Min,b1Max],[b2Max,b2Max],color='k',linewidth=2)
+            plt.plot([b1Min,b1Min],[b2Min,b2Max],color='k',linewidth=2)
+            plt.plot([b1Max,b1Max],[b2Min,b2Max],color='k',linewidth=2)
+        else:
+            plt.plot([b1Min,b1Max],[b2Min,b2Min],color='k',linewidth=0.2)
+            plt.plot([b1Min,b1Max],[b2Max,b2Max],color='k',linewidth=0.2)
+            plt.plot([b1Min,b1Min],[b2Min,b2Max],color='k',linewidth=0.2)
+            plt.plot([b1Max,b1Max],[b2Min,b2Max],color='k',linewidth=0.2)
 
         numPoints = nodeInfo[2] # col 2 points-size
-        if numPoints > 0 :
+        acceptednode = nodeInfo[-1] # col 2 points-size
+        if numPoints > 0 and acceptednode > 0:
             treeInd = int(nodeInfo[0]) # col 0 tree-index
-
-            weight = exp(nodeInfo[heatMapPropertyCol]) # plotting the mean weight
-
+            weight = (nodeInfo[heatMapPropertyCol] - wmi) / (wma - wmi)
             plt.fill_between([b1Min,b1Max],[b2Min,b2Min],[b2Max,b2Max],
-                color=cm.ScalarMappable(norm=norm, cmap=cmap).to_rgba(weight))
+                color=plt.cm.viridis(weight))
 
     if radiusOfSphere != None:
         circle1=plt.Circle((0,0),radius=radiusOfSphere,color='m',fill=False)
@@ -84,12 +91,12 @@ def plotTree(treeDumpFileName,dim1=0,dim2=1,radiusOfSphere=None):
     fig = plt.gca()
     fig.set_axis_bgcolor('#B0B1B2')
 
-    #plt.show()
-    #plt.savefig('plotTree.svg')
-    plt.axes().set_aspect('equal', 'datalim')
-    plt.axes().set_xlim(-5,5)
-    plt.axes().set_ylim(-5,5)
-    plt.savefig(treeDumpFileName.replace("dat","png"),transparent=True)
+    plt.show()
+    # #plt.savefig('plotTree.svg')
+    # plt.axes().set_aspect('equal', 'datalim')
+    # plt.axes().set_xlim(-5,5)
+    # plt.axes().set_ylim(-5,5)
+    # plt.savefig(treeDumpFileName.replace("dat","png"),transparent=True)
 
 if __name__ == "__main__" :
     if len(sys.argv) == 2:

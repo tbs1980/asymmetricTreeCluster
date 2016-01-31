@@ -8,6 +8,7 @@ endif()
 #add the customised package searches to the module path
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 #find_package (Eigen3 3.0.0 REQUIRED)
 #include_directories(${EIGEN3_INCLUDE_DIR})

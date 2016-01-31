@@ -198,11 +198,12 @@ public:
         {
             outFile<<mBoundMin[i]<<",";
         }
-        for(size_t i=0;i<mBoundMax.size() -1 ;++i)
+        for(size_t i=0;i<mBoundMax.size() ;++i)
         {
             outFile<<mBoundMax[i]<<",";
         }
-        outFile<<mBoundMax[mBoundMax.size() -1]<<std::endl;
+
+        outFile<<mNodeChar<<std::endl;
 
         // go inside the trees and do the same
         if(mHasLeftSubTree)
@@ -323,11 +324,15 @@ public:
      *
      * This function deletes all the nodes that contain REJECTED points so that
      * volume of the deleted nodes equal to (1/reductionFactor -1) times the
-     * volume of the ACCEPTED points.
+     * volume of the ACCEPTED points. lstar is the critical likelihood.
      */
-    size_t deleteNodes(realScalarType const reductionFactor)
+    size_t deleteNodes(realScalarType const lstar, realScalarType const reductionFactor)
     {
         size_t numNodesDeleted(0);
+
+        // Recursively assign REJECTED and ACCEPTED characteristics
+        // to all nodes and points
+        node_char_recurse(lstar);
 
         // step 1 compute the total volume of accepted and accepted-rejected nodes
         std::vector<nodeInformationType> ndInfVect;
@@ -348,7 +353,7 @@ public:
             //std::cout<<"Total volume of acc nodes "<<accRejVolume_Vc<<std::endl;
 
             // step 2 define alpha
-            assert(reductionFactor > realScalarType(0.5) and reductionFactor <= realScalarType(1) );
+            // assert(reductionFactor > realScalarType(0.5) and reductionFactor <= realScalarType(1) );
 
             // step 3 compute the volume to be reduced if possible
             //realScalarType reducedVolume = ( realScalarType(1)/reductionFactor -realScalarType(1) )*accRejVolume_Vc;
@@ -370,9 +375,10 @@ public:
                     }
                     );
 
-                realScalarType fractionVr = accRejVolume_Vc/rejVolume_Vr*( realScalarType(1)/reductionFactor - realScalarType(1) );
+                // Fraction (by volume) of REJECTED nodes to delete
+                realScalarType fractionVr = 1. - accRejVolume_Vc/rejVolume_Vr*( realScalarType(1)/reductionFactor - realScalarType(1) );
 
-                assert( fractionVr > realScalarType(0) );
+                // assert( fractionVr > realScalarType(0) );
 
                 //std::cout<<"Fraction of Vr to be deleted = "<<fractionVr<<std::endl;
 
@@ -910,6 +916,36 @@ public:
         }
     }
 
+
+    // Recursively assign REJECTED and ACCEPTED characteristics
+    // to all nodes and points. lstar is the critical likelihood.
+
+    void node_char_recurse(realScalarType const lstar)
+    {
+      if(!(mHasLeftSubTree || mHasRighSubTree) && mPoints.size() > 0)
+      {
+        mNodeChar = REJECTED_NODE;
+        for(auto i=mPoints.begin();i!=mPoints.end();i++)
+        {
+          if(i->weight() >= lstar)
+          {
+            i->set_PointChar(pointCharactersticType::ACCEPTED_POINT);
+            mNodeChar = ACCEPTED_NODE;
+          }
+          else
+          {
+            i->set_PointChar(pointCharactersticType::REJECTED_POINT);
+          }
+        }
+      }
+      else
+      {
+        mNodeChar = REFERENCE_NODE;
+        if(mHasLeftSubTree) { mLeftSubTree->node_char_recurse(lstar);}
+        if(mHasRighSubTree) {mRightSubTree->node_char_recurse(lstar);}
+      }
+    }
+
 private:
 
     /**
@@ -976,36 +1012,37 @@ private:
             // compute the mean and standard deviation
             computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn); // TOTO should this be static?
 
-
-            // flag accept / reject / accept-reject
-            size_t numAcc(0);
-            size_t numRej(0);
-            for(size_t i=0;i<mPoints.size();++i)
-            {
-                if(mPoints[i].pointChar() == pointCharactersticType::ACCEPTED_POINT)
-                {
-                    numAcc += size_t(1);
-                }
-                else if(mPoints[i].pointChar() == pointCharactersticType::REJECTED_POINT)
-                {
-                    numRej += size_t(1);
-                }
-            }
-
-            mAccRatio = (realScalarType)numAcc/(realScalarType)mPoints.size();
-
-            if(numAcc > size_t(0) and numRej == size_t(0))
-            {
-                mNodeChar = ACCEPTED_NODE;
-            }
-            else if(numAcc > size_t(0) and numRej > size_t(0))
-            {
-                mNodeChar = ACCEPTED_AND_REJECTED_NODE;
-            }
-            else if(numAcc == size_t(0) and numRej > size_t(0))
-            {
-                mNodeChar = REJECTED_NODE;
-            }
+            // // flag accept / reject / accept-reject
+            // size_t numAcc(0);
+            // size_t numRej(0);
+            // for(size_t i=0;i<mPoints.size();++i)
+            // {
+            //     if(mPoints[i].weight() >= mlstar)
+            //     {
+            //         numAcc += size_t(1);
+            //         mPoints[i].set_PointChar(pointCharactersticType::ACCEPTED_POINT);
+            //     }
+            //     else if(mPoints[i].weight() < mlstar)
+            //     {
+            //         numRej += size_t(1);
+            //         mPoints[i].set_PointChar(pointCharactersticType::REJECTED_POINT);
+            //     }
+            // }
+            //
+            // mAccRatio = (realScalarType)numAcc/(realScalarType)mPoints.size();
+            //
+            // if(numAcc > size_t(0) and numRej == size_t(0))
+            // {
+            //     mNodeChar = ACCEPTED_NODE;
+            // }
+            // else if(numAcc > size_t(0) and numRej > size_t(0))
+            // {
+            //     mNodeChar = ACCEPTED_AND_REJECTED_NODE;
+            // }
+            // else if(numAcc == size_t(0) and numRej > size_t(0))
+            // {
+            //     mNodeChar = REJECTED_NODE;
+            // }
             // default is REFERENCE_NODE
 
             /*

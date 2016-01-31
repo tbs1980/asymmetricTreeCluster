@@ -150,7 +150,7 @@ void simulateNS(void)
         {
             std::cout<<"Deleting the nodes "<<std::endl;
             // we delete nodes at each iteration
-            ast.deleteNodes(reductionFactor);
+            ast.deleteNodes(livePoints[livePointInds[0]].weight(),reductionFactor);
         }
         else
         {
@@ -163,7 +163,7 @@ void simulateNS(void)
                 tempAst.addPoint(allPoints[i],false);
             }
             tempAst.buildTree();
-            size_t numNodesDeleted = tempAst.deleteNodes(reductionFactor);
+            size_t numNodesDeleted = tempAst.deleteNodes(livePoints[livePointInds[0]].weight(),reductionFactor);
             std::cout<<"nodes deleted from the temp tree = "<<numNodesDeleted<<std::endl;
 
 
