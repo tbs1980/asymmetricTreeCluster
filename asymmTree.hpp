@@ -20,31 +20,6 @@ enum nodeCharacterstic
     ACCEPTED_AND_REJECTED_NODE
 };
 
-template<class pointType>
-struct nodeInformation
-{
-    typedef typename pointType::realScalarType realScalarType;
-
-    size_t mNumDims;
-    size_t mSplitDimension;
-    pointType mBoundMin;
-    pointType mBoundMax;
-    pointType mMedianVal;
-    size_t mThresholdForBranching;
-    size_t mTreeIndex;
-    size_t mTreeLevel;
-    realScalarType mWeightMin;
-    realScalarType mWeightMax;
-    bool mHasLeftSubTree;
-    bool mHasRighSubTree;
-    bool mTreeActive;
-    realScalarType mWeightsStdDvn;
-    realScalarType mWeightsMean;
-    realScalarType mVolume;
-    nodeCharacterstic mNodeChar;
-    realScalarType mAccRatio;
-};
-
 /**
  * \class asymmTree
  * \brief A class for building an asymmetric k-d tree given a set of points
@@ -78,12 +53,6 @@ public:
      * \brief a vector of points
      */
     typedef std::vector<pointType> pointsArrayType;
-
-    /**
-     * \typedef nodeInformation<pointType> nodeInformationType;
-     * \brief node information
-     */
-    typedef nodeInformation<pointType> nodeInformationType;
 
     /**
      * \brief The default constructor. Allocates no memory and nodes,
@@ -318,115 +287,55 @@ public:
         }
     }
 
-    /**
-     * \brief A method for deleting the nodes according to a volume factor
-     * @param reductionFactor the factor by whihc the nodes to be deleted
-     *
-     * This function deletes all the nodes that contain REJECTED points so that
-     * volume of the deleted nodes equal to (1/reductionFactor -1) times the
-     * volume of the ACCEPTED points. lstar is the critical likelihood.
-     */
-    size_t deleteNodes(realScalarType const lstar, realScalarType const reductionFactor)
-    {
-        size_t numNodesDeleted(0);
 
-        // Recursively assign REJECTED and ACCEPTED characteristics
-        // to all nodes and points
-        node_char_recurse(lstar);
+   /**
+    * \para A method for deleting a node specified by its address
+    * @param treeIndex The address of the node to be deleted
+    */
+   void deleteActiveNodeByPointer(const asymmTreeType * del_node)
+   {
+     if(mHasLeftSubTree)
+     {
+       if(mLeftSubTree == del_node)
+       {
+         mLeftSubTree->mPoints.clear();
+         mLeftSubTree->mTreeActive = false;
+       }
+       else if(del_node->mBoundMin[mSplitDimension] < mMedianVal[mSplitDimension])
+       {
+         mLeftSubTree->deleteActiveNodeByPointer(del_node);
+       }
+       if ( mLeftSubTree->hasLeftSubTree() == false
+        and mLeftSubTree->hasRightSubTree() == false
+        and mLeftSubTree->treeIsActive() == false)
+       {
+         delete mLeftSubTree;
+         mLeftSubTree = nullptr;
+         mHasLeftSubTree = false;
+       }
+     }
 
-        // step 1 compute the total volume of accepted and accepted-rejected nodes
-        std::vector<nodeInformationType> ndInfVect;
-        getTreeIndicesAndVolumesAcc(ndInfVect);
-
-        // only proceed if we have more than one node
-        if(ndInfVect.size() > 0) // TODO should this be 1?
-        {
-            // std::cout<<"We have "<<ndInfVect.size()<<" acc-nodes "<<std::endl;
-            realScalarType accRejVolume_Vc = std::accumulate(ndInfVect.begin(), ndInfVect.end(),
-                realScalarType(0),
-                [](realScalarType & a, nodeInformationType & b)
-                {
-                    return a != realScalarType(0) ? a + b.mVolume : b.mVolume ;
-                }
-                );
-
-            //std::cout<<"Total volume of acc nodes "<<accRejVolume_Vc<<std::endl;
-
-            // step 2 define alpha
-            // assert(reductionFactor > realScalarType(0.5) and reductionFactor <= realScalarType(1) );
-
-            // step 3 compute the volume to be reduced if possible
-            //realScalarType reducedVolume = ( realScalarType(1)/reductionFactor -realScalarType(1) )*accRejVolume_Vc;
-
-            //std::cout<<"Reduced volume  = "<<reducedVolume<<std::endl;
-
-            // step 4 get the nodes with rejected points
-            std::vector<nodeInformationType> ndInfVectRejc;
-            getTreeIndicesAndVolumesRejc(ndInfVectRejc);
-            //std::cout<<"We have "<<ndInfVectRejc.size()<<" rej-nodes "<<std::endl;
-
-            if( ndInfVectRejc.size() > 0 )
-            {
-                realScalarType rejVolume_Vr = std::accumulate(ndInfVectRejc.begin(), ndInfVectRejc.end(),
-                    realScalarType(0),
-                    [](realScalarType & a, nodeInformationType & b)
-                    {
-                        return a != realScalarType(0) ? a + b.mVolume : b.mVolume ;
-                    }
-                    );
-
-                // Fraction (by volume) of REJECTED nodes to delete
-                realScalarType fractionVr = 1. - accRejVolume_Vc/rejVolume_Vr*( realScalarType(1)/reductionFactor - realScalarType(1) );
-
-                // assert( fractionVr > realScalarType(0) );
-
-                //std::cout<<"Fraction of Vr to be deleted = "<<fractionVr<<std::endl;
-
-                //std::cout<<"We have "<<ndInfVectRejc.size()<<" rejec-nodes"<<std::endl;
-                // step 5 sort them according to the minimum likelihood of the node
-                std::sort(std::begin(ndInfVectRejc),std::end(ndInfVectRejc),
-                    [](nodeInformationType const & a, nodeInformationType const & b)
-                    {
-                        //return a.mWeightMin < b.mWeightMin;
-                        return a.mWeightMax < b.mWeightMax;
-                    }
-                    );
-
-                // step 6 delete the nodes
-                realScalarType volRejcNow(0);
-                for(size_t i=0;i<ndInfVectRejc.size();++i)
-                {
-
-                    //std::cout<<i<<"\t"<<ndInfVectRejc[i].mVolume<<"\t"<<volRejcNow<<std::endl;
-                    if( ( volRejcNow + ndInfVectRejc[i].mVolume )/rejVolume_Vr >= fractionVr)
-                    {
-                        break;
-                    }
-
-                    else
-                    {
-                        volRejcNow += ndInfVectRejc[i].mVolume;
-                        // std::cout<<"We should delete "<<ndInfVectRejc[i].mTreeIndex<<std::endl;
-                        deleteActiveNodeByIndex(ndInfVectRejc[i].mTreeIndex);
-                        ++numNodesDeleted;
-                    }
-
-                    /*
-                    volRejcNow += ndInfVectRejc[i].mVolume;
-                    deleteActiveNodeByIndex(ndInfVectRejc[i].mTreeIndex);
-                    ++numNodesDeleted;
-
-                    if( ( volRejcNow  )/rejVolume_Vr >= fractionVr)
-                    {
-                        break;
-                    }*/
-
-                }
-           }
-        }
-
-        return numNodesDeleted;
-    }
+     if(mHasRighSubTree)
+     {
+       if(mRightSubTree == del_node)
+       {
+         mRightSubTree->mPoints.clear();
+         mRightSubTree->mTreeActive = false;
+       }
+       else if(del_node->mBoundMax[mSplitDimension] > mMedianVal[mSplitDimension])
+       {
+         mRightSubTree->deleteActiveNodeByPointer(del_node);
+       }
+       if ( mRightSubTree->hasLeftSubTree() == false
+        and mRightSubTree->hasRightSubTree() == false
+        and mRightSubTree->treeIsActive() == false)
+       {
+         delete mRightSubTree;
+         mRightSubTree = nullptr;
+         mHasRighSubTree = false;
+       }
+     }
+   }
 
     /**
      * \brief A function that returns true if left sub tree exisits
@@ -470,39 +379,10 @@ public:
     }
 
     /**
-     * \brief retrieve the node information into a structure
-     * @return node information
+     * \brief Build a list of accepted nodes
+     * @param nodeInfoVect a vector containing pointers to accepted nodes
      */
-    nodeInformationType getNodeInformation() const
-    {
-        nodeInformationType ndInfo;
-
-        ndInfo.mNumDims = mNumDims;
-        ndInfo.mBoundMin = mBoundMin;
-        ndInfo.mBoundMax = mBoundMax;
-        ndInfo.mMedianVal = mMedianVal;
-        ndInfo.mThresholdForBranching = mThresholdForBranching;
-        ndInfo.mTreeIndex = mTreeIndex;
-        ndInfo.mTreeLevel = mTreeLevel;
-        ndInfo.mWeightMin = mWeightMin;
-        ndInfo.mWeightMax = mWeightMax;
-        ndInfo.mHasLeftSubTree = mHasLeftSubTree;
-        ndInfo.mHasRighSubTree = mHasRighSubTree;
-        ndInfo.mTreeActive = mTreeActive;
-        ndInfo.mWeightsStdDvn = mWeightsStdDvn;
-        ndInfo.mWeightsMean = mWeightsMean;
-        ndInfo.mVolume = mVolume;
-        ndInfo.mNodeChar = mNodeChar;
-        ndInfo.mAccRatio = mAccRatio;
-
-        return ndInfo;
-    }
-
-    /**
-     * \brief retrieve node information for the accepted nodes
-     * @param nodeInfoVect a vector containing the node information of accepted nodes
-     */
-    void getTreeIndicesAndVolumesAcc(std::vector<nodeInformationType> & nodeInfoVect) const
+    void getTreeIndicesAndVolumesAcc(std::vector<const asymmTreeType *> & nodeInfoVect) const
     {
         // TODO should we have a struct returning all the properties?
         if(mHasLeftSubTree or mHasRighSubTree)
@@ -519,15 +399,15 @@ public:
         }
         else if(mNodeChar == ACCEPTED_NODE or mNodeChar == ACCEPTED_AND_REJECTED_NODE)
         {
-            nodeInfoVect.push_back( getNodeInformation() );
+            nodeInfoVect.push_back( this );
         }
     }
 
     /**
-     * \brief retrieve node information for the rejected nodes
-     * @param nodeInfoVect a vector containing the node information of rejected nodes
+     * \brief Build a list of rejected nodes
+     * @param nodeInfoVect a vector containing pointers to rejected nodes
      */
-    void getTreeIndicesAndVolumesRejc(std::vector<nodeInformationType> & nodeInfoVect) const
+    void getTreeIndicesAndVolumesRejc(std::vector<const asymmTreeType *> & nodeInfoVect) const
     {
         // TODO should we have a struct returning all the properties?
         if(mHasLeftSubTree or mHasRighSubTree)
@@ -544,13 +424,13 @@ public:
         }
         else if(mNodeChar == REJECTED_NODE)
         {
-            nodeInfoVect.push_back( getNodeInformation() );
+            nodeInfoVect.push_back( this );
         }
     }
 
     /**
-     * \brief retrieve node information for all the nodes
-     * @param nodeInfoVect a vector containing the node information of all nodes
+     * \brief Build a list of active nodes
+     * @param nodeInfoVect a vector containing pointers to all active nodes
      */
     void getTreeInformation(std::vector<const asymmTreeType *> & nodeInfoVect) const
     {
