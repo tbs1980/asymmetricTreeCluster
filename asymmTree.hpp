@@ -552,7 +552,7 @@ public:
      * \brief retrieve node information for all the nodes
      * @param nodeInfoVect a vector containing the node information of all nodes
      */
-    void getTreeInformation(std::vector<nodeInformationType> & nodeInfoVect) const
+    void getTreeInformation(std::vector<const asymmTreeType *> & nodeInfoVect) const
     {
         if(mHasLeftSubTree or mHasRighSubTree)
         {
@@ -572,7 +572,7 @@ public:
             if( mTreeActive )
             {
                 //std::cout<<"Success"<<std::endl;
-                nodeInfoVect.push_back( getNodeInformation() );
+                nodeInfoVect.push_back( this );
             }
             else
             {
@@ -593,84 +593,6 @@ public:
             }
 
         }
-    }
-
-
-    template<class RNGType>
-    pointType getRandomPoint(RNGType & rng)
-    {
-        // step 1 create a list of active nodes
-        std::vector<nodeInformationType> ndInfVect;
-        getTreeInformation(ndInfVect);
-
-        if(ndInfVect.size() == 0)
-        {
-            std::cout<<"Our search for nodes returned zero. Printing the tree now"<<std::endl;
-            std::ofstream of("dumpTreeFromError.dat");
-            dumpTree(of);
-            of.close();
-        }
-
-        assert( ndInfVect.size() > size_t(0) );
-
-        // step 2 create a list of the cumulative node volumes
-        std::vector<realScalarType> fcvol(ndInfVect.size()+1);
-        fcvol[0] = 0.0;
-        for(size_t i=0; i<ndInfVect.size(); i++)
-        {
-            assert(ndInfVect[i].mVolume > realScalarType(0) );
-            fcvol[i+1] = fcvol[i] + ndInfVect[i].mVolume;
-        }
-
-        // step 3 convert to cumulative fractional volumes
-        assert( fcvol.back() > realScalarType(0) );
-        for(auto&& i : fcvol) { i /= fcvol.back(); }
-        assert(fcvol.front() == 0.0);
-        assert(fcvol.back()  == 1.0);
-
-        // step 4 uniformly select a volume element
-        // and find the corresponding node
-        std::uniform_real_distribution<> distUniReal;
-        realScalarType uniVal = distUniReal(rng);
-
-        // Intial bounding solutions
-        size_t klo,khi,k;
-        klo = 0;
-        khi = ndInfVect.size();
-
-        // Binary search for lower and upper bounding x values
-        while (khi-klo > 1)
-        {
-            k = (khi+klo) >> 1;
-            if( fcvol[k] > uniVal )
-            {
-                khi = k;
-            }
-            else
-            {
-                klo=k;
-            }
-        }
-
-        // Assert that the solutions are within the range of input x values
-        assert( khi > 0 && klo >= 0);
-        assert( khi <= ndInfVect.size() && klo < ndInfVect.size() );
-
-        // Step regression: use the low-bounding x value to predict y
-        size_t idx = klo;
-
-        // step 5 generate a random variate from the node bounds
-        pointType boundMin = ndInfVect[ idx ].mBoundMin;
-        pointType boundMax = ndInfVect[ idx ].mBoundMax;
-
-        pointType randPnt(boundMin.size(),realScalarType(0));
-        for(size_t i=0;i<boundMin.size();++i)
-        {
-            assert(boundMin[i] < boundMax[i]);
-            randPnt[i] = boundMin[i] + (boundMax[i]-boundMin[i])*distUniReal(rng);
-        }
-
-        return randPnt;
     }
 
     /**
@@ -865,6 +787,11 @@ public:
         if(mHasRighSubTree) {mRightSubTree->node_char_recurse(lstar);}
       }
     }
+
+    pointType      boundMin()  const {return mBoundMin;}
+    pointType      boundMax()  const {return mBoundMax;}
+    realScalarType volume()    const {return mVolume;}
+    realScalarType weightMax() const {return mWeightMax;}
 
 private:
 
