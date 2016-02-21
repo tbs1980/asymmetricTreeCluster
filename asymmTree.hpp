@@ -384,7 +384,6 @@ public:
      */
     void getTreeIndicesAndVolumesAcc(std::vector<const asymmTreeType *> & nodeInfoVect) const
     {
-        // TODO should we have a struct returning all the properties?
         if(mHasLeftSubTree or mHasRighSubTree)
         {
             if(mHasLeftSubTree)
@@ -409,7 +408,6 @@ public:
      */
     void getTreeIndicesAndVolumesRejc(std::vector<const asymmTreeType *> & nodeInfoVect) const
     {
-        // TODO should we have a struct returning all the properties?
         if(mHasLeftSubTree or mHasRighSubTree)
         {
             if(mHasLeftSubTree)
@@ -448,10 +446,8 @@ public:
         }
         else //if(mPoints.size() > size_t(0)) // this to make sure that the node selected is actually a node with points
         {
-            //std::cout<<"trying to adding node "<<mTreeIndex<<" with points "<<mPoints.size()<<std::endl;
             if( mTreeActive )
             {
-                //std::cout<<"Success"<<std::endl;
                 nodeInfoVect.push_back( this );
             }
             else
@@ -464,12 +460,6 @@ public:
                 {
                     std::cout<<" mHasRighSubTree "<<std::endl;
                 }
-
-                //std::cout<<mBoundMin[0]<<"\t"<<mBoundMin[1]<<std::endl;
-                //std::cout<<mBoundMax[0]<<"\t"<<mBoundMax[1]<<std::endl;
-                //std::cout<<mLeftSubTree->treeIndex()<<std::endl;
-                //std::cout<<mRightSubTree->treeIndex()<<std::endl;
-                //std::cout<<"Failure"<<std::endl;
             }
 
         }
@@ -558,7 +548,6 @@ public:
             mLeftSubTree = new asymmTreeType(pointsLeft,boundMinLeft,boundMaxLeft,
                 mThresholdForBranching,(2*mTreeIndex+1),(mTreeLevel+1),
                 (mSplitDimension +1) % mNumDims);
-            //if(mTreeIndex==size_t(0)) std::cout<<"@ "<<mTreeIndex<<" setting the mLeftSubTree = true"<<std::endl;
             mHasLeftSubTree = true;
 
             mRightSubTree = new asymmTreeType(pointsRight,boundMinRight,boundMaxRight,
@@ -602,17 +591,6 @@ public:
         {
             for(size_t i=0;i<mPoints.size();++i)
             {
-                //std::cout<<i<<"\t"<<mPoints[i][0]<<"\t"<<point[0]<<"\t"<<mPoints[i].pointId()<<"\t"<<point.pointId()<<std::endl;
-                /*
-                if( mPoints[i].pointId() == point.pointId() )
-                {
-                    //std::cout<<"Found point"<<std::endl;
-                    //std::cout<<"before point char = "<<(int)mPoints[i].pointChar()<<"\t corrd 0 = "<<mPoints[i][0]<<std::endl;
-                    mPoints[i] = point;
-                    //std::cout<<"after point char = "<<(int)mPoints[i].pointChar()<<"\t corrd 0 = "<<mPoints[i][0]<<std::endl;
-                    break;
-                }
-                */
                bool replace=true;
                for(size_t j=0;j<mPoints[0].size();++j)
                {
@@ -625,16 +603,9 @@ public:
 
                if(replace)
                {
-                   //std::cout<<"Found point"<<std::endl;
-                   //std::cout<<"before point char = "<<(int)mPoints[i].pointChar()<<"\t corrd 0 = "<<mPoints[i][0]<<std::endl;
                    mPoints[i] = point;
-                   //std::cout<<"after point char = "<<(int)mPoints[i].pointChar()<<"\t corrd 0 = "<<mPoints[i][0]<<std::endl;
                }
             }
-            //std::cout<<std::endl;
-
-            //std::cout<<"didn't find the point"<<std::endl;
-            //abort();
         }
     }
 
@@ -738,50 +709,6 @@ private:
 
             // compute the mean and standard deviation
             computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn); // TOTO should this be static?
-
-            // // flag accept / reject / accept-reject
-            // size_t numAcc(0);
-            // size_t numRej(0);
-            // for(size_t i=0;i<mPoints.size();++i)
-            // {
-            //     if(mPoints[i].weight() >= mlstar)
-            //     {
-            //         numAcc += size_t(1);
-            //         mPoints[i].set_PointChar(pointCharactersticType::ACCEPTED_POINT);
-            //     }
-            //     else if(mPoints[i].weight() < mlstar)
-            //     {
-            //         numRej += size_t(1);
-            //         mPoints[i].set_PointChar(pointCharactersticType::REJECTED_POINT);
-            //     }
-            // }
-            //
-            // mAccRatio = (realScalarType)numAcc/(realScalarType)mPoints.size();
-            //
-            // if(numAcc > size_t(0) and numRej == size_t(0))
-            // {
-            //     mNodeChar = ACCEPTED_NODE;
-            // }
-            // else if(numAcc > size_t(0) and numRej > size_t(0))
-            // {
-            //     mNodeChar = ACCEPTED_AND_REJECTED_NODE;
-            // }
-            // else if(numAcc == size_t(0) and numRej > size_t(0))
-            // {
-            //     mNodeChar = REJECTED_NODE;
-            // }
-            // default is REFERENCE_NODE
-
-            /*
-            else if(numAcc == size_t(0) and numRej == size_t(0))
-            {
-                assert(mPoints.size() == 0); // in this case we should have problem
-            }
-            else
-            {
-                std::cout<<"This shold not hapen. numAcc = "<<numAcc<<", numRej="<<numRej<<std::endl;
-                abort();
-            }*/
         }
     }
 
