@@ -16,8 +16,7 @@ enum nodeCharacterstic
 {
     REFERENCE_NODE,
     ACCEPTED_NODE,
-    REJECTED_NODE,
-    ACCEPTED_AND_REJECTED_NODE
+    REJECTED_NODE
 };
 
 /**
@@ -237,6 +236,7 @@ public:
             if(mHasLeftSubTree and mHasRighSubTree) { mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight()); }
             else if(mHasLeftSubTree) { mLiveMinWeight = mLeftSubTree->liveMinWeight();}
             else if(mHasRighSubTree) { mLiveMinWeight = mRightSubTree->liveMinWeight();}
+            mNodeChar = REFERENCE_NODE;
         }
         else
         {
@@ -246,9 +246,6 @@ public:
             });
             mPoints.insert(lb,point);
 
-            auto lowest_live = std::find_if(std::begin(mPoints),std::end(mPoints),[](pointType const a) {return(a.pointChar()==pointCharactersticType::LIVE_POINT);});
-            if( lowest_live == std::end(mPoints) ) {mLiveMinWeight = std::numeric_limits<realScalarType>::max();}
-            else                                   {mLiveMinWeight = lowest_live->weight();}
             computeNodeCharacterstics();
 
             if(makeTree == true and mPoints.size() + size_t(1) > mThresholdForBranching)
@@ -408,7 +405,7 @@ public:
                 mRightSubTree->getTreeIndicesAndVolumesAcc(nodeInfoVect);
             }
         }
-        else if(mNodeChar == ACCEPTED_NODE or mNodeChar == ACCEPTED_AND_REJECTED_NODE)
+        else if(mNodeChar == ACCEPTED_NODE)
         {
             nodeInfoVect.push_back( this );
         }
@@ -575,6 +572,7 @@ public:
 
             // Minimum likelihood of live points
             mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
+            mNodeChar      = REFERENCE_NODE;
         }
         else
         {
@@ -624,32 +622,6 @@ public:
         }
     }
 
-
-    // Recursively assign REJECTED and ACCEPTED characteristics
-    // to all nodes and points. lstar is the critical likelihood.
-
-    void node_char_recurse()
-    {
-      if(!(mHasLeftSubTree || mHasRighSubTree) && mPoints.size() > 0)
-      {
-        mNodeChar = REJECTED_NODE;
-        for(auto i=mPoints.begin();i!=mPoints.end();i++)
-        {
-          if(i->pointChar() == pointCharactersticType::LIVE_POINT)
-          {
-            mNodeChar = ACCEPTED_NODE;
-            break;
-          }
-        }
-      }
-      else
-      {
-        mNodeChar = REFERENCE_NODE;
-        if(mHasLeftSubTree) { mLeftSubTree->node_char_recurse();}
-        if(mHasRighSubTree) {mRightSubTree->node_char_recurse();}
-      }
-    }
-
     pointType      boundMin()      const {return mBoundMin;}
     pointType      boundMax()      const {return mBoundMax;}
     realScalarType volume()        const {return mVolume;}
@@ -689,13 +661,27 @@ public:
       else
       {
         auto lowest_live = std::find_if(std::begin(mPoints),std::end(mPoints),[](pointType const a) {return(a.pointChar()==pointCharactersticType::LIVE_POINT);});
-        if( lowest_live == std::end(mPoints) ) {mLiveMinWeight = std::numeric_limits<realScalarType>::max();}
+        if( lowest_live == std::end(mPoints) )
+        {
+          mLiveMinWeight = std::numeric_limits<realScalarType>::max();
+          mNodeChar      = REJECTED_NODE;
+          printf("Error: Could not find minimum likelihood live point. Exiting\n");
+          exit(8);
+        }
         else
         {
           lowest_live->set_PointChar(pointCharactersticType::REJECTED_POINT);
           lowest_live++;
-          if( lowest_live == std::end(mPoints) ) {mLiveMinWeight = std::numeric_limits<realScalarType>::max();}
-          else{ mLiveMinWeight = lowest_live->weight(); }
+          if( lowest_live == std::end(mPoints) )
+          {
+            mLiveMinWeight = std::numeric_limits<realScalarType>::max();
+            mNodeChar      = REJECTED_NODE;
+          }
+          else
+          {
+            mLiveMinWeight = lowest_live->weight();
+            mNodeChar      = ACCEPTED_NODE;
+          }
         }
       }
     }
@@ -772,8 +758,16 @@ private:
             });
 
             auto lowest_live = std::find_if(std::begin(mPoints),std::end(mPoints),[](pointType const a) {return(a.pointChar()==pointCharactersticType::LIVE_POINT);});
-            if( lowest_live == std::end(mPoints) ) {mLiveMinWeight = std::numeric_limits<realScalarType>::max();}
-            else                                   {mLiveMinWeight = lowest_live->weight();}
+            if( lowest_live == std::end(mPoints) )
+            {
+              mLiveMinWeight = std::numeric_limits<realScalarType>::max();
+              mNodeChar      = REJECTED_NODE;
+            }
+            else
+            {
+              mLiveMinWeight = lowest_live->weight();
+              mNodeChar      = ACCEPTED_NODE;
+            }
         }
     }
 
