@@ -78,6 +78,7 @@ public:
     ,mVolume(0)
     ,mNodeChar(REFERENCE_NODE)
     ,mAccRatio(1)
+    ,mLiveMinWeight(std::numeric_limits<realScalarType>::max())
     {
 
     }
@@ -233,10 +234,21 @@ public:
                     abort();
                 }
             }
+            if(mHasLeftSubTree and mHasRighSubTree) { mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight()); }
+            else if(mHasLeftSubTree) { mLiveMinWeight = mLeftSubTree->liveMinWeight();}
+            else if(mHasRighSubTree) { mLiveMinWeight = mRightSubTree->liveMinWeight();}
         }
         else
         {
-            mPoints.push_back(point);
+            auto lb = std::lower_bound(std::begin(mPoints),std::end(mPoints),point,[]( pointType const a, pointType const b)
+            {
+                return ( a.weight() < b.weight() );
+            });
+            mPoints.insert(lb,point);
+
+            auto lowest_live = std::find_if(std::begin(mPoints),std::end(mPoints),[](pointType const a) {return(a.pointChar()==pointCharactersticType::LIVE_POINT);});
+            if( lowest_live == std::end(mPoints) ) {mLiveMinWeight = std::numeric_limits<realScalarType>::max();}
+            else                                   {mLiveMinWeight = lowest_live->weight();}
             computeNodeCharacterstics();
 
             if(makeTree == true and mPoints.size() + size_t(1) > mThresholdForBranching)
@@ -560,6 +572,9 @@ public:
 
             // TODO set the branch to inactive?
             mTreeActive = false;
+
+            // Minimum likelihood of live points
+            mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
         }
         else
         {
@@ -613,36 +628,77 @@ public:
     // Recursively assign REJECTED and ACCEPTED characteristics
     // to all nodes and points. lstar is the critical likelihood.
 
-    void node_char_recurse(realScalarType const lstar)
+    void node_char_recurse()
     {
       if(!(mHasLeftSubTree || mHasRighSubTree) && mPoints.size() > 0)
       {
         mNodeChar = REJECTED_NODE;
         for(auto i=mPoints.begin();i!=mPoints.end();i++)
         {
-          if(i->weight() >= lstar)
+          if(i->pointChar() == pointCharactersticType::LIVE_POINT)
           {
-            i->set_PointChar(pointCharactersticType::ACCEPTED_POINT);
             mNodeChar = ACCEPTED_NODE;
-          }
-          else
-          {
-            i->set_PointChar(pointCharactersticType::REJECTED_POINT);
+            break;
           }
         }
       }
       else
       {
         mNodeChar = REFERENCE_NODE;
-        if(mHasLeftSubTree) { mLeftSubTree->node_char_recurse(lstar);}
-        if(mHasRighSubTree) {mRightSubTree->node_char_recurse(lstar);}
+        if(mHasLeftSubTree) { mLeftSubTree->node_char_recurse();}
+        if(mHasRighSubTree) {mRightSubTree->node_char_recurse();}
       }
     }
 
-    pointType      boundMin()  const {return mBoundMin;}
-    pointType      boundMax()  const {return mBoundMax;}
-    realScalarType volume()    const {return mVolume;}
-    realScalarType weightMax() const {return mWeightMax;}
+    pointType      boundMin()      const {return mBoundMin;}
+    pointType      boundMax()      const {return mBoundMax;}
+    realScalarType volume()        const {return mVolume;}
+    realScalarType weightMax()     const {return mWeightMax;}
+    realScalarType liveMinWeight() const {return mLiveMinWeight;}
+
+    void replace_live()
+    {
+      if(mHasLeftSubTree && mHasRighSubTree && mLeftSubTree->liveMinWeight() == mRightSubTree->liveMinWeight())
+      {
+        std::cout << "Cannot identify min likelihood live point. Aborting" << std::endl;
+        exit(9);
+      }
+      if(mHasLeftSubTree && !mHasRighSubTree)
+      {
+        mLeftSubTree->replace_live();
+        mLiveMinWeight = mLeftSubTree->liveMinWeight();
+      }
+      else if(!mHasLeftSubTree && mHasRighSubTree)
+      {
+        mRightSubTree->replace_live();
+        mLiveMinWeight = mRightSubTree->liveMinWeight();
+      }
+      else if(mHasLeftSubTree && mHasRighSubTree)
+      {
+        if(mLeftSubTree->liveMinWeight() < mRightSubTree->liveMinWeight())
+        {
+          mLeftSubTree->replace_live();
+          mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
+        }
+        else if(mLeftSubTree->liveMinWeight() > mRightSubTree->liveMinWeight())
+        {
+          mRightSubTree->replace_live();
+          mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
+        }
+      }
+      else
+      {
+        auto lowest_live = std::find_if(std::begin(mPoints),std::end(mPoints),[](pointType const a) {return(a.pointChar()==pointCharactersticType::LIVE_POINT);});
+        if( lowest_live == std::end(mPoints) ) {mLiveMinWeight = std::numeric_limits<realScalarType>::max();}
+        else
+        {
+          lowest_live->set_PointChar(pointCharactersticType::REJECTED_POINT);
+          lowest_live++;
+          if( lowest_live == std::end(mPoints) ) {mLiveMinWeight = std::numeric_limits<realScalarType>::max();}
+          else{ mLiveMinWeight = lowest_live->weight(); }
+        }
+      }
+    }
 
 private:
 
@@ -709,6 +765,15 @@ private:
 
             // compute the mean and standard deviation
             computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn); // TOTO should this be static?
+
+            std::sort(std::begin(mPoints),std::end(mPoints),[]( pointType const a, pointType const b)
+            {
+                return ( a.weight() < b.weight() );
+            });
+
+            auto lowest_live = std::find_if(std::begin(mPoints),std::end(mPoints),[](pointType const a) {return(a.pointChar()==pointCharactersticType::LIVE_POINT);});
+            if( lowest_live == std::end(mPoints) ) {mLiveMinWeight = std::numeric_limits<realScalarType>::max();}
+            else                                   {mLiveMinWeight = lowest_live->weight();}
         }
     }
 
@@ -871,6 +936,7 @@ private:
     realScalarType mVolume;
     nodeCharacterstic mNodeChar;
     realScalarType mAccRatio;
+    realScalarType mLiveMinWeight;
 };
 
 
