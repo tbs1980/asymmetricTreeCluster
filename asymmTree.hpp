@@ -78,6 +78,7 @@ public:
     ,mNodeChar(REFERENCE_NODE)
     ,mAccRatio(1)
     ,mLiveMinWeight(std::numeric_limits<realScalarType>::max())
+    ,mLiveMaxWeight(std::numeric_limits<realScalarType>::lowest())
     {
 
     }
@@ -233,9 +234,21 @@ public:
                     abort();
                 }
             }
-            if(mHasLeftSubTree and mHasRighSubTree) { mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight()); }
-            else if(mHasLeftSubTree) { mLiveMinWeight = mLeftSubTree->liveMinWeight();}
-            else if(mHasRighSubTree) { mLiveMinWeight = mRightSubTree->liveMinWeight();}
+            if(mHasLeftSubTree and mHasRighSubTree)
+            {
+              mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
+              mLiveMaxWeight = std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight());
+            }
+            else if(mHasLeftSubTree)
+            {
+              mLiveMinWeight = mLeftSubTree->liveMinWeight();
+              mLiveMaxWeight = mLeftSubTree->liveMaxWeight();
+            }
+            else if(mHasRighSubTree)
+            {
+              mLiveMinWeight = mRightSubTree->liveMinWeight();
+              mLiveMaxWeight = mRightSubTree->liveMaxWeight();
+            }
             mNodeChar = REFERENCE_NODE;
         }
         else
@@ -453,25 +466,7 @@ public:
                 mRightSubTree->getTreeInformation(nodeInfoVect);
             }
         }
-        else //if(mPoints.size() > size_t(0)) // this to make sure that the node selected is actually a node with points
-        {
-            if( mTreeActive )
-            {
-                nodeInfoVect.push_back( this );
-            }
-            else
-            {
-                if(mHasLeftSubTree )
-                {
-                    std::cout<<" mHasLeftSubTree "<<std::endl;
-                }
-                if(mHasRighSubTree)
-                {
-                    std::cout<<" mHasRighSubTree "<<std::endl;
-                }
-            }
-
-        }
+        else { nodeInfoVect.push_back( this ); }
     }
 
     /**
@@ -572,6 +567,7 @@ public:
 
             // Minimum likelihood of live points
             mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
+            mLiveMaxWeight = std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight());
             mNodeChar      = REFERENCE_NODE;
         }
         else
@@ -627,6 +623,7 @@ public:
     realScalarType volume()        const {return mVolume;}
     realScalarType weightMax()     const {return mWeightMax;}
     realScalarType liveMinWeight() const {return mLiveMinWeight;}
+    realScalarType liveMaxWeight() const {return mLiveMaxWeight;}
 
     void replace_live()
     {
@@ -635,15 +632,22 @@ public:
         std::cout << "Cannot identify min likelihood live point. Aborting" << std::endl;
         exit(9);
       }
+      if(mHasLeftSubTree && mHasRighSubTree && mLeftSubTree->liveMaxWeight() == mRightSubTree->liveMaxWeight())
+        {
+          std::cout << "Cannot identify max likelihood live point. Aborting" << std::endl;
+          exit(7);
+        }
       if(mHasLeftSubTree && !mHasRighSubTree)
       {
         mLeftSubTree->replace_live();
         mLiveMinWeight = mLeftSubTree->liveMinWeight();
+        mLiveMaxWeight = mLeftSubTree->liveMaxWeight();
       }
       else if(!mHasLeftSubTree && mHasRighSubTree)
       {
         mRightSubTree->replace_live();
         mLiveMinWeight = mRightSubTree->liveMinWeight();
+        mLiveMaxWeight = mRightSubTree->liveMaxWeight();
       }
       else if(mHasLeftSubTree && mHasRighSubTree)
       {
@@ -651,11 +655,13 @@ public:
         {
           mLeftSubTree->replace_live();
           mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
+          mLiveMaxWeight = std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight());
         }
         else if(mLeftSubTree->liveMinWeight() > mRightSubTree->liveMinWeight())
         {
           mRightSubTree->replace_live();
           mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
+          mLiveMaxWeight = std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight());
         }
       }
       else
@@ -664,6 +670,7 @@ public:
         if( lowest_live == std::end(mPoints) )
         {
           mLiveMinWeight = std::numeric_limits<realScalarType>::max();
+          mLiveMaxWeight = std::numeric_limits<realScalarType>::lowest();
           mNodeChar      = REJECTED_NODE;
           printf("Error: Could not find minimum likelihood live point. Exiting\n");
           exit(8);
@@ -675,11 +682,13 @@ public:
           if( lowest_live == std::end(mPoints) )
           {
             mLiveMinWeight = std::numeric_limits<realScalarType>::max();
+            mLiveMaxWeight = std::numeric_limits<realScalarType>::lowest();
             mNodeChar      = REJECTED_NODE;
           }
           else
           {
             mLiveMinWeight = lowest_live->weight();
+            mLiveMaxWeight = (--std::end(mPoints))->weight();
             mNodeChar      = ACCEPTED_NODE;
           }
         }
@@ -761,11 +770,13 @@ private:
             if( lowest_live == std::end(mPoints) )
             {
               mLiveMinWeight = std::numeric_limits<realScalarType>::max();
+              mLiveMaxWeight = std::numeric_limits<realScalarType>::lowest();
               mNodeChar      = REJECTED_NODE;
             }
             else
             {
               mLiveMinWeight = lowest_live->weight();
+              mLiveMaxWeight = (--std::end(mPoints))->weight();
               mNodeChar      = ACCEPTED_NODE;
             }
         }
@@ -931,6 +942,7 @@ private:
     nodeCharacterstic mNodeChar;
     realScalarType mAccRatio;
     realScalarType mLiveMinWeight;
+    realScalarType mLiveMaxWeight;
 };
 
 
