@@ -618,12 +618,16 @@ public:
         }
     }
 
-    pointType      boundMin()      const {return mBoundMin;}
-    pointType      boundMax()      const {return mBoundMax;}
-    realScalarType volume()        const {return mVolume;}
-    realScalarType weightMax()     const {return mWeightMax;}
-    realScalarType liveMinWeight() const {return mLiveMinWeight;}
-    realScalarType liveMaxWeight() const {return mLiveMaxWeight;}
+    pointType       boundMin()       const {return mBoundMin;}
+    pointType       boundMax()       const {return mBoundMax;}
+    pointType       median()         const {return mMedianVal;}
+    realScalarType  volume()         const {return mVolume;}
+    realScalarType  weightMax()      const {return mWeightMax;}
+    realScalarType  liveMinWeight()  const {return mLiveMinWeight;}
+    realScalarType  liveMaxWeight()  const {return mLiveMaxWeight;}
+    realScalarType  splitDimension() const {return mSplitDimension;}
+    asymmTreeType * leftSubTree()    const {return mLeftSubTree;}
+    asymmTreeType * rightSubTree()   const {return mRightSubTree;}
 
     void replace_live()
     {
