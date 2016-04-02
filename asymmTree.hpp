@@ -238,16 +238,22 @@ public:
             {
               mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
               mLiveMaxWeight = std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight());
+              mVolAccepted   = mLeftSubTree->volAccepted() + mRightSubTree->volAccepted();
+              mVolRejected   = mLeftSubTree->volRejected() + mRightSubTree->volRejected();
             }
             else if(mHasLeftSubTree)
             {
               mLiveMinWeight = mLeftSubTree->liveMinWeight();
               mLiveMaxWeight = mLeftSubTree->liveMaxWeight();
+              mVolAccepted   = mLeftSubTree->volAccepted();
+              mVolRejected   = mLeftSubTree->volRejected();
             }
             else if(mHasRighSubTree)
             {
               mLiveMinWeight = mRightSubTree->liveMinWeight();
               mLiveMaxWeight = mRightSubTree->liveMaxWeight();
+              mVolAccepted   = mRightSubTree->volAccepted();
+              mVolRejected   = mRightSubTree->volRejected();
             }
             mNodeChar = REFERENCE_NODE;
         }
@@ -356,6 +362,28 @@ public:
          mRightSubTree = nullptr;
          mHasRighSubTree = false;
        }
+     }
+
+     if(mHasLeftSubTree and mHasRighSubTree)
+     {
+       mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
+       mLiveMaxWeight = std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight());
+       mVolAccepted   = mLeftSubTree->volAccepted() + mRightSubTree->volAccepted();
+       mVolRejected   = mLeftSubTree->volRejected() + mRightSubTree->volRejected();
+     }
+     else if(mHasLeftSubTree)
+     {
+       mLiveMinWeight = mLeftSubTree->liveMinWeight();
+       mLiveMaxWeight = mLeftSubTree->liveMaxWeight();
+       mVolAccepted   = mLeftSubTree->volAccepted();
+       mVolRejected   = mLeftSubTree->volRejected();
+     }
+     else if(mHasRighSubTree)
+     {
+       mLiveMinWeight = mRightSubTree->liveMinWeight();
+       mLiveMaxWeight = mRightSubTree->liveMaxWeight();
+       mVolAccepted   = mRightSubTree->volAccepted();
+       mVolRejected   = mRightSubTree->volRejected();
      }
    }
 
@@ -568,6 +596,8 @@ public:
             // Minimum likelihood of live points
             mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
             mLiveMaxWeight = std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight());
+            mVolAccepted   = mLeftSubTree->volAccepted() + mRightSubTree->volAccepted();
+            mVolRejected   = mLeftSubTree->volRejected() + mRightSubTree->volRejected();
             mNodeChar      = REFERENCE_NODE;
         }
         else
@@ -628,6 +658,8 @@ public:
     realScalarType  splitDimension() const {return mSplitDimension;}
     asymmTreeType * leftSubTree()    const {return mLeftSubTree;}
     asymmTreeType * rightSubTree()   const {return mRightSubTree;}
+    realScalarType  volAccepted()    const {return mVolAccepted;}
+    realScalarType  volRejected()    const {return mVolRejected;}
 
     void replace_live()
     {
@@ -646,12 +678,16 @@ public:
         mLeftSubTree->replace_live();
         mLiveMinWeight = mLeftSubTree->liveMinWeight();
         mLiveMaxWeight = mLeftSubTree->liveMaxWeight();
+        mVolAccepted   = mLeftSubTree->volAccepted();
+        mVolRejected   = mLeftSubTree->volRejected();
       }
       else if(!mHasLeftSubTree && mHasRighSubTree)
       {
         mRightSubTree->replace_live();
         mLiveMinWeight = mRightSubTree->liveMinWeight();
         mLiveMaxWeight = mRightSubTree->liveMaxWeight();
+        mVolAccepted   = mRightSubTree->volAccepted();
+        mVolRejected   = mRightSubTree->volRejected();
       }
       else if(mHasLeftSubTree && mHasRighSubTree)
       {
@@ -667,6 +703,8 @@ public:
           mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
           mLiveMaxWeight = std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight());
         }
+        mVolAccepted   = mLeftSubTree->volAccepted() + mRightSubTree->volAccepted();
+        mVolRejected   = mLeftSubTree->volRejected() + mRightSubTree->volRejected();
       }
       else
       {
@@ -695,6 +733,16 @@ public:
             mLiveMaxWeight = (--std::end(mPoints))->weight();
             mNodeChar      = ACCEPTED_NODE;
           }
+        }
+        if(mNodeChar == ACCEPTED_NODE)
+        {
+          mVolAccepted = mVolume;
+          mVolRejected = 0.0;
+        }
+        if(mNodeChar == REJECTED_NODE)
+        {
+          mVolAccepted = 0.0;
+          mVolRejected = mVolume;
         }
       }
     }
@@ -782,6 +830,16 @@ private:
               mLiveMinWeight = lowest_live->weight();
               mLiveMaxWeight = (--std::end(mPoints))->weight();
               mNodeChar      = ACCEPTED_NODE;
+            }
+            if(mNodeChar == ACCEPTED_NODE)
+            {
+              mVolAccepted = mVolume;
+              mVolRejected = 0.0;
+            }
+            if(mNodeChar == REJECTED_NODE)
+            {
+              mVolAccepted = 0.0;
+              mVolRejected = mVolume;
             }
         }
     }
@@ -947,6 +1005,8 @@ private:
     realScalarType mAccRatio;
     realScalarType mLiveMinWeight;
     realScalarType mLiveMaxWeight;
+    realScalarType mVolAccepted;
+    realScalarType mVolRejected;
 };
 
 
