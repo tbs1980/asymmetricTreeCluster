@@ -79,6 +79,7 @@ public:
     ,mAccRatio(1)
     ,mLiveMinWeight(std::numeric_limits<realScalarType>::max())
     ,mLiveMaxWeight(std::numeric_limits<realScalarType>::lowest())
+    ,mMinCutWeight(std::numeric_limits<realScalarType>::max())
     {
 
     }
@@ -122,11 +123,12 @@ public:
     ,mNodeChar(REFERENCE_NODE)
     ,mAccRatio(1)
     {
-        computeNodeCharacterstics();
-        if(points.size() >0)
-        {
+        // computeNodeCharacterstics();
+        // if(points.size() >0)
+        // {
             buildTree();
-        }
+            computeNodeCharacterstics();
+        // }
     }
 
     /**
@@ -204,16 +206,11 @@ public:
      */
     void addPoint(pointType const&  point, bool const makeTree = true)
     {
-        assert(mThresholdForBranching>0);
-
         if(mHasLeftSubTree or mHasRighSubTree)
         {
             if( point[mSplitDimension] < mMedianVal[mSplitDimension] )
             {
-                if(mHasLeftSubTree)
-                {
-                    mLeftSubTree->addPoint(point);
-                }
+                if(mHasLeftSubTree) { mLeftSubTree->addPoint(point); }
                 else
                 {
                     std::cout<<"This means we are trying to add point to a left-tree that we deleted"<<std::endl;
@@ -223,10 +220,7 @@ public:
             }
             else
             {
-                if(mHasRighSubTree)
-                {
-                    mRightSubTree->addPoint(point);
-                }
+                if(mHasRighSubTree) { mRightSubTree->addPoint(point); }
                 else
                 {
                     std::cout<<"This means we are trying to add point to a right-tree that we deleted"<<std::endl;
@@ -238,6 +232,7 @@ public:
             {
               mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
               mLiveMaxWeight = std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight());
+              mMinCutWeight  = std::min(mLeftSubTree->minCutWeight(),mRightSubTree->minCutWeight());
               mVolAccepted   = mLeftSubTree->volAccepted() + mRightSubTree->volAccepted();
               mVolRejected   = mLeftSubTree->volRejected() + mRightSubTree->volRejected();
             }
@@ -245,6 +240,7 @@ public:
             {
               mLiveMinWeight = mLeftSubTree->liveMinWeight();
               mLiveMaxWeight = mLeftSubTree->liveMaxWeight();
+              mMinCutWeight  = mLeftSubTree->minCutWeight();
               mVolAccepted   = mLeftSubTree->volAccepted();
               mVolRejected   = mLeftSubTree->volRejected();
             }
@@ -252,6 +248,7 @@ public:
             {
               mLiveMinWeight = mRightSubTree->liveMinWeight();
               mLiveMaxWeight = mRightSubTree->liveMaxWeight();
+              mMinCutWeight  = mRightSubTree->minCutWeight();
               mVolAccepted   = mRightSubTree->volAccepted();
               mVolRejected   = mRightSubTree->volRejected();
             }
@@ -265,12 +262,16 @@ public:
             });
             mPoints.insert(lb,point);
 
-            computeNodeCharacterstics();
+            // computeNodeCharacterstics();
 
-            if(makeTree == true and mPoints.size() + size_t(1) > mThresholdForBranching)
-            {
+            // if(makeTree == true and mPoints.size() + size_t(1) > mThresholdForBranching)
+            // {
+            // if((mNodeChar == ACCEPTED_NODE && point.pointChar() == pointCharactersticType::REJECTED_POINT) or (mNodeChar == REJECTED_NODE && point.pointChar() == pointCharactersticType::LIVE_POINT))
+            // {
                 buildTree();
-            }
+            // }
+
+            computeNodeCharacterstics();
         }
     }
 
@@ -278,114 +279,114 @@ public:
      * \para A method for deleting a node specified by the index
      * @param treeIndex The tree index of the node to be deleted
      */
-    void deleteActiveNodeByIndex(size_t const treeIndex)
-    {
-        if(mHasLeftSubTree or mHasRighSubTree)
-        {
-            if(mHasRighSubTree)
-            {
-                mRightSubTree->deleteActiveNodeByIndex(treeIndex);
-                if( mRightSubTree->hasLeftSubTree() == false
-                    and mRightSubTree->hasRightSubTree() == false
-                    and mRightSubTree->treeIsActive() == false)
-                {
-                    delete mRightSubTree;
-                    mRightSubTree = nullptr;
-                    mHasRighSubTree = false;
-                }
-            }
-
-            if(mHasLeftSubTree)
-            {
-                mLeftSubTree->deleteActiveNodeByIndex(treeIndex);
-                if ( mLeftSubTree->hasLeftSubTree() == false
-                    and mLeftSubTree->hasRightSubTree() == false
-                    and mLeftSubTree->treeIsActive() == false)
-                {
-                    delete mLeftSubTree;
-                    mLeftSubTree = nullptr;
-                    mHasLeftSubTree = false;
-                }
-            }
-        }
-        else if(treeIndex == mTreeIndex)
-        {
-            mPoints.clear();
-            mTreeActive = false;
-        }
-    }
+    // void deleteActiveNodeByIndex(size_t const treeIndex)
+    // {
+    //     if(mHasLeftSubTree or mHasRighSubTree)
+    //     {
+    //         if(mHasRighSubTree)
+    //         {
+    //             mRightSubTree->deleteActiveNodeByIndex(treeIndex);
+    //             if( mRightSubTree->hasLeftSubTree() == false
+    //                 and mRightSubTree->hasRightSubTree() == false
+    //                 and mRightSubTree->treeIsActive() == false)
+    //             {
+    //                 delete mRightSubTree;
+    //                 mRightSubTree = nullptr;
+    //                 mHasRighSubTree = false;
+    //             }
+    //         }
+    //
+    //         if(mHasLeftSubTree)
+    //         {
+    //             mLeftSubTree->deleteActiveNodeByIndex(treeIndex);
+    //             if ( mLeftSubTree->hasLeftSubTree() == false
+    //                 and mLeftSubTree->hasRightSubTree() == false
+    //                 and mLeftSubTree->treeIsActive() == false)
+    //             {
+    //                 delete mLeftSubTree;
+    //                 mLeftSubTree = nullptr;
+    //                 mHasLeftSubTree = false;
+    //             }
+    //         }
+    //     }
+    //     else if(treeIndex == mTreeIndex)
+    //     {
+    //         mPoints.clear();
+    //         mTreeActive = false;
+    //     }
+    // }
 
 
    /**
     * \para A method for deleting a node specified by its address
     * @param treeIndex The address of the node to be deleted
     */
-   void deleteActiveNodeByPointer(const asymmTreeType * del_node)
-   {
-     if(mHasLeftSubTree)
-     {
-       if(mLeftSubTree == del_node)
-       {
-         mLeftSubTree->mPoints.clear();
-         mLeftSubTree->mTreeActive = false;
-       }
-       else if(del_node->mBoundMin[mSplitDimension] < mMedianVal[mSplitDimension])
-       {
-         mLeftSubTree->deleteActiveNodeByPointer(del_node);
-       }
-       if ( mLeftSubTree->hasLeftSubTree() == false
-        and mLeftSubTree->hasRightSubTree() == false
-        and mLeftSubTree->treeIsActive() == false)
-       {
-         delete mLeftSubTree;
-         mLeftSubTree = nullptr;
-         mHasLeftSubTree = false;
-       }
-     }
-
-     if(mHasRighSubTree)
-     {
-       if(mRightSubTree == del_node)
-       {
-         mRightSubTree->mPoints.clear();
-         mRightSubTree->mTreeActive = false;
-       }
-       else if(del_node->mBoundMax[mSplitDimension] > mMedianVal[mSplitDimension])
-       {
-         mRightSubTree->deleteActiveNodeByPointer(del_node);
-       }
-       if ( mRightSubTree->hasLeftSubTree() == false
-        and mRightSubTree->hasRightSubTree() == false
-        and mRightSubTree->treeIsActive() == false)
-       {
-         delete mRightSubTree;
-         mRightSubTree = nullptr;
-         mHasRighSubTree = false;
-       }
-     }
-
-     if(mHasLeftSubTree and mHasRighSubTree)
-     {
-       mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
-       mLiveMaxWeight = std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight());
-       mVolAccepted   = mLeftSubTree->volAccepted() + mRightSubTree->volAccepted();
-       mVolRejected   = mLeftSubTree->volRejected() + mRightSubTree->volRejected();
-     }
-     else if(mHasLeftSubTree)
-     {
-       mLiveMinWeight = mLeftSubTree->liveMinWeight();
-       mLiveMaxWeight = mLeftSubTree->liveMaxWeight();
-       mVolAccepted   = mLeftSubTree->volAccepted();
-       mVolRejected   = mLeftSubTree->volRejected();
-     }
-     else if(mHasRighSubTree)
-     {
-       mLiveMinWeight = mRightSubTree->liveMinWeight();
-       mLiveMaxWeight = mRightSubTree->liveMaxWeight();
-       mVolAccepted   = mRightSubTree->volAccepted();
-       mVolRejected   = mRightSubTree->volRejected();
-     }
-   }
+  //  void deleteActiveNodeByPointer(const asymmTreeType * del_node)
+  //  {
+  //    if(mHasLeftSubTree)
+  //    {
+  //      if(mLeftSubTree == del_node)
+  //      {
+  //        mLeftSubTree->mPoints.clear();
+  //        mLeftSubTree->mTreeActive = false;
+  //      }
+  //      else if(del_node->mBoundMin[mSplitDimension] < mMedianVal[mSplitDimension])
+  //      {
+  //        mLeftSubTree->deleteActiveNodeByPointer(del_node);
+  //      }
+  //      if ( mLeftSubTree->hasLeftSubTree() == false
+  //       and mLeftSubTree->hasRightSubTree() == false
+  //       and mLeftSubTree->treeIsActive() == false)
+  //      {
+  //        delete mLeftSubTree;
+  //        mLeftSubTree = nullptr;
+  //        mHasLeftSubTree = false;
+  //      }
+  //    }
+   //
+  //    if(mHasRighSubTree)
+  //    {
+  //      if(mRightSubTree == del_node)
+  //      {
+  //        mRightSubTree->mPoints.clear();
+  //        mRightSubTree->mTreeActive = false;
+  //      }
+  //      else if(del_node->mBoundMax[mSplitDimension] > mMedianVal[mSplitDimension])
+  //      {
+  //        mRightSubTree->deleteActiveNodeByPointer(del_node);
+  //      }
+  //      if ( mRightSubTree->hasLeftSubTree() == false
+  //       and mRightSubTree->hasRightSubTree() == false
+  //       and mRightSubTree->treeIsActive() == false)
+  //      {
+  //        delete mRightSubTree;
+  //        mRightSubTree = nullptr;
+  //        mHasRighSubTree = false;
+  //      }
+  //    }
+   //
+  //    if(mHasLeftSubTree and mHasRighSubTree)
+  //    {
+  //      mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
+  //      mLiveMaxWeight = std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight());
+  //      mVolAccepted   = mLeftSubTree->volAccepted() + mRightSubTree->volAccepted();
+  //      mVolRejected   = mLeftSubTree->volRejected() + mRightSubTree->volRejected();
+  //    }
+  //    else if(mHasLeftSubTree)
+  //    {
+  //      mLiveMinWeight = mLeftSubTree->liveMinWeight();
+  //      mLiveMaxWeight = mLeftSubTree->liveMaxWeight();
+  //      mVolAccepted   = mLeftSubTree->volAccepted();
+  //      mVolRejected   = mLeftSubTree->volRejected();
+  //    }
+  //    else if(mHasRighSubTree)
+  //    {
+  //      mLiveMinWeight = mRightSubTree->liveMinWeight();
+  //      mLiveMaxWeight = mRightSubTree->liveMaxWeight();
+  //      mVolAccepted   = mRightSubTree->volAccepted();
+  //      mVolRejected   = mRightSubTree->volRejected();
+  //    }
+  //  }
 
     /**
      * \brief A function that returns true if left sub tree exisits
@@ -423,90 +424,95 @@ public:
         return mTreeIndex;
     }
 
-    pointsArrayType const & getPoints() const
-    {
-        return mPoints;
-    }
+    // pointsArrayType const & getPoints() const
+    // {
+    //     return mPoints;
+    // }
 
-    /**
-     * \brief Build a list of accepted nodes
-     * @param nodeInfoVect a vector containing pointers to accepted nodes
-     */
-    void getTreeIndicesAndVolumesAcc(std::vector<const asymmTreeType *> & nodeInfoVect) const
-    {
-        if(mHasLeftSubTree or mHasRighSubTree)
-        {
-            if(mHasLeftSubTree)
-            {
-                mLeftSubTree->getTreeIndicesAndVolumesAcc(nodeInfoVect);
-            }
+    // /**
+    //  * \brief Build a list of accepted nodes
+    //  * @param nodeInfoVect a vector containing pointers to accepted nodes
+    //  */
+    // void getTreeIndicesAndVolumesAcc(std::vector<const asymmTreeType *> & nodeInfoVect) const
+    // {
+    //     if(mHasLeftSubTree or mHasRighSubTree)
+    //     {
+    //         if(mHasLeftSubTree)
+    //         {
+    //             mLeftSubTree->getTreeIndicesAndVolumesAcc(nodeInfoVect);
+    //         }
+    //
+    //         if(mHasRighSubTree)
+    //         {
+    //             mRightSubTree->getTreeIndicesAndVolumesAcc(nodeInfoVect);
+    //         }
+    //     }
+    //     else if(mNodeChar == ACCEPTED_NODE)
+    //     {
+    //         nodeInfoVect.push_back( this );
+    //     }
+    // }
 
-            if(mHasRighSubTree)
-            {
-                mRightSubTree->getTreeIndicesAndVolumesAcc(nodeInfoVect);
-            }
-        }
-        else if(mNodeChar == ACCEPTED_NODE)
-        {
-            nodeInfoVect.push_back( this );
-        }
-    }
-
-    /**
-     * \brief Build a list of rejected nodes
-     * @param nodeInfoVect a vector containing pointers to rejected nodes
-     */
-    void getTreeIndicesAndVolumesRejc(std::vector<const asymmTreeType *> & nodeInfoVect) const
-    {
-        if(mHasLeftSubTree or mHasRighSubTree)
-        {
-            if(mHasLeftSubTree)
-            {
-                mLeftSubTree->getTreeIndicesAndVolumesRejc(nodeInfoVect);
-            }
-
-            if(mHasRighSubTree)
-            {
-                mRightSubTree->getTreeIndicesAndVolumesRejc(nodeInfoVect);
-            }
-        }
-        else if(mNodeChar == REJECTED_NODE)
-        {
-            nodeInfoVect.push_back( this );
-        }
-    }
+    // /**
+    //  * \brief Build a list of rejected nodes
+    //  * @param nodeInfoVect a vector containing pointers to rejected nodes
+    //  */
+    // void getTreeIndicesAndVolumesRejc(std::vector<const asymmTreeType *> & nodeInfoVect) const
+    // {
+    //     if(mHasLeftSubTree or mHasRighSubTree)
+    //     {
+    //         if(mHasLeftSubTree)
+    //         {
+    //             mLeftSubTree->getTreeIndicesAndVolumesRejc(nodeInfoVect);
+    //         }
+    //
+    //         if(mHasRighSubTree)
+    //         {
+    //             mRightSubTree->getTreeIndicesAndVolumesRejc(nodeInfoVect);
+    //         }
+    //     }
+    //     else if(mNodeChar == REJECTED_NODE)
+    //     {
+    //         nodeInfoVect.push_back( this );
+    //     }
+    // }
 
     /**
      * \brief Build a list of active nodes
      * @param nodeInfoVect a vector containing pointers to all active nodes
      */
-    void getTreeInformation(std::vector<const asymmTreeType *> & nodeInfoVect) const
-    {
-        if(mHasLeftSubTree or mHasRighSubTree)
-        {
-            if(mHasLeftSubTree)
-            {
-                mLeftSubTree->getTreeInformation(nodeInfoVect);
-            }
-
-            if(mHasRighSubTree)
-            {
-                mRightSubTree->getTreeInformation(nodeInfoVect);
-            }
-        }
-        else { nodeInfoVect.push_back( this ); }
-    }
+    // void getTreeInformation(std::vector<const asymmTreeType *> & nodeInfoVect) const
+    // {
+    //     if(mHasLeftSubTree or mHasRighSubTree)
+    //     {
+    //         if(mHasLeftSubTree)
+    //         {
+    //             mLeftSubTree->getTreeInformation(nodeInfoVect);
+    //         }
+    //
+    //         if(mHasRighSubTree)
+    //         {
+    //             mRightSubTree->getTreeInformation(nodeInfoVect);
+    //         }
+    //     }
+    //     else { nodeInfoVect.push_back( this ); }
+    // }
 
     /**
      * \brief A method that build tree.
      */
     void buildTree()
     {
+        // // check if we have enough points for branching
+        // assert(mThresholdForBranching >0);
+        //
+        // if(mPoints.size() > mThresholdForBranching)
+        // {
 
-        // check if we have enough points for branching
-        assert(mThresholdForBranching >0);
-
-        if(mPoints.size() > mThresholdForBranching)
+        // Split node it it contains both live and rejected points
+        auto acc = std::count_if(std::begin(mPoints),std::end(mPoints),[](pointType const a){return a.pointChar() == pointCharactersticType::LIVE_POINT;});
+        auto rej = std::count_if(std::begin(mPoints),std::end(mPoints),[](pointType const a){return a.pointChar() == pointCharactersticType::REJECTED_POINT;});
+        if( acc > 0 && rej > 0)
         {
             // since we have enough points we can create new tress
             std::vector<size_t> pointIndices(mPoints.size());
@@ -590,76 +596,84 @@ public:
             // clear the points in the currect branch
             mPoints.clear();
 
+            mLeftSubTree->buildTree();
+            mRightSubTree->buildTree();
+            mLeftSubTree->computeNodeCharacterstics();
+            mRightSubTree->computeNodeCharacterstics();
+
             // TODO set the branch to inactive?
-            mTreeActive = false;
+            // mTreeActive = false;
 
             // Minimum likelihood of live points
             mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
             mLiveMaxWeight = std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight());
+            mMinCutWeight  = std::min(mLeftSubTree->minCutWeight(),mRightSubTree->minCutWeight());
             mVolAccepted   = mLeftSubTree->volAccepted() + mRightSubTree->volAccepted();
             mVolRejected   = mLeftSubTree->volRejected() + mRightSubTree->volRejected();
             mNodeChar      = REFERENCE_NODE;
         }
-        else
-        {
-            computeNodeCharacterstics();
-        }
+        // else
+        // {
+        //     computeNodeCharacterstics();
+        // }
     }
 
-    void searchAndReplacePoint(pointType const & point)
-    {
-        if( mHasLeftSubTree or mHasRighSubTree)
-        {
-            // go to the left sub tree and point[mSplitDimension] < mMedianVal[mSplitDimension]
-            if( point[mSplitDimension] < mMedianVal[mSplitDimension] )
-            {
-                if(mHasLeftSubTree)
-                {
-                    mLeftSubTree->searchAndReplacePoint(point);
-                }
-            }
-            else
-            {
-                if(mHasRighSubTree)
-                {
-                    mRightSubTree->searchAndReplacePoint(point);
-                }
-            }
-        }
-        else
-        {
-            for(size_t i=0;i<mPoints.size();++i)
-            {
-               bool replace=true;
-               for(size_t j=0;j<mPoints[0].size();++j)
-               {
-                   if( std::abs( mPoints[i][j] -  point[j] ) > std::numeric_limits<realScalarType>::epsilon() )
-                   {
-                       replace = false;
-                       break;
-                   }
-               }
+    // void searchAndReplacePoint(pointType const & point)
+    // {
+    //     if( mHasLeftSubTree or mHasRighSubTree)
+    //     {
+    //         // go to the left sub tree and point[mSplitDimension] < mMedianVal[mSplitDimension]
+    //         if( point[mSplitDimension] < mMedianVal[mSplitDimension] )
+    //         {
+    //             if(mHasLeftSubTree)
+    //             {
+    //                 mLeftSubTree->searchAndReplacePoint(point);
+    //             }
+    //         }
+    //         else
+    //         {
+    //             if(mHasRighSubTree)
+    //             {
+    //                 mRightSubTree->searchAndReplacePoint(point);
+    //             }
+    //         }
+    //     }
+    //     else
+    //     {
+    //         for(size_t i=0;i<mPoints.size();++i)
+    //         {
+    //            bool replace=true;
+    //            for(size_t j=0;j<mPoints[0].size();++j)
+    //            {
+    //                if( std::abs( mPoints[i][j] -  point[j] ) > std::numeric_limits<realScalarType>::epsilon() )
+    //                {
+    //                    replace = false;
+    //                    break;
+    //                }
+    //            }
+    //
+    //            if(replace)
+    //            {
+    //                mPoints[i] = point;
+    //            }
+    //         }
+    //     }
+    // }
 
-               if(replace)
-               {
-                   mPoints[i] = point;
-               }
-            }
-        }
-    }
-
-    pointType       boundMin()       const {return mBoundMin;}
-    pointType       boundMax()       const {return mBoundMax;}
-    pointType       median()         const {return mMedianVal;}
-    realScalarType  volume()         const {return mVolume;}
-    realScalarType  weightMax()      const {return mWeightMax;}
-    realScalarType  liveMinWeight()  const {return mLiveMinWeight;}
-    realScalarType  liveMaxWeight()  const {return mLiveMaxWeight;}
-    realScalarType  splitDimension() const {return mSplitDimension;}
-    asymmTreeType * leftSubTree()    const {return mLeftSubTree;}
-    asymmTreeType * rightSubTree()   const {return mRightSubTree;}
-    realScalarType  volAccepted()    const {return mVolAccepted;}
-    realScalarType  volRejected()    const {return mVolRejected;}
+    pointType         boundMin()       const {return mBoundMin;}
+    pointType         boundMax()       const {return mBoundMax;}
+    pointType         median()         const {return mMedianVal;}
+    realScalarType    volume()         const {return mVolume;}
+    realScalarType    weightMax()      const {return mWeightMax;}
+    realScalarType    liveMinWeight()  const {return mLiveMinWeight;}
+    realScalarType    liveMaxWeight()  const {return mLiveMaxWeight;}
+    realScalarType    splitDimension() const {return mSplitDimension;}
+    asymmTreeType *   leftSubTree()    const {return mLeftSubTree;}
+    asymmTreeType *   rightSubTree()   const {return mRightSubTree;}
+    realScalarType    volAccepted()    const {return mVolAccepted;}
+    realScalarType    volRejected()    const {return mVolRejected;}
+    realScalarType    minCutWeight()   const {return mMinCutWeight;}
+    nodeCharacterstic nodeChar()       const {return mNodeChar;}
 
     void replace_live()
     {
@@ -678,6 +692,7 @@ public:
         mLeftSubTree->replace_live();
         mLiveMinWeight = mLeftSubTree->liveMinWeight();
         mLiveMaxWeight = mLeftSubTree->liveMaxWeight();
+        mMinCutWeight  = mLeftSubTree->minCutWeight();
         mVolAccepted   = mLeftSubTree->volAccepted();
         mVolRejected   = mLeftSubTree->volRejected();
       }
@@ -686,23 +701,19 @@ public:
         mRightSubTree->replace_live();
         mLiveMinWeight = mRightSubTree->liveMinWeight();
         mLiveMaxWeight = mRightSubTree->liveMaxWeight();
+        mMinCutWeight  = mRightSubTree->minCutWeight();
         mVolAccepted   = mRightSubTree->volAccepted();
         mVolRejected   = mRightSubTree->volRejected();
       }
       else if(mHasLeftSubTree && mHasRighSubTree)
       {
         if(mLeftSubTree->liveMinWeight() < mRightSubTree->liveMinWeight())
-        {
-          mLeftSubTree->replace_live();
-          mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
-          mLiveMaxWeight = std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight());
-        }
+          { mLeftSubTree->replace_live(); }
         else if(mLeftSubTree->liveMinWeight() > mRightSubTree->liveMinWeight())
-        {
-          mRightSubTree->replace_live();
-          mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
-          mLiveMaxWeight = std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight());
-        }
+          { mRightSubTree->replace_live(); }
+        mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
+        mLiveMaxWeight = std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight());
+        mMinCutWeight  = std::min(mLeftSubTree->minCutWeight(),mRightSubTree->minCutWeight());
         mVolAccepted   = mLeftSubTree->volAccepted() + mRightSubTree->volAccepted();
         mVolRejected   = mLeftSubTree->volRejected() + mRightSubTree->volRejected();
       }
@@ -720,31 +731,196 @@ public:
         else
         {
           lowest_live->set_PointChar(pointCharactersticType::REJECTED_POINT);
-          lowest_live++;
-          if( lowest_live == std::end(mPoints) )
-          {
-            mLiveMinWeight = std::numeric_limits<realScalarType>::max();
-            mLiveMaxWeight = std::numeric_limits<realScalarType>::lowest();
-            mNodeChar      = REJECTED_NODE;
-          }
-          else
-          {
-            mLiveMinWeight = lowest_live->weight();
-            mLiveMaxWeight = (--std::end(mPoints))->weight();
-            mNodeChar      = ACCEPTED_NODE;
-          }
+          buildTree();
+          computeNodeCharacterstics();
+          // mNodeChar = REJECTED_NODE;
+          // lowest_live++;
+          // if( std::next(lowest_live) == std::end(mPoints) )
+          // {
+          //   mLiveMinWeight = std::numeric_limits<realScalarType>::max();
+          //   mLiveMaxWeight = std::numeric_limits<realScalarType>::lowest();
+          //   mMinCutWeight  = lowest_live->weight();
+          //   mNodeChar      = REJECTED_NODE;
+          // }
+          //
+          // // :TODO: if a mix of live and rejected - build tree
+          // // else
+          // // {
+          // //   mLiveMinWeight = std::next(lowest_live)->weight();
+          // //   mLiveMaxWeight = (std::prev(std::end(mPoints)))->weight();
+          // //   mMinCutWeight  = lowest_live->weight();
+          // //   mNodeChar      = ACCEPTED_NODE;
+          // // }
+          // else
+          // {
+          //   buildTree();
+          //   mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
+          //   mLiveMaxWeight = std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight());
+          //   mMinCutWeight  = std::min(mLeftSubTree->minCutWeight(),mRightSubTree->minCutWeight());
+          //   mVolAccepted   = mLeftSubTree->volAccepted() + mRightSubTree->volAccepted();
+          //   mVolRejected   = mLeftSubTree->volRejected() + mRightSubTree->volRejected();
+          // }
         }
-        if(mNodeChar == ACCEPTED_NODE)
+        // if(mNodeChar == ACCEPTED_NODE)
+        // {
+        //   mVolAccepted = mVolume;
+        //   mVolRejected = 0.0;
+        // }
+        // if(mNodeChar == REJECTED_NODE)
+        // {
+        //   mVolAccepted = 0.0;
+        //   mVolRejected = mVolume;
+        // }
+      }
+    }
+
+    void prune()
+    {
+      if(mTreeActive == false)       { exit(991); } // error! all inactive nodes should be deleted
+      if(mNodeChar == ACCEPTED_NODE) { exit(992); } // error! we should only ever reach rejected nodes
+      if(mNodeChar == REJECTED_NODE && (mHasLeftSubTree || mHasRighSubTree)) { exit(993); } // error - rejected node should be a leaf
+
+      bool prune_left  = mHasLeftSubTree && (!mHasRighSubTree || (mHasRighSubTree && (mLeftSubTree->minCutWeight()  < mRightSubTree->minCutWeight())));
+      bool prune_right = mHasRighSubTree && (!mHasLeftSubTree || (mHasLeftSubTree && (mLeftSubTree->minCutWeight()  > mRightSubTree->minCutWeight())));
+      // :TODO: Implement these as a single XOR
+      if( mNodeChar == REFERENCE_NODE &&  prune_left &&  prune_right ) { exit(994); } // Error - cant prune both nodes
+      if( mNodeChar == REFERENCE_NODE && !prune_left && !prune_right ) { exit(995); } // Error - must prune one node
+
+      if(mNodeChar == REJECTED_NODE)
+      {
+        mPoints.clear();
+        mTreeActive = false;
+        mMinCutWeight = std::numeric_limits<realScalarType>::max();
+      }
+      else if(prune_left)
+      {
+        mLeftSubTree->prune();
+        if(!mLeftSubTree->treeIsActive())
         {
-          mVolAccepted = mVolume;
-          mVolRejected = 0.0;
-        }
-        if(mNodeChar == REJECTED_NODE)
-        {
-          mVolAccepted = 0.0;
-          mVolRejected = mVolume;
+          delete mLeftSubTree;
+          mLeftSubTree = nullptr;
+          mHasLeftSubTree = false;
+          if(!mHasRighSubTree || !mRightSubTree->treeIsActive()) { mTreeActive = false; }
         }
       }
+      else if(prune_right)
+      {
+        mRightSubTree->prune();
+        if(!mRightSubTree->treeIsActive())
+        {
+          delete mRightSubTree;
+          mRightSubTree = nullptr;
+          mHasRighSubTree = false;
+          if(!mHasLeftSubTree || !mLeftSubTree->treeIsActive()) { mTreeActive = false; }
+        }
+      }
+      else { exit(996); } // error! should not reach this point
+
+      // New minimum cut weight
+      if(mHasLeftSubTree && mHasRighSubTree) { mMinCutWeight = std::min(mLeftSubTree->minCutWeight(),mRightSubTree->minCutWeight()); }
+      else if(mHasLeftSubTree) { mMinCutWeight = mLeftSubTree->minCutWeight(); }
+      else if(mHasRighSubTree) { mMinCutWeight = mRightSubTree->minCutWeight(); }
+      else { mMinCutWeight = std::numeric_limits<realScalarType>::max(); }
+
+      // New accepted and rejected volumes
+      if(mNodeChar == ACCEPTED_NODE)
+      {
+        mVolAccepted = mVolume;
+        mVolRejected = 0.;
+      }
+      else if(mNodeChar == REJECTED_NODE)
+      {
+        mVolAccepted = 0.;
+        mVolRejected = mVolume;
+      }
+      else if(mHasLeftSubTree && mHasRighSubTree)
+      {
+        mVolAccepted = mLeftSubTree->volAccepted() + mRightSubTree->volAccepted();
+        mVolRejected = mLeftSubTree->volRejected() + mRightSubTree->volRejected();
+      }
+      else if(mHasLeftSubTree)
+      {
+        mVolAccepted = mLeftSubTree->volAccepted();
+        mVolRejected = mLeftSubTree->volRejected();
+      }
+      else if(mHasRighSubTree)
+      {
+        mVolAccepted = mRightSubTree->volAccepted();
+        mVolRejected = mRightSubTree->volRejected();
+      }
+      else if(mNodeChar == REFERENCE_NODE) {assert(!mTreeActive);}
+      else { exit(997); } // Error - should be accepted, rejected, or have sub trees
+    }
+
+    void check()
+    {
+
+      // if(mTreeActive) assert(mNodeChar != REFERENCE_NODE);
+      // if(mNodeChar == REFERENCE_NODE) assert(!mTreeActive);
+
+      if(mHasLeftSubTree && mLeftSubTree->nodeChar() != REFERENCE_NODE)
+      {
+        assert(mLeftSubTree->treeIsActive());
+      }
+            if(mHasRighSubTree && mRightSubTree->nodeChar() != REFERENCE_NODE)
+            {
+              assert(mRightSubTree->treeIsActive());
+            }
+
+      if(mHasLeftSubTree && mHasRighSubTree)
+      {
+        assert(mLiveMinWeight == std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight()));
+        assert(mLiveMaxWeight == std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight()));
+        assert(mMinCutWeight  == std::min(mLeftSubTree->minCutWeight(),mRightSubTree->minCutWeight()));
+        assert(mVolAccepted   == mLeftSubTree->volAccepted() + mRightSubTree->volAccepted());
+        assert(mVolRejected   == mLeftSubTree->volRejected() + mRightSubTree->volRejected());
+        mLeftSubTree->check();
+        mRightSubTree->check();
+      }
+      else if(mHasLeftSubTree && !mHasRighSubTree)
+      {
+        assert(mLiveMinWeight == mLeftSubTree->liveMinWeight());
+        assert(mLiveMaxWeight == mLeftSubTree->liveMaxWeight());
+        assert(mMinCutWeight  == mLeftSubTree->minCutWeight());
+        assert(mVolAccepted   == mLeftSubTree->volAccepted());
+        assert(mVolRejected   == mLeftSubTree->volRejected());
+        mLeftSubTree->check();
+      }
+      else if(!mHasLeftSubTree && mHasRighSubTree)
+      {
+        assert(mLiveMinWeight == mRightSubTree->liveMinWeight());
+        assert(mLiveMaxWeight == mRightSubTree->liveMaxWeight());
+        assert(mMinCutWeight  == mRightSubTree->minCutWeight());
+        assert(mVolAccepted   == mRightSubTree->volAccepted());
+        assert(mVolRejected   == mRightSubTree->volRejected());
+        mRightSubTree->check();
+      }
+      else if(!mHasLeftSubTree && !mHasRighSubTree)
+      {
+        double minl = std::numeric_limits<double>::max();
+        for(auto ii: mPoints) { if(ii.pointChar() == pointCharactersticType::LIVE_POINT && ii.weight() < minl) {minl = ii.weight();} }
+        assert(mLiveMinWeight == minl);
+        double maxl = std::numeric_limits<double>::lowest();
+        for(auto ii: mPoints) { if(ii.pointChar() == pointCharactersticType::LIVE_POINT && ii.weight() > maxl) {maxl = ii.weight();} }
+        assert(mLiveMaxWeight == maxl);
+        double cut = std::numeric_limits<double>::lowest();
+        for(auto ii: mPoints) { if(ii.pointChar() == pointCharactersticType::REJECTED_POINT && ii.weight() > cut) {cut = ii.weight();} }
+        if(cut == std::numeric_limits<double>::lowest()) {cut = std::numeric_limits<double>::max();}
+        if(mMinCutWeight != cut)
+        {
+          for(auto ii: mPoints) std::cout << ii.weight() << "\t" << ii.pointChar() << std::endl;
+          std::cout << mMinCutWeight << "\t" << cut << std::endl;
+          std::cout << "exit(23425)" << std::endl;
+          exit(23425);
+        }
+        assert(mMinCutWeight == cut);
+        if(mNodeChar == ACCEPTED_NODE) { assert( mVolAccepted == mVolume && mVolRejected == 0.0 ); }
+        if(mNodeChar == REJECTED_NODE) { assert( mVolRejected == mVolume && mVolAccepted == 0.0 ); }
+      }
+
+      auto acc = std::count_if(std::begin(mPoints),std::end(mPoints),[](pointType const a){return a.pointChar() == pointCharactersticType::LIVE_POINT;});
+      auto rej = std::count_if(std::begin(mPoints),std::end(mPoints),[](pointType const a){return a.pointChar() == pointCharactersticType::REJECTED_POINT;});
+      assert( !(acc>0 && rej>0));
     }
 
 private:
@@ -811,7 +987,7 @@ private:
             mWeightMax = mPoints[*wMinMax.second].weight();
 
             // compute the mean and standard deviation
-            computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn); // TOTO should this be static?
+            // computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn); // TOTO should this be static?
 
             std::sort(std::begin(mPoints),std::end(mPoints),[]( pointType const a, pointType const b)
             {
@@ -823,12 +999,28 @@ private:
             {
               mLiveMinWeight = std::numeric_limits<realScalarType>::max();
               mLiveMaxWeight = std::numeric_limits<realScalarType>::lowest();
+              mMinCutWeight  = std::prev(lowest_live)->weight();
               mNodeChar      = REJECTED_NODE;
+            }
+            else if ( lowest_live == std::begin(mPoints) )
+            {
+              mLiveMinWeight = lowest_live->weight();
+              mLiveMaxWeight = std::prev(std::end(mPoints))->weight();
+              mMinCutWeight  = std::numeric_limits<realScalarType>::max();
+              mNodeChar      = ACCEPTED_NODE;
             }
             else
             {
+              std::cout << "Got here!!!! computeNodeCharacterstics()" << std::endl;
               mLiveMinWeight = lowest_live->weight();
-              mLiveMaxWeight = (--std::end(mPoints))->weight();
+              mLiveMaxWeight = std::prev(std::end(mPoints))->weight();
+
+              // :TODO: Here we will not prune if there are any live points
+              // Therefre mMinCutWeight is max()
+
+              // mMinCutWeight  = std::prev(lowest_live)->weight();
+              mMinCutWeight  = std::numeric_limits<realScalarType>::max();
+
               mNodeChar      = ACCEPTED_NODE;
             }
             if(mNodeChar == ACCEPTED_NODE)
@@ -883,103 +1075,103 @@ private:
         return dimWithMaxVar;
     }
 
-    size_t findMaxFisherInfoDimension() const
-    {
-        assert(mPoints.size() > size_t(3)); // otherwise we cant use this
+    // size_t findMaxFisherInfoDimension() const
+    // {
+    //     assert(mPoints.size() > size_t(3)); // otherwise we cant use this
+    //
+    //     // since we have enough points we can create new tress
+    //     std::vector<size_t> pointIndices(mPoints.size());
+    //
+    //     // set the point indices for sorting
+    //     for(size_t i=0;i<pointIndices.size();++i)
+    //     {
+    //         pointIndices[i] = i;
+    //     }
+    //
+    //     auto begin = std::begin(pointIndices);
+    //     auto end = std::end(pointIndices);
+    //
+    //     // for each dimension find the median and the Fisher discriminant
+    //     std::vector<realScalarType> discrDiff(mPoints[0].size());
+    //
+    //     for(size_t dim=size_t(0);dim<mPoints[0].size();++dim)
+    //     {
+    //         // sort the points in the current dimension
+    //         std::sort(begin, end,
+    //             [this,dim]( size_t const a, size_t const b)
+    //             {
+    //                 return ( mPoints[a][dim] < mPoints[b][dim] );
+    //             }
+    //         );
+    //
+    //         // find the median
+    //         auto rangeSize = std::distance(begin, end);
+    //         auto median = begin + rangeSize/2;
+    //         assert(rangeSize>0);
+    //
+    //         // TODO is this step necessary?
+    //         while(median != begin && mPoints[*(median)][dim] == mPoints[*(median - 1)][dim] )
+    //         {
+    //             --median;
+    //         }
+    //
+    //         // find the lmin and lmax right and left
+    //         auto wMinMaxLeft = std::minmax_element(begin, median,
+    //             [this](  size_t const a, size_t const b)
+    //             {
+    //                 return ( mPoints[a].weight() < mPoints[b].weight() );
+    //             }
+    //         );
+    //         auto wMinMaxRight = std::minmax_element( (median+1), end,
+    //             [this](  size_t const a, size_t const b)
+    //             {
+    //                 return ( mPoints[a].weight() < mPoints[b].weight() );
+    //             }
+    //         );
+    //
+    //         realScalarType const wMinLeftVal = mPoints[*wMinMaxLeft.first].weight();
+    //         realScalarType const wMaxLeftVal = mPoints[*wMinMaxLeft.second].weight();
+    //         realScalarType const wMinRightVal = mPoints[*wMinMaxRight.first].weight();
+    //         realScalarType const wMaxRightVal = mPoints[*wMinMaxRight.second].weight();
+    //
+    //         // find the left and right discriminats
+    //         realScalarType discrLeft = wMaxLeftVal - wMinLeftVal;//std::abs( wMaxLeftVal - wMinLeftVal );
+    //         realScalarType discrRight = wMaxRightVal - wMinRightVal;//std::abs( wMaxRightVal - wMinRightVal );
+    //
+    //         // find the difference between the two sides
+    //         discrDiff[dim] = discrRight - discrLeft;//std::abs( discrRight - discrLeft );
+    //
+    //         std::cout<<"dim = "<<dim<<"\t"<<" discr= "<<discrDiff[dim]<<std::endl;
+    //     }
+    //
+    //     // find the dimension with the lowest discriminant
+    //     auto discrMax = std::max_element( std::begin(discrDiff),std::end(discrDiff) );
+    //
+    //     // set the split dimension as the one with the lowest discriminant
+    //     return (size_t) std::distance( std::begin(discrDiff), discrMax );
+    // }
 
-        // since we have enough points we can create new tress
-        std::vector<size_t> pointIndices(mPoints.size());
 
-        // set the point indices for sorting
-        for(size_t i=0;i<pointIndices.size();++i)
-        {
-            pointIndices[i] = i;
-        }
-
-        auto begin = std::begin(pointIndices);
-        auto end = std::end(pointIndices);
-
-        // for each dimension find the median and the Fisher discriminant
-        std::vector<realScalarType> discrDiff(mPoints[0].size());
-
-        for(size_t dim=size_t(0);dim<mPoints[0].size();++dim)
-        {
-            // sort the points in the current dimension
-            std::sort(begin, end,
-                [this,dim]( size_t const a, size_t const b)
-                {
-                    return ( mPoints[a][dim] < mPoints[b][dim] );
-                }
-            );
-
-            // find the median
-            auto rangeSize = std::distance(begin, end);
-            auto median = begin + rangeSize/2;
-            assert(rangeSize>0);
-
-            // TODO is this step necessary?
-            while(median != begin && mPoints[*(median)][dim] == mPoints[*(median - 1)][dim] )
-            {
-                --median;
-            }
-
-            // find the lmin and lmax right and left
-            auto wMinMaxLeft = std::minmax_element(begin, median,
-                [this](  size_t const a, size_t const b)
-                {
-                    return ( mPoints[a].weight() < mPoints[b].weight() );
-                }
-            );
-            auto wMinMaxRight = std::minmax_element( (median+1), end,
-                [this](  size_t const a, size_t const b)
-                {
-                    return ( mPoints[a].weight() < mPoints[b].weight() );
-                }
-            );
-
-            realScalarType const wMinLeftVal = mPoints[*wMinMaxLeft.first].weight();
-            realScalarType const wMaxLeftVal = mPoints[*wMinMaxLeft.second].weight();
-            realScalarType const wMinRightVal = mPoints[*wMinMaxRight.first].weight();
-            realScalarType const wMaxRightVal = mPoints[*wMinMaxRight.second].weight();
-
-            // find the left and right discriminats
-            realScalarType discrLeft = wMaxLeftVal - wMinLeftVal;//std::abs( wMaxLeftVal - wMinLeftVal );
-            realScalarType discrRight = wMaxRightVal - wMinRightVal;//std::abs( wMaxRightVal - wMinRightVal );
-
-            // find the difference between the two sides
-            discrDiff[dim] = discrRight - discrLeft;//std::abs( discrRight - discrLeft );
-
-            std::cout<<"dim = "<<dim<<"\t"<<" discr= "<<discrDiff[dim]<<std::endl;
-        }
-
-        // find the dimension with the lowest discriminant
-        auto discrMax = std::max_element( std::begin(discrDiff),std::end(discrDiff) );
-
-        // set the split dimension as the one with the lowest discriminant
-        return (size_t) std::distance( std::begin(discrDiff), discrMax );
-    }
-
-
-    void computeMeanStdDvnOfWeights(pointsArrayType const & points,realScalarType & mean, realScalarType & stdDvn)
-    {
-        realScalarType sum = 0;
-        realScalarType sum2 = 0;
-
-        for(size_t i=0;i<points.size();++i)
-        {
-            realScalarType weightVal = points[i].weight();
-            sum += weightVal;
-            sum2 += weightVal*weightVal;
-        }
-
-        sum /= (realScalarType)points.size();
-        sum2 /= (realScalarType)points.size();
-
-        mean  = sum;
-
-        assert(sum2 >= sum*sum);
-        stdDvn = std::sqrt(sum2 - sum*sum);
-    }
+    // void computeMeanStdDvnOfWeights(pointsArrayType const & points,realScalarType & mean, realScalarType & stdDvn)
+    // {
+    //     realScalarType sum = 0;
+    //     realScalarType sum2 = 0;
+    //
+    //     for(size_t i=0;i<points.size();++i)
+    //     {
+    //         realScalarType weightVal = points[i].weight();
+    //         sum += weightVal;
+    //         sum2 += weightVal*weightVal;
+    //     }
+    //
+    //     sum /= (realScalarType)points.size();
+    //     sum2 /= (realScalarType)points.size();
+    //
+    //     mean  = sum;
+    //
+    //     assert(sum2 >= sum*sum);
+    //     stdDvn = std::sqrt(sum2 - sum*sum);
+    // }
 
 
     asymmTreeType* mLeftSubTree;
@@ -1007,6 +1199,7 @@ private:
     realScalarType mLiveMaxWeight;
     realScalarType mVolAccepted;
     realScalarType mVolRejected;
+    realScalarType mMinCutWeight;
 };
 
 
