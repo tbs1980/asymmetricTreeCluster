@@ -1120,7 +1120,7 @@ private:
             sum2 /= (realScalarType) mPoints.size();
 
             realScalarType var = sum2 - sum*sum;
-            assert(var >= realScalarType(0));
+            // assert(var >= realScalarType(0));
 
             if(dim == size_t(0))
             {
@@ -1137,6 +1137,7 @@ private:
             }
         }
 
+        assert(varMax>=0);
         return dimWithMaxVar;
     }
 
