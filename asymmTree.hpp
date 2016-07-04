@@ -839,6 +839,29 @@ public:
       }
     }
 
+    pointType minlivepoint()
+    {
+      if(mHasLeftSubTree && !mHasRighSubTree)
+      {
+        return mLeftSubTree->minlivepoint();
+      }
+      else if(!mHasLeftSubTree && mHasRighSubTree)
+      {
+        return mRightSubTree->minlivepoint();
+      }
+      else if(mHasLeftSubTree && mHasRighSubTree)
+      {
+        if(mLeftSubTree->liveMinWeight() < mRightSubTree->liveMinWeight())
+          { return mLeftSubTree->minlivepoint(); }
+        else
+          { return mRightSubTree->minlivepoint(); }
+      }
+      else
+      {
+        return *(std::find_if(std::begin(mPoints),std::end(mPoints),[](pointType const a) {return(a.pointChar()==pointCharactersticType::LIVE_POINT);}));
+      }
+    }
+
     void prune()
     {
       if(mTreeActive == false)       { exit(991); } // error! all inactive nodes should be deleted
