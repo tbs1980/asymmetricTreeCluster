@@ -275,6 +275,71 @@ public:
         }
     }
 
+
+    template<typename T>
+    void addPoints(T begin, T end, bool const makeTree = true)
+    {
+        if(mHasLeftSubTree or mHasRighSubTree)
+        {
+            auto it     = std::partition(begin, end, [&](pointType pnt){return pnt[mSplitDimension] < mMedianVal[mSplitDimension];});
+            auto nleft  = std::distance(begin,it);
+            auto nright = std::distance(it,end);
+
+            if(nleft>0 && !mHasLeftSubTree)
+            {
+                std::cout<<"This means we are trying to add points to a left-tree that we deleted"<<std::endl;
+                std::cout<<"The current node id = "<<mTreeIndex<<std::endl;
+                abort();
+            }
+            if(nright>0 && !mHasRighSubTree)
+            {
+                std::cout<<"This means we are trying to add points to a right-tree that we deleted"<<std::endl;
+                std::cout<<"The current node id = "<<mTreeIndex<<std::endl;
+                abort();
+            }
+
+            mLeftSubTree->addPoints(begin,it);
+            mRightSubTree->addPoints(it,end);
+
+            if(mHasLeftSubTree and mHasRighSubTree)
+            {
+              mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
+              mLiveMaxWeight = std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight());
+              mMinCutWeight  = std::min(mLeftSubTree->minCutWeight(),mRightSubTree->minCutWeight());
+              mVolAccepted   = mLeftSubTree->volAccepted() + mRightSubTree->volAccepted();
+              mVolRejected   = mLeftSubTree->volRejected() + mRightSubTree->volRejected();
+            }
+            else if(mHasLeftSubTree)
+            {
+              mLiveMinWeight = mLeftSubTree->liveMinWeight();
+              mLiveMaxWeight = mLeftSubTree->liveMaxWeight();
+              mMinCutWeight  = mLeftSubTree->minCutWeight();
+              mVolAccepted   = mLeftSubTree->volAccepted();
+              mVolRejected   = mLeftSubTree->volRejected();
+            }
+            else if(mHasRighSubTree)
+            {
+              mLiveMinWeight = mRightSubTree->liveMinWeight();
+              mLiveMaxWeight = mRightSubTree->liveMaxWeight();
+              mMinCutWeight  = mRightSubTree->minCutWeight();
+              mVolAccepted   = mRightSubTree->volAccepted();
+              mVolRejected   = mRightSubTree->volRejected();
+            }
+            mNodeChar = REFERENCE_NODE;
+        }
+        else
+        {
+            mPoints.insert(mPoints.end(),begin,end);
+            std::sort(mPoints.begin(), mPoints.end(),
+                [this]( pointType a, pointType b)
+                {
+                  return ( a.weight() < b.weight() );
+                });
+            buildTree();
+            computeNodeCharacterstics();
+        }
+    }
+
     /**
      * \para A method for deleting a node specified by the index
      * @param treeIndex The tree index of the node to be deleted
