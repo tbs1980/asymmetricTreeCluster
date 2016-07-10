@@ -208,7 +208,7 @@ public:
     {
         if(mHasLeftSubTree or mHasRighSubTree)
         {
-            if( point[mSplitDimension] < mMedianVal[mSplitDimension] )
+            if( point[mSplitDimension] < mMedianVal )
             {
                 if(mHasLeftSubTree) { mLeftSubTree->addPoint(point); }
                 else
@@ -281,7 +281,7 @@ public:
     {
         if(mHasLeftSubTree or mHasRighSubTree)
         {
-            auto it     = std::partition(begin, end, [&](pointType pnt){return pnt[mSplitDimension] < mMedianVal[mSplitDimension];});
+            auto it     = std::partition(begin, end, [&](pointType pnt){return pnt[mSplitDimension] < mMedianVal;});
             auto nleft  = std::distance(begin,it);
             auto nright = std::distance(it,end);
 
@@ -330,11 +330,6 @@ public:
         else
         {
             mPoints.insert(mPoints.end(),begin,end);
-            std::sort(mPoints.begin(), mPoints.end(),
-                [this]( pointType a, pointType b)
-                {
-                  return ( a.weight() < b.weight() );
-                });
             buildTree();
             computeNodeCharacterstics();
         }
@@ -591,26 +586,12 @@ public:
             mSplitDimension = findMaxVarDimension();
             //mSplitDimension = findMaxFisherInfoDimension();
 
-            auto begin = std::begin(pointIndices);
-            auto end = std::end(pointIndices);
-
-            // sort the point-indeices in the split dimension
-            std::sort(begin, end,
-                [this]( size_t a, size_t b)
-                {
-                    return ( mPoints[a][mSplitDimension] < mPoints[b][mSplitDimension] );
-                }
+            auto median_it = std::begin(mPoints) + mPoints.size() / 2;
+            std::nth_element(mPoints.begin(),median_it,mPoints.end(),
+              [this]( pointType const a, pointType const b )
+              { return( a[mSplitDimension] < b[mSplitDimension] ); }
             );
-
-            auto rangeSize = std::distance(begin, end);
-            auto median = begin + rangeSize/2;
-
-            // TODO is this step really necessary?
-            while(median != begin &&
-                mPoints[*(median)][mSplitDimension] == mPoints[*(median - 1)][mSplitDimension] )
-            {
-                --median;
-            }
+            mMedianVal = (*median_it)[mSplitDimension];
 
             // set the new bounds
             pointType boundMinLeft = mBoundMin;
@@ -619,31 +600,17 @@ public:
             pointType boundMaxRight = mBoundMax;
 
             // the split dimension will have a new bound coming from median point
-            boundMaxLeft[mSplitDimension] = mPoints[*(median)][mSplitDimension];
-            boundMinRight[mSplitDimension] = mPoints[*(median)][mSplitDimension];
+            boundMaxLeft[mSplitDimension] = mMedianVal;
+            boundMinRight[mSplitDimension] = mMedianVal;
 
             assert( boundMinLeft[mSplitDimension] < boundMaxLeft[mSplitDimension] );
             assert( boundMinRight[mSplitDimension] < boundMaxRight[mSplitDimension] );
 
-            // since we have decided the split dimension we can set the node bounds here
-            mMedianVal = mPoints[*(median)];
-
             // make points for the left and right tree
-            pointsArrayType pointsLeft( std::distance(begin, median) );
-            pointsArrayType pointsRight( std::distance(median, end) );
+            pointsArrayType pointsLeft( std::begin(mPoints), median_it );
+            pointsArrayType pointsRight( median_it, std::end(mPoints) );
 
             assert( pointsLeft.size() + pointsRight.size() == mPoints.size() );
-
-            for(size_t i=0;i<pointsLeft.size();++i)
-            {
-                pointsLeft[i] = mPoints[ pointIndices[i] ];
-            }
-
-            for(size_t i=0;i<pointsRight.size();++i)
-            {
-                pointsRight[i] = mPoints[ pointIndices[i+pointsLeft.size()] ];
-            }
-
             assert( pointsLeft.size() > size_t(0) );
             assert( pointsRight.size() > size_t(0) );
 
@@ -727,7 +694,7 @@ public:
 
     pointType         boundMin()       const {return mBoundMin;}
     pointType         boundMax()       const {return mBoundMax;}
-    pointType         median()         const {return mMedianVal;}
+    realScalarType    median()         const {return mMedianVal;}
     realScalarType    volume()         const {return mVolume;}
     realScalarType    weightMax()      const {return mWeightMax;}
     realScalarType    liveMinWeight()  const {return mLiveMinWeight;}
@@ -1270,7 +1237,7 @@ private:
     size_t mSplitDimension;
     pointType mBoundMin;
     pointType mBoundMax;
-    pointType mMedianVal;
+    realScalarType mMedianVal;
     size_t mThresholdForBranching;
     size_t mTreeIndex;
     size_t mTreeLevel;
