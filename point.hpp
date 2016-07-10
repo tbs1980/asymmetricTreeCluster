@@ -19,26 +19,32 @@ public:
     typedef std::vector<realScalarType> realVectorType;
     typedef pointCharacterstic pointCharactersticType;
 
-    //static size_t sPointId;
-
     point()
-    :mCoordinates(1,realScalarType(0)),mWeight(0),mPointChar(LIVE_POINT),mPointId(0)
+    :mCoordinates(1,realScalarType(0)),mDerived(1,realScalarType(0)),mWeight(0),mPointChar(LIVE_POINT),mPointId(0)
     {
     }
 
-    point(size_t const numDims,realScalarType const weight)
-    :mCoordinates(numDims,realScalarType(0)),mWeight(weight),mPointChar(LIVE_POINT),mPointId(0)
+    point(size_t const numDims,size_t const numDer,realScalarType const weight)
+      :mCoordinates(numDims,realScalarType(0))
+      ,mDerived(numDer,realScalarType(0))
+      ,mWeight(weight)
+      ,mPointChar(LIVE_POINT)
+      ,mPointId(0)
     {
     }
 
-    point(realVectorType const& coordinates,realScalarType const weight)
-    :mCoordinates(coordinates),mWeight(weight),mPointChar(LIVE_POINT),mPointId(0)
-    {
-        assert(coordinates.size()>0);
-    }
+    // point(realVectorType const& coordinates,realScalarType const weight)
+    // :mCoordinates(coordinates),mWeight(weight),mPointChar(LIVE_POINT),mPointId(0)
+    // {
+    //     assert(coordinates.size()>0);
+    // }
 
-    point(realVectorType const& coordinates,realScalarType const weight,pointCharactersticType pointChar)
-    :mCoordinates(coordinates),mWeight(weight),mPointChar(pointChar),mPointId(0)
+    point(realVectorType const& coordinates,realVectorType const& derived,realScalarType const weight,pointCharactersticType pointChar)
+      :mCoordinates(coordinates)
+      ,mDerived(derived)
+      ,mWeight(weight)
+      ,mPointChar(pointChar)
+      ,mPointId(0)
     {
         assert(coordinates.size()>0);
     }
@@ -58,9 +64,19 @@ public:
         return mCoordinates.size();
     }
 
+    size_t nder() const
+    {
+        return mDerived.size();
+    }
+
     realVectorType const & coords() const
     {
         return mCoordinates;
+    }
+
+    realVectorType const & derived() const
+    {
+        return mDerived;
     }
 
     realScalarType const & operator [] (size_t i) const
@@ -71,6 +87,16 @@ public:
     realScalarType & operator [] (size_t i)
     {
         return mCoordinates[i];
+    }
+
+    realScalarType const & derived (size_t i) const
+    {
+        return mDerived[i];
+    }
+
+    realScalarType & derived (size_t i)
+    {
+        return mDerived[i];
     }
 
     pointCharactersticType const & pointChar() const
@@ -99,13 +125,11 @@ public:
     }
 
 private:
-    realVectorType mCoordinates;
-    realScalarType mWeight;
-    pointCharactersticType mPointChar;
-    size_t mPointId;
+  realVectorType mCoordinates;
+  realVectorType mDerived;
+  realScalarType mWeight;
+  pointCharactersticType mPointChar;
+  size_t mPointId;
 };
-
-// initialise the variable
-//template<class _realScalarType > size_t  point<_realScalarType>::sPointId = size_t(0);
 
 #endif //ASYM_TREE_POINT_HPP
