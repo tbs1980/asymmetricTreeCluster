@@ -20,7 +20,7 @@ public:
     typedef pointCharacterstic pointCharactersticType;
 
     point()
-    :mCoordinates(1,realScalarType(0)),mDerived(1,realScalarType(0)),mWeight(0),mPointChar(LIVE_POINT),mPointId(0)
+    :mCoordinates(1,realScalarType(0)),mDerived(1,realScalarType(0)),mWeight(0),mPointChar(LIVE_POINT)
     {
     }
 
@@ -29,7 +29,6 @@ public:
       ,mDerived(numDer,realScalarType(0))
       ,mWeight()
       ,mPointChar(LIVE_POINT)
-      ,mPointId(0)
     {
     }
 
@@ -44,7 +43,6 @@ public:
       ,mDerived(derived)
       ,mWeight(weight)
       ,mPointChar(pointChar)
-      ,mPointId(0)
     {
         assert(coordinates.size()>0);
     }
@@ -114,22 +112,11 @@ public:
       mPointChar = new_char;
     }
 
-    size_t const & pointId() const
-    {
-        return mPointId;
-    }
-
-    size_t & pointId()
-    {
-        return mPointId;
-    }
-
 private:
   realVectorType mCoordinates;
   realVectorType mDerived;
   realScalarType mWeight;
   pointCharactersticType mPointChar;
-  size_t mPointId;
 };
 
 #endif //ASYM_TREE_POINT_HPP
