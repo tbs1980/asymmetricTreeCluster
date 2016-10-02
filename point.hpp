@@ -24,10 +24,10 @@ public:
     {
     }
 
-    point(size_t const numDims,size_t const numDer,realScalarType const weight)
+    point(size_t const numDims,size_t const numDer)
       :mCoordinates(numDims,realScalarType(0))
       ,mDerived(numDer,realScalarType(0))
-      ,mWeight(weight)
+      ,mWeight()
       ,mPointChar(LIVE_POINT)
       ,mPointId(0)
     {
