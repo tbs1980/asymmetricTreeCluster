@@ -256,21 +256,9 @@ public:
         }
         else
         {
-            auto lb = std::lower_bound(std::begin(mPoints),std::end(mPoints),point,[]( pointType const a, pointType const b)
-            {
-                return ( a.weight() < b.weight() );
-            });
-            mPoints.insert(lb,point);
 
-            // computeNodeCharacterstics();
-
-            // if(makeTree == true and mPoints.size() + size_t(1) > mThresholdForBranching)
-            // {
-            // if((mNodeChar == ACCEPTED_NODE && point.pointChar() == pointCharactersticType::REJECTED_POINT) or (mNodeChar == REJECTED_NODE && point.pointChar() == pointCharactersticType::LIVE_POINT))
-            // {
-                buildTree();
-            // }
-
+            mPoints.push_back(point);
+            buildTree();
             computeNodeCharacterstics();
         }
     }
@@ -574,15 +562,6 @@ public:
         auto rej = std::count_if(std::begin(mPoints),std::end(mPoints),[](pointType const a){return a.pointChar() == pointCharactersticType::REJECTED_POINT;});
         if( acc > 0 && rej > 0)
         {
-            // since we have enough points we can create new tress
-            std::vector<size_t> pointIndices(mPoints.size());
-
-            // set the point indices for sorting
-            for(size_t i=0;i<pointIndices.size();++i)
-            {
-                pointIndices[i] = i;
-            }
-
             mSplitDimension = findMaxVarDimension();
             //mSplitDimension = findMaxFisherInfoDimension();
 
@@ -627,11 +606,6 @@ public:
 
             // clear the points in the currect branch
             mPoints.clear();
-
-            mLeftSubTree->buildTree();
-            mRightSubTree->buildTree();
-            mLeftSubTree->computeNodeCharacterstics();
-            mRightSubTree->computeNodeCharacterstics();
 
             // TODO set the branch to inactive?
             // mTreeActive = false;
@@ -751,48 +725,18 @@ public:
       }
       else
       {
-        auto lowest_live = std::find_if(std::begin(mPoints),std::end(mPoints),[](pointType const a) {return(a.pointChar()==pointCharactersticType::LIVE_POINT);});
-        if( lowest_live == std::end(mPoints) )
-        {
-          mLiveMinWeight = std::numeric_limits<realScalarType>::max();
-          mLiveMaxWeight = std::numeric_limits<realScalarType>::lowest();
-          mNodeChar      = REJECTED_NODE;
-          printf("Error: Could not find minimum likelihood live point. Exiting\n");
-          exit(8);
-        }
-        else
-        {
-          lowest_live->set_PointChar(pointCharactersticType::REJECTED_POINT);
-          buildTree();
-          computeNodeCharacterstics();
-          // mNodeChar = REJECTED_NODE;
-          // lowest_live++;
-          // if( std::next(lowest_live) == std::end(mPoints) )
-          // {
-          //   mLiveMinWeight = std::numeric_limits<realScalarType>::max();
-          //   mLiveMaxWeight = std::numeric_limits<realScalarType>::lowest();
-          //   mMinCutWeight  = lowest_live->weight();
-          //   mNodeChar      = REJECTED_NODE;
-          // }
-          //
-          // // :TODO: if a mix of live and rejected - build tree
-          // // else
-          // // {
-          // //   mLiveMinWeight = std::next(lowest_live)->weight();
-          // //   mLiveMaxWeight = (std::prev(std::end(mPoints)))->weight();
-          // //   mMinCutWeight  = lowest_live->weight();
-          // //   mNodeChar      = ACCEPTED_NODE;
-          // // }
-          // else
-          // {
-          //   buildTree();
-          //   mLiveMinWeight = std::min(mLeftSubTree->liveMinWeight(),mRightSubTree->liveMinWeight());
-          //   mLiveMaxWeight = std::max(mLeftSubTree->liveMaxWeight(),mRightSubTree->liveMaxWeight());
-          //   mMinCutWeight  = std::min(mLeftSubTree->minCutWeight(),mRightSubTree->minCutWeight());
-          //   mVolAccepted   = mLeftSubTree->volAccepted() + mRightSubTree->volAccepted();
-          //   mVolRejected   = mLeftSubTree->volRejected() + mRightSubTree->volRejected();
-          // }
-        }
+        assert(mNodeChar == ACCEPTED_NODE);
+        auto lowest_live = std::min_element(std::begin(mPoints),std::end(mPoints),
+            [this](  pointType const a, pointType const b)
+            {
+                return ( a.weight() < b.weight() );
+            }
+        );
+
+        lowest_live->set_PointChar(pointCharactersticType::REJECTED_POINT);
+        buildTree();
+        computeNodeCharacterstics();
+
         // if(mNodeChar == ACCEPTED_NODE)
         // {
         //   mVolAccepted = mVolume;
@@ -1024,60 +968,43 @@ private:
 
         if(mPoints.size() > size_t(0))
         {
-            std::vector<size_t> pointIndices( mPoints.size() );
-            for(size_t i=0;i<pointIndices.size();++i)
-            {
-                pointIndices[i] = i;
-            }
-
             // find the lmin and lmax right and left
-            auto wMinMax = std::minmax_element(std::begin(pointIndices),std::end(pointIndices),
-                [this](  size_t const a, size_t const b)
+            auto wMinMax = std::minmax_element(std::begin(mPoints),std::end(mPoints),
+                [this](  pointType const a, pointType const b)
                 {
-                    return ( mPoints[a].weight() < mPoints[b].weight() );
+                    return ( a.weight() < b.weight() );
                 }
             );
 
-            mWeightMin = mPoints[*wMinMax.first].weight();
-            mWeightMax = mPoints[*wMinMax.second].weight();
+            mWeightMin = wMinMax.first->weight();
+            mWeightMax = wMinMax.second->weight();
 
             // compute the mean and standard deviation
             // computeMeanStdDvnOfWeights(mPoints,mWeightsMean,mWeightsStdDvn); // TOTO should this be static?
 
-            std::sort(std::begin(mPoints),std::end(mPoints),[]( pointType const a, pointType const b)
-            {
-                return ( a.weight() < b.weight() );
-            });
+            auto acc = std::count_if(std::begin(mPoints),std::end(mPoints),[](pointType const a){return a.pointChar() == pointCharactersticType::LIVE_POINT;});
+            auto rej = std::count_if(std::begin(mPoints),std::end(mPoints),[](pointType const a){return a.pointChar() == pointCharactersticType::REJECTED_POINT;});
 
-            auto lowest_live = std::find_if(std::begin(mPoints),std::end(mPoints),[](pointType const a) {return(a.pointChar()==pointCharactersticType::LIVE_POINT);});
-            if( lowest_live == std::end(mPoints) )
+            if( rej && !acc )
             {
               mLiveMinWeight = std::numeric_limits<realScalarType>::max();
               mLiveMaxWeight = std::numeric_limits<realScalarType>::lowest();
-              mMinCutWeight  = std::prev(lowest_live)->weight();
+              mMinCutWeight  = wMinMax.second->weight();
               mNodeChar      = REJECTED_NODE;
             }
-            else if ( lowest_live == std::begin(mPoints) )
+            else if ( !rej && acc )
             {
-              mLiveMinWeight = lowest_live->weight();
-              mLiveMaxWeight = std::prev(std::end(mPoints))->weight();
+              mLiveMinWeight = wMinMax.first->weight();
+              mLiveMaxWeight = wMinMax.second->weight();
               mMinCutWeight  = std::numeric_limits<realScalarType>::max();
               mNodeChar      = ACCEPTED_NODE;
             }
             else
             {
-              std::cout << "Got here!!!! computeNodeCharacterstics()" << std::endl;
-              mLiveMinWeight = lowest_live->weight();
-              mLiveMaxWeight = std::prev(std::end(mPoints))->weight();
-
-              // :TODO: Here we will not prune if there are any live points
-              // Therefre mMinCutWeight is max()
-
-              // mMinCutWeight  = std::prev(lowest_live)->weight();
-              mMinCutWeight  = std::numeric_limits<realScalarType>::max();
-
-              mNodeChar      = ACCEPTED_NODE;
+                std::cout << "Got here!!!! computeNodeCharacterstics()" << std::endl;
+                exit(9999);
             }
+
             if(mNodeChar == ACCEPTED_NODE)
             {
               mVolAccepted = mVolume;
